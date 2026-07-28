@@ -1,9 +1,10 @@
 import Link from "next/link";
 import PedigreeCard from "./PedigreeCard";
-import { PUPPIES } from "../data/puppies";
+import { getPuppies } from "@/lib/queries/puppies";
 
-export default function FeaturedLitter() {
-  const featured = PUPPIES.filter((p) => p.status === "available").slice(0, 3);
+export default async function FeaturedLitter() {
+  const puppies = await getPuppies();
+  const featured = puppies.filter((p) => p.status === "available").slice(0, 3);
 
   return (
     <section className="max-w-6xl mx-auto px-6 py-20">
@@ -11,11 +12,15 @@ export default function FeaturedLitter() {
       <h2 className="font-display text-3xl text-forest mb-10">
         Puppies available now
       </h2>
-      <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {featured.map((p) => (
-          <PedigreeCard key={p.id} {...p} />
-        ))}
-      </div>
+      {featured.length === 0 ? (
+        <p className="text-sage">No published puppies yet — add some in Supabase.</p>
+      ) : (
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {featured.map((p) => (
+            <PedigreeCard key={p.id} {...p} image={p.coverImage} />
+          ))}
+        </div>
+      )}
       <Link
         href="/puppies"
         className="inline-block mt-8 text-forest border-b border-gold pb-0.5 hover:text-forest-light"

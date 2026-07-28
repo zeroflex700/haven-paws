@@ -11,16 +11,23 @@ export default function PedigreeCard({
   breed,
   price,
   status,
+  image,
 }: {
   name: string;
   breed: string;
   price: number;
   status: Status;
+  image?: string | null;
 }) {
   return (
     <div className="bg-white rounded-lg overflow-hidden border border-sage/20 relative">
-      <div className="aspect-square bg-cream-alt flex items-center justify-center">
-        <span className="text-sage text-xs">Photo</span>
+      <div className="aspect-square bg-cream-alt flex items-center justify-center overflow-hidden">
+        {image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={image} alt={name} className="w-full h-full object-cover" />
+        ) : (
+          <span className="text-sage text-xs">Photo coming soon</span>
+        )}
       </div>
       <span
         className={`absolute top-3 right-3 text-[10px] uppercase tracking-wider px-3 py-1 rounded-full ${statusColor[status]}`}
