@@ -1,10 +1,22 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+cat > app/globals.css << 'EOF'
+@import "tailwindcss";
+
+@theme {
+  --color-cream: #FAF6EE;
+  --color-cream-alt: #F3EEE1;
+  --color-forest: #16302A;
+  --color-forest-light: #2F4F42;
+  --color-sage: #8A9A8C;
+  --color-gold: #B8935A;
+  --color-ink: #1B1B18;
+
+  --font-display: var(--font-fraunces), serif;
+  --font-body: var(--font-inter), sans-serif;
+}
 
 body {
-  background-color: #FAF6EE;
-  color: #1B1B18;
+  background-color: var(--color-cream);
+  color: var(--color-ink);
 }
 
 .eyebrow {
@@ -14,3 +26,4 @@ body {
 .gold-rule {
   @apply w-10 h-px bg-gold;
 }
+EOF
