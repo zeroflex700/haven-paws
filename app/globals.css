@@ -1,4 +1,3 @@
-cat > app/globals.css << 'EOF'
 @import "tailwindcss";
 
 @theme {
@@ -26,4 +25,3 @@ body {
 .gold-rule {
   @apply w-10 h-px bg-gold;
 }
-EOF
