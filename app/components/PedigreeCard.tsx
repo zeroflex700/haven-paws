@@ -14,7 +14,7 @@ export default function PedigreeCard({
 }: {
   name: string;
   breed: string;
-  price: string;
+  price: number;
   status: Status;
 }) {
   return (
@@ -31,7 +31,7 @@ export default function PedigreeCard({
         <h3 className="font-display text-lg text-forest">{name}</h3>
         <p className="eyebrow mt-1 mb-3">{breed}</p>
         <div className="gold-rule mb-3" />
-        <p className="text-ink font-medium">{price}</p>
+        <p className="text-ink font-medium">${price.toLocaleString()}</p>
       </div>
     </div>
   );
