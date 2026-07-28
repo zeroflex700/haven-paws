@@ -10,6 +10,16 @@ export type PuppyRecord = {
   coverImage: string | null;
 };
 
+type RawPuppyRow = {
+  id: string;
+  name: string;
+  sex: "male" | "female";
+  price: number;
+  status: "available" | "reserved" | "sold";
+  breeds: { name: string } | null;
+  puppy_media: { url: string; is_cover: boolean }[] | null;
+};
+
 export async function getPuppies(): Promise<PuppyRecord[]> {
   const { data, error } = await supabase
     .from("puppies")
@@ -25,7 +35,9 @@ export async function getPuppies(): Promise<PuppyRecord[]> {
     return [];
   }
 
-  return (data ?? []).map((p: any) => ({
+  const rows = (data ?? []) as unknown as RawPuppyRow[];
+
+  return rows.map((p) => ({
     id: p.id,
     name: p.name,
     breed: p.breeds?.name ?? "Unknown",
@@ -33,7 +45,7 @@ export async function getPuppies(): Promise<PuppyRecord[]> {
     price: Number(p.price),
     status: p.status,
     coverImage:
-      p.puppy_media?.find((m: any) => m.is_cover)?.url ??
+      p.puppy_media?.find((m) => m.is_cover)?.url ??
       p.puppy_media?.[0]?.url ??
       null,
   }));

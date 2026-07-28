@@ -1,6 +1,14 @@
 import Link from "next/link";
 
-export default function PuppyListView({ puppies }: { puppies: any[] }) {
+type AdminPuppy = {
+  id: string;
+  name: string;
+  price: number;
+  status: "available" | "reserved" | "sold";
+  breeds: { name: string } | null;
+};
+
+export default function PuppyListView({ puppies }: { puppies: AdminPuppy[] }) {
   if (puppies.length === 0) {
     return <p className="text-sage">No puppies yet. Add your first one.</p>;
   }
