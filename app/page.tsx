@@ -5,6 +5,8 @@ import FeaturedLitter from "./components/FeaturedLitter";
 import HowItWorks from "./components/HowItWorks";
 import Footer from "./components/Footer";
 
+export const dynamic = "force-dynamic";
+
 export default function Home() {
   return (
     <main>

@@ -3,6 +3,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
+function revalidatePublicPages(puppyId: string) {
+  revalidatePath("/");
+  revalidatePath("/puppies");
+  revalidatePath(`/admin/puppies/${puppyId}/media`);
+}
+
 export async function addMedia(
   puppyId: string,
   url: string,
@@ -28,14 +34,14 @@ export async function addMedia(
   });
 
   if (error) throw new Error(error.message);
-  revalidatePath(`/admin/puppies/${puppyId}/media`);
+  revalidatePublicPages(puppyId);
 }
 
 export async function deleteMedia(puppyId: string, mediaId: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("puppy_media").delete().eq("id", mediaId);
   if (error) throw new Error(error.message);
-  revalidatePath(`/admin/puppies/${puppyId}/media`);
+  revalidatePublicPages(puppyId);
 }
 
 export async function setCover(puppyId: string, mediaId: string) {
@@ -48,7 +54,7 @@ export async function setCover(puppyId: string, mediaId: string) {
     .eq("id", mediaId);
 
   if (error) throw new Error(error.message);
-  revalidatePath(`/admin/puppies/${puppyId}/media`);
+  revalidatePublicPages(puppyId);
 }
 
 export async function moveMedia(
@@ -72,5 +78,5 @@ export async function moveMedia(
   await supabase.from("puppy_media").update({ sort_order: currentOrder }).eq("id", swapTarget.id);
   await supabase.from("puppy_media").update({ sort_order: targetOrder }).eq("id", mediaId);
 
-  revalidatePath(`/admin/puppies/${puppyId}/media`);
+  revalidatePublicPages(puppyId);
 }
