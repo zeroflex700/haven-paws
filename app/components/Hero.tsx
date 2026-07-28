@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Hero() {
   return (
     <section className="max-w-6xl mx-auto px-6 pt-16 pb-20 grid md:grid-cols-2 gap-12 items-center">
@@ -11,18 +13,18 @@ export default function Hero() {
           process from first meeting to homecoming.
         </p>
         <div className="flex gap-4">
-          <a
+          <Link
             href="/puppies"
             className="bg-forest text-cream px-6 py-3 rounded-full hover:bg-forest-light transition-colors"
           >
             Meet the Litter
-          </a>
-          <a
+          </Link>
+          <Link
             href="/how-it-works"
             className="border border-forest/30 text-forest px-6 py-3 rounded-full hover:border-forest transition-colors"
           >
             How It Works
-          </a>
+          </Link>
         </div>
       </div>
       <div className="relative">

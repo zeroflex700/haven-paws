@@ -1,3 +1,4 @@
+import Link from "next/link";
 import PedigreeCard from "./PedigreeCard";
 
 const puppies = [
@@ -18,12 +19,12 @@ export default function FeaturedLitter() {
           <PedigreeCard key={p.name} {...p} />
         ))}
       </div>
-      <a
+      <Link
         href="/puppies"
         className="inline-block mt-8 text-forest border-b border-gold pb-0.5 hover:text-forest-light"
       >
         View all available puppies →
-      </a>
+      </Link>
     </section>
   );
 }
