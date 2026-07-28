@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getBreeds } from "@/lib/queries/breeds";
 import PuppyForm from "../../components/PuppyForm";
@@ -26,7 +27,13 @@ export default async function EditPuppyPage({
   return (
     <main className="px-5 pt-6">
       <p className="eyebrow mb-1">Haven Paws Admin</p>
-      <h1 className="font-display text-2xl text-forest mb-6">Edit {puppy.name}</h1>
+      <h1 className="font-display text-2xl text-forest mb-1">Edit {puppy.name}</h1>
+      <Link
+        href={`/admin/puppies/${id}/media`}
+        className="inline-block text-sm text-forest border-b border-gold pb-0.5 mb-6"
+      >
+        Manage Photos & Videos →
+      </Link>
       <PuppyForm breeds={breeds} puppy={puppy} action={updatePuppyWithId} />
     </main>
   );
