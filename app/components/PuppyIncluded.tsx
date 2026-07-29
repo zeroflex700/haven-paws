@@ -11,7 +11,7 @@ const items = [
 export default function PuppyIncluded() {
   return (
     <div className="bg-cream-alt rounded-lg p-5 mt-6">
-      <h3 className="font-display text-lg text-forest mb-3">What's included</h3>
+      <h3 className="font-display text-lg text-forest mb-3">What&apos;s included</h3>
       <ul className="space-y-2">
         {items.map(({ icon: Icon, label }) => (
           <li key={label} className="flex items-center gap-2 text-sm text-ink/80">

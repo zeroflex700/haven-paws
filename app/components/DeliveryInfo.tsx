@@ -10,7 +10,7 @@ export default function DeliveryInfo() {
         </div>
         <p className="text-sm text-ink/80 leading-relaxed mb-3">
           Once your puppy has completed their veterinary health check and is
-          fully ready, we'll coordinate delivery timing directly with you.
+          fully ready, we&apos;ll coordinate delivery timing directly with you.
           Depending on your location, we offer in-person pickup or
           white-glove delivery options.
         </p>
