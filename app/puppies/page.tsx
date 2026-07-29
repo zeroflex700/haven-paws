@@ -1,10 +1,8 @@
-
+import { Suspense } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PuppiesClient from "../components/PuppiesClient";
 import { getPuppies } from "@/lib/queries/puppies";
-
-export const dynamic = "force-dynamic";
 
 export default async function PuppiesPage() {
   const puppies = await getPuppies();
@@ -12,7 +10,9 @@ export default async function PuppiesPage() {
   return (
     <main>
       <Navbar />
-      <PuppiesClient initialPuppies={puppies} />
+      <Suspense fallback={null}>
+        <PuppiesClient initialPuppies={puppies} />
+      </Suspense>
       <Footer />
     </main>
   );

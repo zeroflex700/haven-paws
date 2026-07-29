@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import PedigreeCard from "./PedigreeCard";
 import PuppyFilters, { Filters } from "./PuppyFilters";
 import type { PuppyRecord } from "@/lib/queries/puppies";
@@ -10,8 +11,11 @@ export default function PuppiesClient({
 }: {
   initialPuppies: PuppyRecord[];
 }) {
+  const searchParams = useSearchParams();
+
   const [filters, setFilters] = useState<Filters>({
-    breed: "all",
+    search: searchParams.get("search") ?? "",
+    breed: searchParams.get("breed") ?? "all",
     status: "all",
     sex: "all",
     sort: "none",
@@ -22,6 +26,12 @@ export default function PuppiesClient({
       if (filters.breed !== "all" && p.breed !== filters.breed) return false;
       if (filters.status !== "all" && p.status !== filters.status) return false;
       if (filters.sex !== "all" && p.sex !== filters.sex) return false;
+      if (filters.search.trim()) {
+        const term = filters.search.trim().toLowerCase();
+        const matches =
+          p.name.toLowerCase().includes(term) || p.breed.toLowerCase().includes(term);
+        if (!matches) return false;
+      }
       return true;
     });
 
