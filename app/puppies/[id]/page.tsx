@@ -3,7 +3,14 @@ import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import PuppyGallery from "../../components/PuppyGallery";
 import InquiryForm from "../../components/InquiryForm";
+import PuppyIncluded from "../../components/PuppyIncluded";
+import RelatedPuppies from "../../components/RelatedPuppies";
+import Testimonials from "../../components/Testimonials";
+import DeliveryInfo from "../../components/DeliveryInfo";
+import StickyReserveBar from "../../components/StickyReserveBar";
 import { getPuppyDetail } from "@/lib/queries/puppyDetail";
+import { getRelatedPuppies } from "@/lib/queries/relatedPuppies";
+import { getReviews } from "@/lib/queries/testimonials";
 
 const statusColor: Record<string, string> = {
   available: "bg-gold text-forest",
@@ -21,8 +28,13 @@ export default async function PuppyDetailPage({
 
   if (!puppy) notFound();
 
+  const [related, reviews] = await Promise.all([
+    getRelatedPuppies(puppy.breedId, puppy.id),
+    getReviews(4),
+  ]);
+
   return (
-    <main>
+    <main className="pb-20 md:pb-0">
       <Navbar />
       <section className="max-w-5xl mx-auto px-6 py-12 grid md:grid-cols-2 gap-10">
         <PuppyGallery media={puppy.media} name={puppy.name} />
@@ -34,7 +46,11 @@ export default async function PuppyDetailPage({
             {puppy.status}
           </span>
           <h1 className="font-display text-3xl text-forest mt-3 mb-1">{puppy.name}</h1>
-          <p className="eyebrow mb-4">{puppy.breed}</p>
+          <p className="eyebrow mb-1">{puppy.breed}</p>
+          <p className="text-sm text-ink/60 capitalize mb-4">
+            {puppy.sex}
+            {puppy.ageWeeks !== null ? ` · ${puppy.ageWeeks} weeks old` : ""}
+          </p>
           <div className="gold-rule mb-4" />
 
           <p className="text-2xl text-ink font-medium mb-6">
@@ -42,39 +58,55 @@ export default async function PuppyDetailPage({
           </p>
 
           {puppy.description && (
-            <p className="text-ink/80 mb-6 leading-relaxed">{puppy.description}</p>
+            <div className="mb-6">
+              <h3 className="font-display text-lg text-forest mb-2">
+                About {puppy.name}
+              </h3>
+              <p className="text-ink/80 leading-relaxed">{puppy.description}</p>
+            </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4 text-sm mb-8">
+          <div className="grid grid-cols-2 gap-4 text-sm mb-2">
             <div>
-              <p className="text-sage text-xs uppercase tracking-wider">Gender</p>
-              <p className="text-ink capitalize">{puppy.sex}</p>
+              <p className="text-sage text-xs uppercase tracking-wider">Color</p>
+              <p className="text-ink">{puppy.color ?? "—"}</p>
             </div>
-            {puppy.color && (
-              <div>
-                <p className="text-sage text-xs uppercase tracking-wider">Color</p>
-                <p className="text-ink">{puppy.color}</p>
-              </div>
-            )}
-            {puppy.weightEstimate && (
-              <div>
-                <p className="text-sage text-xs uppercase tracking-wider">Est. Weight</p>
-                <p className="text-ink">{puppy.weightEstimate} lbs</p>
-              </div>
-            )}
             <div>
-              <p className="text-sage text-xs uppercase tracking-wider">Health</p>
+              <p className="text-sage text-xs uppercase tracking-wider">Est. Weight</p>
               <p className="text-ink">
-                {puppy.vetChecked ? "Vet Checked" : "Pending"} ·{" "}
-                {puppy.vaccinated ? "Vaccinated" : "Pending"}
+                {puppy.weightEstimate ? `${puppy.weightEstimate} lbs` : "—"}
               </p>
             </div>
+            <div>
+              <p className="text-sage text-xs uppercase tracking-wider">Vet Checked</p>
+              <p className="text-ink">{puppy.vetChecked ? "Yes" : "Pending"}</p>
+            </div>
+            <div>
+              <p className="text-sage text-xs uppercase tracking-wider">Vaccinated</p>
+              <p className="text-ink">{puppy.vaccinated ? "Yes" : "Pending"}</p>
+            </div>
+            {puppy.microchipId && (
+              <div className="col-span-2">
+                <p className="text-sage text-xs uppercase tracking-wider">Microchip ID</p>
+                <p className="text-ink">{puppy.microchipId}</p>
+              </div>
+            )}
           </div>
 
-          <InquiryForm puppyId={puppy.id} puppyName={puppy.name} />
+          <PuppyIncluded />
+
+          <div id="inquiry-form" className="mt-6">
+            <InquiryForm puppyId={puppy.id} puppyName={puppy.name} />
+          </div>
         </div>
       </section>
+
+      <DeliveryInfo />
+      <RelatedPuppies puppies={related} breedName={puppy.breed} />
+      <Testimonials reviews={reviews} />
+
       <Footer />
+      <StickyReserveBar price={puppy.price} status={puppy.status} />
     </main>
   );
 }
