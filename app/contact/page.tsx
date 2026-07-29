@@ -12,7 +12,7 @@ export default function ContactPage() {
         </h1>
         <p className="text-ink/80 leading-relaxed mb-6">
           Have a question about a specific puppy? Reach out directly from
-          that puppy's page and we'll respond as soon as possible. For
+          that puppy&apos;s page and we&apos;ll respond as soon as possible. For
           general inquiries, email us below.
         </p>
         <a href="mailto:hello@havenpaws.com" className="text-forest border-b border-gold pb-0.5">
