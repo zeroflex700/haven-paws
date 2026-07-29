@@ -1,5 +1,13 @@
 import { supabase } from "@/lib/supabase/client";
 
+export type ParentInfo = {
+  name: string | null;
+  breed: string | null;
+  weight: string | null;
+  registration: string | null;
+  photoUrl: string | null;
+};
+
 export type PuppyDetail = {
   id: string;
   name: string;
@@ -17,6 +25,8 @@ export type PuppyDetail = {
   birthDate: string | null;
   ageWeeks: number | null;
   media: { url: string; mediaType: "image" | "video"; isCover: boolean }[];
+  mom: ParentInfo;
+  dad: ParentInfo;
 };
 
 function calcAgeWeeks(birthDate: string | null): number | null {
@@ -31,6 +41,8 @@ export async function getPuppyDetail(id: string): Promise<PuppyDetail | null> {
     .select(
       `id, name, sex, price, status, description, color, weight_estimate,
        vet_checked, vaccinated, microchip_id, birth_date, breed_id,
+       mom_name, mom_breed, mom_weight, mom_registration, mom_photo_url,
+       dad_name, dad_breed, dad_weight, dad_registration, dad_photo_url,
        breeds ( name ),
        puppy_media ( url, media_type, is_cover, sort_order )`
     )
@@ -54,6 +66,16 @@ export async function getPuppyDetail(id: string): Promise<PuppyDetail | null> {
     microchip_id: string | null;
     birth_date: string | null;
     breed_id: string;
+    mom_name: string | null;
+    mom_breed: string | null;
+    mom_weight: string | null;
+    mom_registration: string | null;
+    mom_photo_url: string | null;
+    dad_name: string | null;
+    dad_breed: string | null;
+    dad_weight: string | null;
+    dad_registration: string | null;
+    dad_photo_url: string | null;
     breeds: { name: string } | null;
     puppy_media: { url: string; media_type: "image" | "video"; is_cover: boolean; sort_order: number }[] | null;
   };
@@ -77,5 +99,19 @@ export async function getPuppyDetail(id: string): Promise<PuppyDetail | null> {
     media: (raw.puppy_media ?? [])
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((m) => ({ url: m.url, mediaType: m.media_type, isCover: m.is_cover })),
+    mom: {
+      name: raw.mom_name,
+      breed: raw.mom_breed,
+      weight: raw.mom_weight,
+      registration: raw.mom_registration,
+      photoUrl: raw.mom_photo_url,
+    },
+    dad: {
+      name: raw.dad_name,
+      breed: raw.dad_breed,
+      weight: raw.dad_weight,
+      registration: raw.dad_registration,
+      photoUrl: raw.dad_photo_url,
+    },
   };
 }

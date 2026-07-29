@@ -28,12 +28,20 @@ export default async function EditPuppyPage({
     <main className="px-5 pt-6">
       <p className="eyebrow mb-1">Haven Paws Admin</p>
       <h1 className="font-display text-2xl text-forest mb-1">Edit {puppy.name}</h1>
-      <Link
-        href={`/admin/puppies/${id}/media`}
-        className="inline-block text-sm text-forest border-b border-gold pb-0.5 mb-6"
-      >
-        Manage Photos & Videos →
-      </Link>
+      <div className="flex gap-4 mb-6">
+        <Link
+          href={`/admin/puppies/${id}/media`}
+          className="text-sm text-forest border-b border-gold pb-0.5"
+        >
+          Manage Photos & Videos →
+        </Link>
+        <Link
+          href={`/admin/puppies/${id}/parents`}
+          className="text-sm text-forest border-b border-gold pb-0.5"
+        >
+          Manage Parents →
+        </Link>
+      </div>
       <PuppyForm breeds={breeds} puppy={puppy} action={updatePuppyWithId} />
     </main>
   );

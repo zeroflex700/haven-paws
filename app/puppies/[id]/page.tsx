@@ -4,6 +4,7 @@ import Footer from "../../components/Footer";
 import PuppyGallery from "../../components/PuppyGallery";
 import InquiryForm from "../../components/InquiryForm";
 import PuppyIncluded from "../../components/PuppyIncluded";
+import PuppyParents from "../../components/PuppyParents";
 import RelatedPuppies from "../../components/RelatedPuppies";
 import Testimonials from "../../components/Testimonials";
 import DeliveryInfo from "../../components/DeliveryInfo";
@@ -101,6 +102,7 @@ export default async function PuppyDetailPage({
         </div>
       </section>
 
+      <PuppyParents puppyName={puppy.name} mom={puppy.mom} dad={puppy.dad} />
       <DeliveryInfo />
       <RelatedPuppies puppies={related} breedName={puppy.breed} />
       <Testimonials reviews={reviews} />
