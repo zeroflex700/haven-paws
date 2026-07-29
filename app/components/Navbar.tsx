@@ -1,12 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { PawPrint, Menu } from "lucide-react";
+import { PawPrint, Menu, User } from "lucide-react";
 import MobileMenu from "./MobileMenu";
+import { supabase } from "@/lib/supabase/client";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setLoggedIn(!!data.session);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setLoggedIn(!!session);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
 
   return (
     <>
@@ -29,10 +41,11 @@ export default function Navbar() {
             <Link href="/about" className="hover:text-forest">About</Link>
           </nav>
           <Link
-            href="/contact"
-            className="text-sm bg-forest text-cream px-5 py-2.5 rounded-full hover:bg-forest-light transition-colors"
+            href={loggedIn ? "/account" : "/account/login"}
+            aria-label="Account"
+            className="w-10 h-10 rounded-full bg-cream-alt border border-sage/30 flex items-center justify-center hover:border-gold transition-colors"
           >
-            Reserve a Visit
+            <User size={18} className="text-forest" strokeWidth={1.5} />
           </Link>
         </div>
       </header>
