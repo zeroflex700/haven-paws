@@ -1,3 +1,5 @@
+
+import Link from "next/link";
 import { cldOptimized } from "@/lib/cloudinary";
 
 type Status = "available" | "reserved" | "sold";
@@ -9,12 +11,14 @@ const statusColor: Record<Status, string> = {
 };
 
 export default function PedigreeCard({
+  id,
   name,
   breed,
   price,
   status,
   image,
 }: {
+  id: string;
   name: string;
   breed: string;
   price: number;
@@ -22,7 +26,10 @@ export default function PedigreeCard({
   image?: string | null;
 }) {
   return (
-    <div className="bg-white rounded-lg overflow-hidden border border-sage/20 relative">
+    <Link
+      href={`/puppies/${id}`}
+      className="block bg-white rounded-lg overflow-hidden border border-sage/20 relative"
+    >
       <div className="aspect-square bg-cream-alt flex items-center justify-center overflow-hidden">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -47,6 +54,6 @@ export default function PedigreeCard({
         <div className="gold-rule mb-3" />
         <p className="text-ink font-medium">${price.toLocaleString()}</p>
       </div>
-    </div>
+    </Link>
   );
 }
