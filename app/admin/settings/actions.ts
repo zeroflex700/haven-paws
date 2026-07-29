@@ -14,6 +14,9 @@ export async function updateSettings(formData: FormData) {
       specialties: formData.get("specialties") as string,
       bio: formData.get("bio") as string,
       badge_text: formData.get("badge_text") as string,
+      delivery_fee: Number(formData.get("delivery_fee") || 0),
+      starter_kit_price: Number(formData.get("starter_kit_price") || 0),
+      health_guarantee_price: Number(formData.get("health_guarantee_price") || 0),
     })
     .eq("id", "main");
 

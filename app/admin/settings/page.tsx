@@ -13,48 +13,50 @@ export default async function AdminSettingsPage() {
 
       <form action={updateSettings}>
         <label className="block text-sm text-ink/80 mb-1">Breeder / Business Name</label>
-        <input
-          name="breeder_name"
-          defaultValue={settings.breederName}
-          className={`${inputClass} mb-4`}
-        />
+        <input name="breeder_name" defaultValue={settings.breederName} className={`${inputClass} mb-4`} />
 
         <label className="block text-sm text-ink/80 mb-1">Badge Text</label>
-        <input
-          name="badge_text"
-          defaultValue={settings.badgeText}
-          placeholder="e.g. Verified Breeder"
-          className={`${inputClass} mb-4`}
-        />
+        <input name="badge_text" defaultValue={settings.badgeText} className={`${inputClass} mb-4`} />
 
         <label className="block text-sm text-ink/80 mb-1">Experience</label>
-        <input
-          name="years_experience"
-          defaultValue={settings.yearsExperience}
-          placeholder="e.g. 10+ years breeding experience"
-          className={`${inputClass} mb-4`}
-        />
+        <input name="years_experience" defaultValue={settings.yearsExperience} className={`${inputClass} mb-4`} />
 
         <label className="block text-sm text-ink/80 mb-1">Specialties</label>
+        <input name="specialties" defaultValue={settings.specialties} className={`${inputClass} mb-4`} />
+
+        <label className="block text-sm text-ink/80 mb-1">Bio</label>
+        <textarea name="bio" defaultValue={settings.bio} rows={4} className={`${inputClass} mb-6`} />
+
+        <h2 className="font-display text-lg text-forest mb-3">Checkout Pricing</h2>
+
+        <label className="block text-sm text-ink/80 mb-1">Nationwide Delivery Fee ($)</label>
         <input
-          name="specialties"
-          defaultValue={settings.specialties}
-          placeholder="e.g. Golden Retriever, French Bulldog"
+          name="delivery_fee"
+          type="number"
+          step="0.01"
+          defaultValue={settings.deliveryFee}
           className={`${inputClass} mb-4`}
         />
 
-        <label className="block text-sm text-ink/80 mb-1">Bio</label>
-        <textarea
-          name="bio"
-          defaultValue={settings.bio}
-          rows={4}
+        <label className="block text-sm text-ink/80 mb-1">Starter Care Kit Price ($)</label>
+        <input
+          name="starter_kit_price"
+          type="number"
+          step="0.01"
+          defaultValue={settings.starterKitPrice}
+          className={`${inputClass} mb-4`}
+        />
+
+        <label className="block text-sm text-ink/80 mb-1">Extended Health Guarantee Price ($)</label>
+        <input
+          name="health_guarantee_price"
+          type="number"
+          step="0.01"
+          defaultValue={settings.healthGuaranteePrice}
           className={`${inputClass} mb-6`}
         />
 
-        <button
-          type="submit"
-          className="w-full bg-forest text-cream py-2.5 rounded-full hover:bg-forest-light"
-        >
+        <button type="submit" className="w-full bg-forest text-cream py-2.5 rounded-full hover:bg-forest-light">
           Save
         </button>
       </form>

@@ -16,6 +16,7 @@ export type PuppyDetail = {
   litterId: string | null;
   sex: "male" | "female";
   price: number;
+  depositAmount: number;
   status: "available" | "reserved" | "sold";
   description: string | null;
   color: string | null;
@@ -40,7 +41,7 @@ export async function getPuppyDetail(id: string): Promise<PuppyDetail | null> {
   const { data, error } = await supabase
     .from("puppies")
     .select(
-      `id, name, sex, price, status, description, color, weight_estimate,
+      `id, name, sex, price, deposit_amount, status, description, color, weight_estimate,
        vet_checked, vaccinated, microchip_id, birth_date, breed_id, litter_id,
        mom_name, mom_breed, mom_weight, mom_registration, mom_photo_url,
        dad_name, dad_breed, dad_weight, dad_registration, dad_photo_url,
@@ -58,6 +59,7 @@ export async function getPuppyDetail(id: string): Promise<PuppyDetail | null> {
     name: string;
     sex: "male" | "female";
     price: number;
+    deposit_amount: number | null;
     status: "available" | "reserved" | "sold";
     description: string | null;
     color: string | null;
@@ -90,6 +92,7 @@ export async function getPuppyDetail(id: string): Promise<PuppyDetail | null> {
     litterId: raw.litter_id,
     sex: raw.sex,
     price: Number(raw.price),
+    depositAmount: Number(raw.deposit_amount ?? 0),
     status: raw.status,
     description: raw.description,
     color: raw.color,
