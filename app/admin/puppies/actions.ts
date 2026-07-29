@@ -4,14 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-function revalidateAll(id?: string) {
-  revalidatePath("/");
-  revalidatePath("/puppies");
-  revalidatePath("/admin");
-  revalidatePath("/admin/puppies");
-  if (id) revalidatePath(`/admin/puppies/${id}`);
-}
-
 export async function createPuppy(formData: FormData) {
   const supabase = await createClient();
 
@@ -27,6 +19,7 @@ export async function createPuppy(formData: FormData) {
     weight_estimate: formData.get("weight_estimate")
       ? Number(formData.get("weight_estimate"))
       : null,
+    litter_id: (formData.get("litter_id") as string) || null,
     vet_checked: formData.get("vet_checked") === "on",
     vaccinated: formData.get("vaccinated") === "on",
     is_published: formData.get("is_published") === "on",
@@ -34,7 +27,8 @@ export async function createPuppy(formData: FormData) {
 
   if (error) throw new Error(error.message);
 
-  revalidateAll();
+  revalidatePath("/admin");
+  revalidatePath("/admin/puppies");
   redirect("/admin/puppies");
 }
 
@@ -55,6 +49,7 @@ export async function updatePuppy(id: string, formData: FormData) {
       weight_estimate: formData.get("weight_estimate")
         ? Number(formData.get("weight_estimate"))
         : null,
+      litter_id: (formData.get("litter_id") as string) || null,
       vet_checked: formData.get("vet_checked") === "on",
       vaccinated: formData.get("vaccinated") === "on",
       is_published: formData.get("is_published") === "on",
@@ -64,6 +59,8 @@ export async function updatePuppy(id: string, formData: FormData) {
 
   if (error) throw new Error(error.message);
 
-  revalidateAll(id);
+  revalidatePath("/admin");
+  revalidatePath("/admin/puppies");
+  revalidatePath(`/admin/puppies/${id}`);
   redirect("/admin/puppies");
 }

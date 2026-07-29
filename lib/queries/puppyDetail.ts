@@ -13,6 +13,7 @@ export type PuppyDetail = {
   name: string;
   breed: string;
   breedId: string;
+  litterId: string | null;
   sex: "male" | "female";
   price: number;
   status: "available" | "reserved" | "sold";
@@ -40,7 +41,7 @@ export async function getPuppyDetail(id: string): Promise<PuppyDetail | null> {
     .from("puppies")
     .select(
       `id, name, sex, price, status, description, color, weight_estimate,
-       vet_checked, vaccinated, microchip_id, birth_date, breed_id,
+       vet_checked, vaccinated, microchip_id, birth_date, breed_id, litter_id,
        mom_name, mom_breed, mom_weight, mom_registration, mom_photo_url,
        dad_name, dad_breed, dad_weight, dad_registration, dad_photo_url,
        breeds ( name ),
@@ -66,6 +67,7 @@ export async function getPuppyDetail(id: string): Promise<PuppyDetail | null> {
     microchip_id: string | null;
     birth_date: string | null;
     breed_id: string;
+    litter_id: string | null;
     mom_name: string | null;
     mom_breed: string | null;
     mom_weight: string | null;
@@ -85,6 +87,7 @@ export async function getPuppyDetail(id: string): Promise<PuppyDetail | null> {
     name: raw.name,
     breed: raw.breeds?.name ?? "Unknown",
     breedId: raw.breed_id,
+    litterId: raw.litter_id,
     sex: raw.sex,
     price: Number(raw.price),
     status: raw.status,

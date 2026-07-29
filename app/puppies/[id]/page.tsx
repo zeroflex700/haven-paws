@@ -5,6 +5,8 @@ import PuppyGallery from "../../components/PuppyGallery";
 import InquiryForm from "../../components/InquiryForm";
 import PuppyIncluded from "../../components/PuppyIncluded";
 import PuppyParents from "../../components/PuppyParents";
+import PuppySiblings from "../../components/PuppySiblings";
+import AboutBreeder from "../../components/AboutBreeder";
 import RelatedPuppies from "../../components/RelatedPuppies";
 import Testimonials from "../../components/Testimonials";
 import DeliveryInfo from "../../components/DeliveryInfo";
@@ -12,6 +14,8 @@ import StickyReserveBar from "../../components/StickyReserveBar";
 import { getPuppyDetail } from "@/lib/queries/puppyDetail";
 import { getRelatedPuppies } from "@/lib/queries/relatedPuppies";
 import { getReviews } from "@/lib/queries/testimonials";
+import { getSiblings } from "@/lib/queries/siblings";
+import { getSettings } from "@/lib/queries/settings";
 
 const statusColor: Record<string, string> = {
   available: "bg-gold text-forest",
@@ -29,9 +33,11 @@ export default async function PuppyDetailPage({
 
   if (!puppy) notFound();
 
-  const [related, reviews] = await Promise.all([
+  const [related, reviews, siblings, settings] = await Promise.all([
     getRelatedPuppies(puppy.breedId, puppy.id),
     getReviews(4),
+    getSiblings(puppy.litterId, puppy.id),
+    getSettings(),
   ]);
 
   return (
@@ -103,9 +109,11 @@ export default async function PuppyDetailPage({
       </section>
 
       <PuppyParents puppyName={puppy.name} mom={puppy.mom} dad={puppy.dad} />
+      <PuppySiblings puppyName={puppy.name} siblings={siblings} />
       <DeliveryInfo />
       <RelatedPuppies puppies={related} breedName={puppy.breed} />
       <Testimonials reviews={reviews} />
+      <AboutBreeder settings={settings} />
 
       <Footer />
       <StickyReserveBar price={puppy.price} status={puppy.status} />

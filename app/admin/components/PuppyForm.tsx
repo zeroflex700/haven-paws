@@ -12,6 +12,7 @@ type PuppyData = {
   status?: string;
   color?: string;
   weight_estimate?: number;
+  litter_id?: string;
   vet_checked?: boolean;
   vaccinated?: boolean;
   is_published?: boolean;
@@ -82,6 +83,17 @@ export default function PuppyForm({
         defaultValue={puppy?.weight_estimate}
         className={inputClass}
       />
+
+      <label className={labelClass}>Litter ID</label>
+      <input
+        name="litter_id"
+        defaultValue={puppy?.litter_id}
+        placeholder="e.g. litter-2026-golden-01"
+        className={inputClass}
+      />
+      <p className="text-xs text-sage mt-1">
+        Use the same Litter ID for puppies from the same litter to show them as siblings.
+      </p>
 
       <label className={labelClass}>Description</label>
       <textarea
