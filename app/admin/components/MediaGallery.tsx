@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { ChevronUp, ChevronDown, Star, Trash2 } from "lucide-react";
 import { deleteMedia, setCover, moveMedia } from "../puppies/media-actions";
+import { cldThumb } from "@/lib/cloudinary";
 import type { MediaItem } from "@/lib/queries/media";
 
 export default function MediaGallery({
@@ -28,9 +29,9 @@ export default function MediaGallery({
           <div className="w-16 h-16 rounded-md overflow-hidden bg-cream-alt shrink-0">
             {m.media_type === "image" ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={m.url} alt="" className="w-full h-full object-cover" />
+              <img src={cldThumb(m.url, 128)} alt="" className="w-full h-full object-cover" />
             ) : (
-              <video src={m.url} className="w-full h-full object-cover" />
+              <video src={m.url} className="w-full h-full object-cover" preload="metadata" />
             )}
           </div>
 

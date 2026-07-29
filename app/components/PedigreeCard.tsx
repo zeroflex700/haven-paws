@@ -1,3 +1,5 @@
+import { cldOptimized } from "@/lib/cloudinary";
+
 type Status = "available" | "reserved" | "sold";
 
 const statusColor: Record<Status, string> = {
@@ -24,7 +26,12 @@ export default function PedigreeCard({
       <div className="aspect-square bg-cream-alt flex items-center justify-center overflow-hidden">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={image} alt={name} className="w-full h-full object-cover" />
+          <img
+            src={cldOptimized(image, 500)}
+            alt={name}
+            loading="lazy"
+            className="w-full h-full object-cover"
+          />
         ) : (
           <span className="text-sage text-xs">Photo coming soon</span>
         )}
