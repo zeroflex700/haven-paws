@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { cldOptimized } from "@/lib/cloudinary";
+import { ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { cldOptimized, cldThumb } from "@/lib/cloudinary";
 
 export default function PuppyGallery({
   media,
@@ -22,9 +23,17 @@ export default function PuppyGallery({
 
   const current = media[active];
 
+  function goPrev() {
+    setActive((i) => (i === 0 ? media.length - 1 : i - 1));
+  }
+
+  function goNext() {
+    setActive((i) => (i === media.length - 1 ? 0 : i + 1));
+  }
+
   return (
     <div>
-      <div className="aspect-square rounded-lg overflow-hidden bg-cream-alt">
+      <div className="relative aspect-square rounded-lg overflow-hidden bg-cream-alt">
         {current.mediaType === "image" ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -35,26 +44,51 @@ export default function PuppyGallery({
         ) : (
           <video src={current.url} controls className="w-full h-full object-cover" />
         )}
+
+        {media.length > 1 && (
+          <>
+            <button
+              onClick={goPrev}
+              aria-label="Previous photo"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 flex items-center justify-center"
+            >
+              <ChevronLeft size={20} className="text-forest" />
+            </button>
+            <button
+              onClick={goNext}
+              aria-label="Next photo"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 flex items-center justify-center"
+            >
+              <ChevronRight size={20} className="text-forest" />
+            </button>
+            <span className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2.5 py-1 rounded-full">
+              {active + 1} / {media.length}
+            </span>
+          </>
+        )}
       </div>
+
       {media.length > 1 && (
         <div className="flex gap-2 mt-3 overflow-x-auto">
           {media.map((m, i) => (
             <button
               key={i}
               onClick={() => setActive(i)}
-              className={`w-16 h-16 rounded-md overflow-hidden shrink-0 border-2 ${
+              className={`relative w-16 h-16 rounded-md overflow-hidden shrink-0 border-2 ${
                 i === active ? "border-gold" : "border-transparent"
               }`}
             >
               {m.mediaType === "image" ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={cldOptimized(m.url, 128)}
+                  src={cldThumb(m.url, 128)}
                   alt=""
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <video src={m.url} className="w-full h-full object-cover" preload="metadata" />
+                <div className="w-full h-full bg-forest flex items-center justify-center">
+                  <Play size={18} className="text-cream fill-cream" />
+                </div>
               )}
             </button>
           ))}
