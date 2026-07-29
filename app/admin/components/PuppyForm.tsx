@@ -13,6 +13,7 @@ type PuppyData = {
   color?: string;
   weight_estimate?: number;
   litter_id?: string;
+  ready_date?: string;
   vet_checked?: boolean;
   vaccinated?: boolean;
   is_published?: boolean;
@@ -84,6 +85,17 @@ export default function PuppyForm({
         className={inputClass}
       />
 
+      <label className={labelClass}>Ready Date</label>
+      <input
+        name="ready_date"
+        type="date"
+        defaultValue={puppy?.ready_date}
+        className={inputClass}
+      />
+      <p className="text-xs text-sage mt-1">
+        Leave blank if ready to go home now. Otherwise pick the date they&apos;ll be ready.
+      </p>
+
       <label className={labelClass}>Litter ID</label>
       <input
         name="litter_id"
@@ -91,9 +103,6 @@ export default function PuppyForm({
         placeholder="e.g. litter-2026-golden-01"
         className={inputClass}
       />
-      <p className="text-xs text-sage mt-1">
-        Use the same Litter ID for puppies from the same litter to show them as siblings.
-      </p>
 
       <label className={labelClass}>Description</label>
       <textarea

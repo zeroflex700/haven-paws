@@ -16,16 +16,16 @@ export default function PuppiesClient({
   const [filters, setFilters] = useState<Filters>({
     search: searchParams.get("search") ?? "",
     breed: searchParams.get("breed") ?? "all",
-    status: "all",
     sex: "all",
+    readyNow: false,
     sort: "none",
   });
 
   const filtered = useMemo(() => {
     let result = initialPuppies.filter((p) => {
       if (filters.breed !== "all" && p.breed !== filters.breed) return false;
-      if (filters.status !== "all" && p.status !== filters.status) return false;
       if (filters.sex !== "all" && p.sex !== filters.sex) return false;
+      if (filters.readyNow && p.readyLabel !== "Ready to go home") return false;
       if (filters.search.trim()) {
         const term = filters.search.trim().toLowerCase();
         const matches =
@@ -45,12 +45,15 @@ export default function PuppiesClient({
   }, [filters, initialPuppies]);
 
   return (
-    <section className="max-w-6xl mx-auto px-6 pt-12 pb-20">
-      <p className="eyebrow mb-3">Available Puppies</p>
-      <h1 className="font-display text-3xl text-forest mb-2">Find your puppy</h1>
-      <p className="text-ink/70 mb-2">
-        {filtered.length} {filtered.length === 1 ? "puppy" : "puppies"} match your search
-      </p>
+    <section className="max-w-6xl mx-auto px-6 pt-8 pb-20">
+      <div className="relative mb-4">
+        <input
+          value={filters.search}
+          onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+          placeholder="Search by breed or puppy name"
+          className="w-full border border-sage/30 rounded-full px-5 py-3 text-sm focus:outline-none focus:border-gold"
+        />
+      </div>
 
       <PuppyFilters filters={filters} onChange={setFilters} />
 
@@ -59,7 +62,7 @@ export default function PuppiesClient({
           No puppies match these filters. Try adjusting your search.
         </p>
       ) : (
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-8">
           {filtered.map((p) => (
             <PedigreeCard key={p.id} {...p} image={p.coverImage} />
           ))}

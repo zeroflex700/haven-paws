@@ -20,6 +20,7 @@ export async function createPuppy(formData: FormData) {
       ? Number(formData.get("weight_estimate"))
       : null,
     litter_id: (formData.get("litter_id") as string) || null,
+    ready_date: (formData.get("ready_date") as string) || null,
     vet_checked: formData.get("vet_checked") === "on",
     vaccinated: formData.get("vaccinated") === "on",
     is_published: formData.get("is_published") === "on",
@@ -50,6 +51,7 @@ export async function updatePuppy(id: string, formData: FormData) {
         ? Number(formData.get("weight_estimate"))
         : null,
       litter_id: (formData.get("litter_id") as string) || null,
+      ready_date: (formData.get("ready_date") as string) || null,
       vet_checked: formData.get("vet_checked") === "on",
       vaccinated: formData.get("vaccinated") === "on",
       is_published: formData.get("is_published") === "on",

@@ -1,13 +1,14 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { SlidersHorizontal, ArrowUpDown, ChevronDown } from "lucide-react";
 import { BREEDS } from "../data/breeds";
 
 export type Filters = {
   search: string;
   breed: string;
-  status: string;
   sex: string;
+  readyNow: boolean;
   sort: string;
 };
 
@@ -18,66 +19,116 @@ export default function PuppyFilters({
   filters: Filters;
   onChange: (filters: Filters) => void;
 }) {
-  const selectClass =
-    "bg-white border border-sage/30 rounded-full px-4 py-2 text-sm text-ink focus:outline-none focus:border-gold";
+  const [breedOpen, setBreedOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
+  const breedRef = useRef<HTMLDivElement>(null);
+  const sortRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (breedRef.current && !breedRef.current.contains(e.target as Node)) setBreedOpen(false);
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) setSortOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const chipBase =
+    "flex items-center gap-1.5 shrink-0 px-4 py-2 rounded-full text-sm border transition-colors";
+  const chipInactive = "bg-white border-sage/30 text-ink";
+  const chipActive = "bg-forest border-forest text-cream";
+
+  function toggleSex(value: string) {
+    onChange({ ...filters, sex: filters.sex === value ? "all" : value });
+  }
 
   return (
-    <div>
-      <div className="relative mb-4">
-        <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-sage" />
-        <input
-          value={filters.search}
-          onChange={(e) => onChange({ ...filters, search: e.target.value })}
-          placeholder="Search by breed or puppy name"
-          className="w-full border border-sage/30 rounded-full pl-11 pr-4 py-2.5 text-sm focus:outline-none focus:border-gold"
-        />
+    <div className="flex gap-2 overflow-x-auto pb-4 -mx-6 px-6">
+      <div className="relative shrink-0" ref={breedRef}>
+        <button
+          onClick={() => setBreedOpen(!breedOpen)}
+          className={`${chipBase} ${filters.breed !== "all" ? chipActive : chipInactive}`}
+        >
+          <SlidersHorizontal size={14} />
+          {filters.breed === "all" ? "Filter" : filters.breed}
+          <ChevronDown size={14} />
+        </button>
+        {breedOpen && (
+          <div className="absolute top-full left-0 mt-2 w-56 max-h-72 overflow-y-auto bg-white border border-sage/20 rounded-lg shadow-lg z-20 py-2">
+            <button
+              onClick={() => {
+                onChange({ ...filters, breed: "all" });
+                setBreedOpen(false);
+              }}
+              className="block w-full text-left px-4 py-2 text-sm hover:bg-cream-alt"
+            >
+              All Breeds
+            </button>
+            {BREEDS.map((b) => (
+              <button
+                key={b}
+                onClick={() => {
+                  onChange({ ...filters, breed: b });
+                  setBreedOpen(false);
+                }}
+                className="block w-full text-left px-4 py-2 text-sm hover:bg-cream-alt"
+              >
+                {b}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      <div className="flex flex-wrap gap-3 pb-6">
-        <select
-          className={selectClass}
-          value={filters.breed}
-          onChange={(e) => onChange({ ...filters, breed: e.target.value })}
+      <div className="relative shrink-0" ref={sortRef}>
+        <button
+          onClick={() => setSortOpen(!sortOpen)}
+          className={`${chipBase} ${filters.sort !== "none" ? chipActive : chipInactive}`}
         >
-          <option value="all">All Breeds</option>
-          {BREEDS.map((b) => (
-            <option key={b} value={b}>
-              {b}
-            </option>
-          ))}
-        </select>
-
-        <select
-          className={selectClass}
-          value={filters.status}
-          onChange={(e) => onChange({ ...filters, status: e.target.value })}
-        >
-          <option value="all">All Statuses</option>
-          <option value="available">Available</option>
-          <option value="reserved">Reserved</option>
-          <option value="sold">Sold</option>
-        </select>
-
-        <select
-          className={selectClass}
-          value={filters.sex}
-          onChange={(e) => onChange({ ...filters, sex: e.target.value })}
-        >
-          <option value="all">Any Gender</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-        </select>
-
-        <select
-          className={selectClass}
-          value={filters.sort}
-          onChange={(e) => onChange({ ...filters, sort: e.target.value })}
-        >
-          <option value="none">Sort By</option>
-          <option value="price-asc">Price: Low to High</option>
-          <option value="price-desc">Price: High to Low</option>
-        </select>
+          <ArrowUpDown size={14} />
+          Sort
+          <ChevronDown size={14} />
+        </button>
+        {sortOpen && (
+          <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-sage/20 rounded-lg shadow-lg z-20 py-2">
+            {[
+              { value: "none", label: "Default" },
+              { value: "price-asc", label: "Price: Low to High" },
+              { value: "price-desc", label: "Price: High to Low" },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => {
+                  onChange({ ...filters, sort: opt.value });
+                  setSortOpen(false);
+                }}
+                className="block w-full text-left px-4 py-2 text-sm hover:bg-cream-alt"
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
+
+      <button
+        onClick={() => toggleSex("female")}
+        className={`${chipBase} ${filters.sex === "female" ? chipActive : chipInactive}`}
+      >
+        Female
+      </button>
+      <button
+        onClick={() => toggleSex("male")}
+        className={`${chipBase} ${filters.sex === "male" ? chipActive : chipInactive}`}
+      >
+        Male
+      </button>
+      <button
+        onClick={() => onChange({ ...filters, readyNow: !filters.readyNow })}
+        className={`${chipBase} ${filters.readyNow ? chipActive : chipInactive}`}
+      >
+        Ready to go home
+      </button>
     </div>
   );
 }

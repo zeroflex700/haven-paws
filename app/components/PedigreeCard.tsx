@@ -1,36 +1,33 @@
-
 import Link from "next/link";
+import { Video } from "lucide-react";
 import { cldOptimized } from "@/lib/cloudinary";
 
 type Status = "available" | "reserved" | "sold";
-
-const statusColor: Record<Status, string> = {
-  available: "bg-gold text-forest",
-  reserved: "bg-sage text-cream",
-  sold: "border border-ink/40 text-ink/60",
-};
 
 export default function PedigreeCard({
   id,
   name,
   breed,
-  price,
+  sex,
+  ageWeeks,
+  readyLabel,
   status,
   image,
+  hasVideo,
 }: {
   id: string;
   name: string;
   breed: string;
-  price: number;
+  sex: "male" | "female";
+  ageWeeks: number | null;
+  readyLabel: string;
   status: Status;
   image?: string | null;
+  hasVideo?: boolean;
 }) {
   return (
-    <Link
-      href={`/puppies/${id}`}
-      className="block bg-white rounded-lg overflow-hidden border border-sage/20 relative"
-    >
-      <div className="aspect-square bg-cream-alt flex items-center justify-center overflow-hidden">
+    <Link href={`/puppies/${id}`} className="block">
+      <div className="aspect-square rounded-lg overflow-hidden bg-cream-alt relative">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -40,20 +37,28 @@ export default function PedigreeCard({
             className="w-full h-full object-cover"
           />
         ) : (
-          <span className="text-sage text-xs">Photo coming soon</span>
+          <div className="w-full h-full flex items-center justify-center text-sage text-xs">
+            Photo coming soon
+          </div>
+        )}
+        {status !== "available" && (
+          <span className="absolute top-2 left-2 text-[9px] uppercase tracking-wider px-2 py-1 rounded-full bg-white/90 text-ink">
+            {status}
+          </span>
+        )}
+        {hasVideo && (
+          <span className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center">
+            <Video size={14} className="text-white" />
+          </span>
         )}
       </div>
-      <span
-        className={`absolute top-3 right-3 text-[10px] uppercase tracking-wider px-3 py-1 rounded-full ${statusColor[status]}`}
-      >
-        {status}
-      </span>
-      <div className="p-4">
-        <h3 className="font-display text-lg text-forest">{name}</h3>
-        <p className="eyebrow mt-1 mb-3">{breed}</p>
-        <div className="gold-rule mb-3" />
-        <p className="text-ink font-medium">${price.toLocaleString()}</p>
-      </div>
+      <p className="text-xs text-sage mt-2">{breed}</p>
+      <p className="text-forest font-medium border-b border-gold/60 inline-block">{name}</p>
+      <p className="text-sm text-ink/70 capitalize mt-0.5">
+        {sex}
+        {ageWeeks !== null ? ` · ${ageWeeks} weeks` : ""}
+      </p>
+      <p className="text-xs text-ink/60">{readyLabel}</p>
     </Link>
   );
 }
