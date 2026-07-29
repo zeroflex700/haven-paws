@@ -5,7 +5,7 @@ export type AdminPuppyRow = {
   name: string;
   sex: "male" | "female";
   price: number;
-  status: "available" | "reserved" | "sold";
+  status: "available" | "reserved" | "sold" | "hidden";
   is_published: boolean;
   breeds: { name: string } | null;
 };
