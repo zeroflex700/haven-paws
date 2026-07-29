@@ -7,6 +7,7 @@ import PuppyIncluded from "../../components/PuppyIncluded";
 import PuppyParents from "../../components/PuppyParents";
 import PuppySiblings from "../../components/PuppySiblings";
 import AboutBreeder from "../../components/AboutBreeder";
+import BreedFacts from "../../components/BreedFacts";
 import RelatedPuppies from "../../components/RelatedPuppies";
 import Testimonials from "../../components/Testimonials";
 import DeliveryInfo from "../../components/DeliveryInfo";
@@ -16,6 +17,7 @@ import { getRelatedPuppies } from "@/lib/queries/relatedPuppies";
 import { getReviews } from "@/lib/queries/testimonials";
 import { getSiblings } from "@/lib/queries/siblings";
 import { getSettings } from "@/lib/queries/settings";
+import { getBreedInfo } from "@/lib/queries/breedInfo";
 
 const statusColor: Record<string, string> = {
   available: "bg-gold text-forest",
@@ -33,11 +35,12 @@ export default async function PuppyDetailPage({
 
   if (!puppy) notFound();
 
-  const [related, reviews, siblings, settings] = await Promise.all([
+  const [related, reviews, siblings, settings, breedInfo] = await Promise.all([
     getRelatedPuppies(puppy.breedId, puppy.id),
     getReviews(4),
     getSiblings(puppy.litterId, puppy.id),
     getSettings(),
+    getBreedInfo(puppy.breedId),
   ]);
 
   return (
@@ -113,6 +116,7 @@ export default async function PuppyDetailPage({
       <DeliveryInfo />
       <RelatedPuppies puppies={related} breedName={puppy.breed} />
       <Testimonials reviews={reviews} />
+      <BreedFacts breed={breedInfo} />
       <AboutBreeder settings={settings} />
 
       <Footer />

@@ -7,7 +7,7 @@ export default async function AdminPuppiesPage() {
 
   return (
     <main className="px-5 pt-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-2">
         <div>
           <p className="eyebrow mb-1">Haven Paws Admin</p>
           <h1 className="font-display text-2xl text-forest">Manage Puppies</h1>
@@ -19,6 +19,9 @@ export default async function AdminPuppiesPage() {
           + Add
         </Link>
       </div>
+      <Link href="/admin/breeds" className="text-sm text-forest border-b border-gold pb-0.5 mb-6 inline-block">
+        Manage Breed Info →
+      </Link>
       <PuppyListView puppies={puppies} />
     </main>
   );
