@@ -5,13 +5,29 @@ import { revalidatePath } from "next/cache";
 
 export async function updatePageHeroImage(slug: string, url: string) {
   const supabase = await createClient();
+  const { error } = await supabase.from("page_content").upsert({ slug, hero_image_url: url });
+  if (error) throw new Error(error.message);
+  revalidatePath(`/${slug}`);
+  revalidatePath(`/admin/content/${slug}`);
+}
+
+export async function updatePageExtraImage(slug: string, key: string, url: string) {
+  const supabase = await createClient();
+
+  const { data: existing } = await supabase
+    .from("page_content")
+    .select("extra_images")
+    .eq("slug", slug)
+    .single();
+
+  const current = (existing?.extra_images as Record<string, string>) ?? {};
+  const updated = { ...current, [key]: url };
 
   const { error } = await supabase
     .from("page_content")
-    .upsert({ slug, hero_image_url: url });
+    .upsert({ slug, extra_images: updated });
 
   if (error) throw new Error(error.message);
-
   revalidatePath(`/${slug}`);
   revalidatePath(`/admin/content/${slug}`);
 }
