@@ -59,7 +59,7 @@ export default function SocialLinks({
           target={url ? "_blank" : undefined}
           rel="noopener noreferrer"
           aria-label={label}
-          className="w-9 h-9 rounded-full bg-forest-light flex items-center justify-center hover:bg-gold transition-colors text-cream"
+          className="w-9 h-9 rounded-full bg-white border border-sage/30 flex items-center justify-center hover:border-gold hover:text-gold transition-colors text-forest"
         >
           <Icon />
         </a>
