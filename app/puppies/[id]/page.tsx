@@ -1,3 +1,4 @@
+
 import { notFound } from "next/navigation";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
@@ -73,6 +74,9 @@ export default async function PuppyDetailPage({
             puppy={{
               id: puppy.id,
               name: puppy.name,
+              breed: puppy.breed,
+              sex: puppy.sex,
+              ageWeeks: puppy.ageWeeks,
               price: puppy.price,
               depositAmount: puppy.depositAmount,
               coverImage,

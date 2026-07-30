@@ -1,14 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { X, User, Truck, Heart, CreditCard } from "lucide-react";
+import { X, User, Truck, Heart, CreditCard, ChevronDown } from "lucide-react";
 import { cldOptimized } from "@/lib/cloudinary";
 import { submitTakeMeHome } from "../puppies/[id]/checkout-actions";
+import CheckoutSummarySheet from "./CheckoutSummarySheet";
 import type { AppSettings } from "@/lib/queries/settings";
 
 type Puppy = {
   id: string;
   name: string;
+  breed: string;
+  sex: "male" | "female";
+  ageWeeks: number | null;
   price: number;
   depositAmount: number;
   coverImage: string | null;
@@ -33,7 +37,7 @@ export default function TakeMeHomeModal({
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
-  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+  const [showSummary, setShowSummary] = useState(false);
 
   const [form, setForm] = useState({
     email: "",
@@ -59,6 +63,15 @@ export default function TakeMeHomeModal({
   const subtotal = puppy.price + deliveryCost + essentialsCost;
   const hasDeposit = puppy.depositAmount > 0;
   const dueNow = form.paymentType === "deposit" && hasDeposit ? puppy.depositAmount : subtotal;
+
+  const lineItems = [
+    { label: puppy.name, amount: puppy.price },
+    ...(deliveryCost > 0 ? [{ label: "Delivery", amount: deliveryCost }] : []),
+    ...(form.starterKit ? [{ label: "Starter Care Kit", amount: settings.starterKitPrice }] : []),
+    ...(form.healthGuarantee
+      ? [{ label: "Extended Health Guarantee", amount: settings.healthGuaranteePrice }]
+      : []),
+  ];
 
   function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -95,7 +108,6 @@ export default function TakeMeHomeModal({
         return;
       }
 
-      setCheckoutUrl(null);
       setDone(true);
     } catch {
       alert("Something went wrong. Please try again.");
@@ -130,9 +142,15 @@ export default function TakeMeHomeModal({
           <h1 className="font-display text-2xl text-forest text-center mb-2">
             Let&apos;s bring {puppy.name} home!
           </h1>
-          <p className="text-center text-sm text-ink/70 mb-6">
-            Estimated total: ${subtotal.toLocaleString()}
-          </p>
+
+          <button
+            onClick={() => setShowSummary(true)}
+            className="flex items-center justify-center gap-2 mx-auto text-sm text-ink/80 mb-6"
+          >
+            Show summary:{" "}
+            <span className="underline font-medium">${subtotal.toLocaleString()}</span>
+            <ChevronDown size={16} />
+          </button>
 
           {!done && (
             <div className="flex justify-between mb-8">
@@ -378,30 +396,12 @@ export default function TakeMeHomeModal({
                   <h2 className="font-display text-lg text-forest mb-4">Payment</h2>
 
                   <div className="border border-sage/20 rounded-lg p-4 mb-6 text-sm space-y-1.5">
-                    <div className="flex justify-between">
-                      <span className="text-ink/70">{puppy.name}</span>
-                      <span className="text-ink">${puppy.price.toLocaleString()}</span>
-                    </div>
-                    {deliveryCost > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-ink/70">Delivery</span>
-                        <span className="text-ink">${deliveryCost.toLocaleString()}</span>
+                    {lineItems.map((item) => (
+                      <div key={item.label} className="flex justify-between">
+                        <span className="text-ink/70">{item.label}</span>
+                        <span className="text-ink">${item.amount.toLocaleString()}</span>
                       </div>
-                    )}
-                    {form.starterKit && (
-                      <div className="flex justify-between">
-                        <span className="text-ink/70">Starter Care Kit</span>
-                        <span className="text-ink">${settings.starterKitPrice.toLocaleString()}</span>
-                      </div>
-                    )}
-                    {form.healthGuarantee && (
-                      <div className="flex justify-between">
-                        <span className="text-ink/70">Extended Health Guarantee</span>
-                        <span className="text-ink">
-                          ${settings.healthGuaranteePrice.toLocaleString()}
-                        </span>
-                      </div>
-                    )}
+                    ))}
                     <div className="flex justify-between pt-2 border-t border-sage/20 font-medium">
                       <span className="text-forest">Total</span>
                       <span className="text-forest">${subtotal.toLocaleString()}</span>
@@ -458,6 +458,21 @@ export default function TakeMeHomeModal({
           )}
         </div>
       </div>
+
+      {showSummary && (
+        <CheckoutSummarySheet
+          puppyName={puppy.name}
+          puppyBreed={puppy.breed}
+          puppySex={puppy.sex}
+          puppyAgeWeeks={puppy.ageWeeks}
+          puppyId={puppy.id}
+          coverImage={puppy.coverImage}
+          lineItems={lineItems}
+          subtotal={subtotal}
+          supportPhone={settings.supportPhone}
+          onClose={() => setShowSummary(false)}
+        />
+      )}
     </div>
   );
 }

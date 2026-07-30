@@ -7,6 +7,9 @@ import type { AppSettings } from "@/lib/queries/settings";
 type Puppy = {
   id: string;
   name: string;
+  breed: string;
+  sex: "male" | "female";
+  ageWeeks: number | null;
   price: number;
   depositAmount: number;
   coverImage: string | null;

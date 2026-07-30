@@ -10,6 +10,7 @@ export type AppSettings = {
   deliveryFee: number;
   starterKitPrice: number;
   healthGuaranteePrice: number;
+  supportPhone: string;
 };
 
 const defaults: AppSettings = {
@@ -21,6 +22,7 @@ const defaults: AppSettings = {
   deliveryFee: 150,
   starterKitPrice: 89,
   healthGuaranteePrice: 149,
+  supportPhone: "",
 };
 
 function mapRow(data: {
@@ -32,6 +34,7 @@ function mapRow(data: {
   delivery_fee: number | null;
   starter_kit_price: number | null;
   health_guarantee_price: number | null;
+  support_phone: string | null;
 }): AppSettings {
   return {
     breederName: data.breeder_name ?? defaults.breederName,
@@ -42,6 +45,7 @@ function mapRow(data: {
     deliveryFee: data.delivery_fee ?? defaults.deliveryFee,
     starterKitPrice: data.starter_kit_price ?? defaults.starterKitPrice,
     healthGuaranteePrice: data.health_guarantee_price ?? defaults.healthGuaranteePrice,
+    supportPhone: data.support_phone ?? "",
   };
 }
 
@@ -49,7 +53,7 @@ export async function getSettings(): Promise<AppSettings> {
   const { data } = await supabase
     .from("app_settings")
     .select(
-      "breeder_name, years_experience, specialties, bio, badge_text, delivery_fee, starter_kit_price, health_guarantee_price"
+      "breeder_name, years_experience, specialties, bio, badge_text, delivery_fee, starter_kit_price, health_guarantee_price, support_phone"
     )
     .eq("id", "main")
     .single();
@@ -63,7 +67,7 @@ export async function getSettingsAdmin(): Promise<AppSettings> {
   const { data } = await supabase
     .from("app_settings")
     .select(
-      "breeder_name, years_experience, specialties, bio, badge_text, delivery_fee, starter_kit_price, health_guarantee_price"
+      "breeder_name, years_experience, specialties, bio, badge_text, delivery_fee, starter_kit_price, health_guarantee_price, support_phone"
     )
     .eq("id", "main")
     .single();

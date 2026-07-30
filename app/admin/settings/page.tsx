@@ -27,6 +27,14 @@ export default async function AdminSettingsPage() {
         <label className="block text-sm text-ink/80 mb-1">Bio</label>
         <textarea name="bio" defaultValue={settings.bio} rows={4} className={`${inputClass} mb-6`} />
 
+        <label className="block text-sm text-ink/80 mb-1">Support Phone Number</label>
+        <input
+          name="support_phone"
+          defaultValue={settings.supportPhone}
+          placeholder="e.g. 866-306-6064"
+          className={`${inputClass} mb-6`}
+        />
+
         <h2 className="font-display text-lg text-forest mb-3">Checkout Pricing</h2>
 
         <label className="block text-sm text-ink/80 mb-1">Nationwide Delivery Fee ($)</label>
