@@ -18,11 +18,18 @@ export async function updateSettings(formData: FormData) {
       starter_kit_price: Number(formData.get("starter_kit_price") || 0),
       health_guarantee_price: Number(formData.get("health_guarantee_price") || 0),
       support_phone: formData.get("support_phone") as string,
+      support_hours: formData.get("support_hours") as string,
+      tagline: formData.get("tagline") as string,
+      promise_text: formData.get("promise_text") as string,
+      facebook_url: formData.get("facebook_url") as string,
+      instagram_url: formData.get("instagram_url") as string,
+      youtube_url: formData.get("youtube_url") as string,
+      twitter_url: formData.get("twitter_url") as string,
     })
     .eq("id", "main");
 
   if (error) throw new Error(error.message);
 
   revalidatePath("/admin/settings");
-  revalidatePath("/puppies", "layout");
+  revalidatePath("/", "layout");
 }

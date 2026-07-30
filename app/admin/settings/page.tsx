@@ -9,11 +9,17 @@ export default async function AdminSettingsPage() {
   return (
     <main className="px-5 pt-6 pb-10">
       <p className="eyebrow mb-1">Haven Paws Admin</p>
-      <h1 className="font-display text-2xl text-forest mb-6">Breeder Info</h1>
+      <h1 className="font-display text-2xl text-forest mb-6">Site Settings</h1>
 
       <form action={updateSettings}>
         <label className="block text-sm text-ink/80 mb-1">Breeder / Business Name</label>
         <input name="breeder_name" defaultValue={settings.breederName} className={`${inputClass} mb-4`} />
+
+        <label className="block text-sm text-ink/80 mb-1">Tagline</label>
+        <input name="tagline" defaultValue={settings.tagline} className={`${inputClass} mb-4`} />
+
+        <label className="block text-sm text-ink/80 mb-1">Promise Statement</label>
+        <textarea name="promise_text" defaultValue={settings.promiseText} rows={3} className={`${inputClass} mb-6`} />
 
         <label className="block text-sm text-ink/80 mb-1">Badge Text</label>
         <input name="badge_text" defaultValue={settings.badgeText} className={`${inputClass} mb-4`} />
@@ -27,15 +33,34 @@ export default async function AdminSettingsPage() {
         <label className="block text-sm text-ink/80 mb-1">Bio</label>
         <textarea name="bio" defaultValue={settings.bio} rows={4} className={`${inputClass} mb-6`} />
 
+        <h2 className="font-display text-lg text-forest mb-3">Contact</h2>
+
         <label className="block text-sm text-ink/80 mb-1">Support Phone Number</label>
         <input
           name="support_phone"
           defaultValue={settings.supportPhone}
           placeholder="e.g. 866-306-6064"
-          className={`${inputClass} mb-6`}
+          className={`${inputClass} mb-4`}
         />
 
-        <h2 className="font-display text-lg text-forest mb-3">Checkout Pricing</h2>
+        <label className="block text-sm text-ink/80 mb-1">Support Hours</label>
+        <input name="support_hours" defaultValue={settings.supportHours} className={`${inputClass} mb-6`} />
+
+        <h2 className="font-display text-lg text-forest mb-3">Social Media Links</h2>
+
+        <label className="block text-sm text-ink/80 mb-1">Facebook URL</label>
+        <input name="facebook_url" defaultValue={settings.facebookUrl} className={`${inputClass} mb-4`} />
+
+        <label className="block text-sm text-ink/80 mb-1">Instagram URL</label>
+        <input name="instagram_url" defaultValue={settings.instagramUrl} className={`${inputClass} mb-4`} />
+
+        <label className="block text-sm text-ink/80 mb-1">YouTube URL</label>
+        <input name="youtube_url" defaultValue={settings.youtubeUrl} className={`${inputClass} mb-4`} />
+
+        <label className="block text-sm text-ink/80 mb-1">X / Twitter URL</label>
+        <input name="twitter_url" defaultValue={settings.twitterUrl} className={`${inputClass} mb-4`} />
+
+        <h2 className="font-display text-lg text-forest mb-3 mt-6">Checkout Pricing</h2>
 
         <label className="block text-sm text-ink/80 mb-1">Nationwide Delivery Fee ($)</label>
         <input
