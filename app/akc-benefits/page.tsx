@@ -1,7 +1,7 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import FaqAccordion from "../components/FaqAccordion";
-import { getPageHeroImage } from "@/lib/queries/pageContent";
+import { getPageImages } from "@/lib/queries/pageContent";
 import { cldOptimized } from "@/lib/cloudinary";
 
 const SECTIONS = [
@@ -38,7 +38,7 @@ const SECTIONS = [
 ];
 
 export default async function AkcBenefitsPage() {
-  const heroImage = await getPageHeroImage("akc-benefits");
+  const { heroImage } = await getPageImages("akc-benefits");
 
   return (
     <main>

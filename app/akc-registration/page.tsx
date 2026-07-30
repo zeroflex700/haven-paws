@@ -1,7 +1,7 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import FaqAccordion from "../components/FaqAccordion";
-import { getPageHeroImage } from "@/lib/queries/pageContent";
+import { getPageImages } from "@/lib/queries/pageContent";
 import { cldOptimized } from "@/lib/cloudinary";
 
 const FAQS = [
@@ -53,7 +53,7 @@ const FAQS = [
 ];
 
 export default async function AkcRegistrationPage() {
-  const heroImage = await getPageHeroImage("akc-registration");
+  const { heroImage } = await getPageImages("akc-registration");
 
   return (
     <main>

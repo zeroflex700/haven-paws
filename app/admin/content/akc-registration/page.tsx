@@ -1,8 +1,8 @@
-import { getPageHeroImageAdmin } from "@/lib/queries/pageContent";
+import { getPageImagesAdmin } from "@/lib/queries/pageContent";
 import PageHeroUploader from "../../components/PageHeroUploader";
 
 export default async function AdminAkcRegistrationContentPage() {
-  const heroImage = await getPageHeroImageAdmin("akc-registration");
+  const { heroImage } = await getPageImagesAdmin("akc-registration");
 
   return (
     <main className="px-5 pt-6 pb-10">
