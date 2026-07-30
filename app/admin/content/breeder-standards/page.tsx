@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getPageImagesAdmin } from "@/lib/queries/pageContent";
 import PageHeroVideoUploader from "../../components/PageHeroVideoUploader";
 import NamedImageUploader from "../../components/NamedImageUploader";
@@ -12,7 +13,7 @@ export default async function AdminBreederStandardsContentPage() {
       <h1 className="font-display text-2xl text-forest mb-2">Breeder Standards Page</h1>
       <p className="text-sm text-sage mb-6">
         Manage advisory board members separately at{" "}
-        <a href="/admin/board" className="underline text-forest">/admin/board</a>.
+        <Link href="/admin/board" className="underline text-forest">/admin/board</Link>.
       </p>
 
       <p className="font-display text-lg text-forest mb-3">Hero Video</p>
