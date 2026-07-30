@@ -1,4 +1,4 @@
-import { getPageImagesAdmin } from "@/lib/queries/pageContent";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import PageHeroVideoUploader from "../../components/PageHeroVideoUploader";
 
@@ -16,9 +16,9 @@ export default async function AdminReviewsContentPage() {
       <h1 className="font-display text-2xl text-forest mb-2">Reviews Page</h1>
       <p className="text-sm text-sage mb-4">
         Upload a hero video for the top of the reviews page. Manage individual reviews at{" "}
-        <a href="/admin/reviews" className="underline text-forest">
+        <Link href="/admin/reviews" className="underline text-forest">
           /admin/reviews
-        </a>
+        </Link>
         .
       </p>
       <PageHeroVideoUploader slug="reviews" currentUrl={data?.hero_video_url ?? null} />
