@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 @theme {
-  --color-cream: #FAF6EE;
-  --color-cream-alt: #F3EEE1;
-  --color-forest: #16302A;
-  --color-forest-light: #2F4F42;
-  --color-sage: #8A9A8C;
-  --color-gold: #B8935A;
-  --color-ink: #1B1B18;
+  --color-cream: #FAFAF8;
+  --color-cream-alt: #F3F4F6;
+  --color-forest: #4E5D78;
+  --color-forest-light: #6B7A94;
+  --color-sage: #6B7280;
+  --color-gold: #22C55E;
+  --color-ink: #222222;
 
   --font-display: var(--font-fraunces), serif;
   --font-body: var(--font-inter), sans-serif;
