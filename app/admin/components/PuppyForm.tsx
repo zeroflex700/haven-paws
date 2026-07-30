@@ -1,5 +1,8 @@
 "use client";
 
+import IncludedItemsPicker from "./IncludedItemsPicker";
+import type { IncludedItemKey } from "@/lib/includedItems";
+
 type Breed = { id: string; name: string };
 type PuppyData = {
   id?: string;
@@ -14,6 +17,7 @@ type PuppyData = {
   weight_estimate?: number;
   litter_id?: string;
   ready_date?: string;
+  included_items?: IncludedItemKey[];
   vet_checked?: boolean;
   vaccinated?: boolean;
   is_published?: boolean;
@@ -92,9 +96,6 @@ export default function PuppyForm({
         defaultValue={puppy?.ready_date}
         className={inputClass}
       />
-      <p className="text-xs text-sage mt-1">
-        Leave blank if ready to go home now. Otherwise pick the date they&apos;ll be ready.
-      </p>
 
       <label className={labelClass}>Litter ID</label>
       <input
@@ -163,6 +164,12 @@ export default function PuppyForm({
           Published (visible on site)
         </label>
       </div>
+
+      <label className={labelClass}>What&apos;s Included</label>
+      <p className="text-xs text-sage mb-1">
+        Check everything that applies to this puppy.
+      </p>
+      <IncludedItemsPicker selected={puppy?.included_items ?? []} />
 
       <button
         type="submit"

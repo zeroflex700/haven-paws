@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
+import type { IncludedItemKey } from "@/lib/includedItems";
 
 export type ParentInfo = {
   name: string | null;
@@ -26,6 +27,7 @@ export type PuppyDetail = {
   microchipId: string | null;
   birthDate: string | null;
   ageWeeks: number | null;
+  includedItems: IncludedItemKey[];
   media: { url: string; mediaType: "image" | "video"; isCover: boolean }[];
   mom: ParentInfo;
   dad: ParentInfo;
@@ -42,7 +44,7 @@ export async function getPuppyDetail(id: string): Promise<PuppyDetail | null> {
     .from("puppies")
     .select(
       `id, name, sex, price, deposit_amount, status, description, color, weight_estimate,
-       vet_checked, vaccinated, microchip_id, birth_date, breed_id, litter_id,
+       vet_checked, vaccinated, microchip_id, birth_date, breed_id, litter_id, included_items,
        mom_name, mom_breed, mom_weight, mom_registration, mom_photo_url,
        dad_name, dad_breed, dad_weight, dad_registration, dad_photo_url,
        breeds ( name ),
@@ -70,6 +72,7 @@ export async function getPuppyDetail(id: string): Promise<PuppyDetail | null> {
     birth_date: string | null;
     breed_id: string;
     litter_id: string | null;
+    included_items: IncludedItemKey[] | null;
     mom_name: string | null;
     mom_breed: string | null;
     mom_weight: string | null;
@@ -102,6 +105,7 @@ export async function getPuppyDetail(id: string): Promise<PuppyDetail | null> {
     microchipId: raw.microchip_id,
     birthDate: raw.birth_date,
     ageWeeks: calcAgeWeeks(raw.birth_date),
+    includedItems: raw.included_items ?? [],
     media: (raw.puppy_media ?? [])
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((m) => ({ url: m.url, mediaType: m.media_type, isCover: m.is_cover })),

@@ -1,4 +1,3 @@
-
 import { notFound } from "next/navigation";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
@@ -120,7 +119,7 @@ export default async function PuppyDetailPage({
             )}
           </div>
 
-          <PuppyIncluded />
+          <PuppyIncluded items={puppy.includedItems} />
 
           <div id="inquiry-form" className="mt-6">
             <InquiryForm puppyId={puppy.id} puppyName={puppy.name} />
