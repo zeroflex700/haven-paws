@@ -3,32 +3,42 @@ import { createClient } from "@/lib/supabase/server";
 
 export type PageContentImages = {
   heroImage: string | null;
+  heroVideo: string | null;
   extraImages: Record<string, string>;
+  extraVideos: Record<string, string>;
 };
+
+async function mapPageContent(row: {
+  hero_image_url: string | null;
+  hero_video_url: string | null;
+  extra_images: Record<string, string> | null;
+  extra_videos: Record<string, string> | null;
+} | null): Promise<PageContentImages> {
+  return {
+    heroImage: row?.hero_image_url ?? null,
+    heroVideo: row?.hero_video_url ?? null,
+    extraImages: row?.extra_images ?? {},
+    extraVideos: row?.extra_videos ?? {},
+  };
+}
 
 export async function getPageImages(slug: string): Promise<PageContentImages> {
   const { data } = await supabase
     .from("page_content")
-    .select("hero_image_url, extra_images")
+    .select("hero_image_url, hero_video_url, extra_images, extra_videos")
     .eq("slug", slug)
     .single();
 
-  return {
-    heroImage: data?.hero_image_url ?? null,
-    extraImages: (data?.extra_images as Record<string, string>) ?? {},
-  };
+  return mapPageContent(data);
 }
 
 export async function getPageImagesAdmin(slug: string): Promise<PageContentImages> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("page_content")
-    .select("hero_image_url, extra_images")
+    .select("hero_image_url, hero_video_url, extra_images, extra_videos")
     .eq("slug", slug)
     .single();
 
-  return {
-    heroImage: data?.hero_image_url ?? null,
-    extraImages: (data?.extra_images as Record<string, string>) ?? {},
-  };
+  return mapPageContent(data);
 }

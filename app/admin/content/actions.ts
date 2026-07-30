@@ -36,3 +36,21 @@ export async function updatePageExtraImage(slug: string, key: string, url: strin
   revalidatePath(`/${slug}`);
   revalidatePath(`/admin/content/${slug}`);
 }
+
+export async function updatePageExtraVideo(slug: string, key: string, url: string) {
+  const supabase = await createClient();
+
+  const { data: existing } = await supabase
+    .from("page_content")
+    .select("extra_videos")
+    .eq("slug", slug)
+    .single();
+
+  const current = (existing?.extra_videos as Record<string, string>) ?? {};
+  const updated = { ...current, [key]: url };
+
+  const { error } = await supabase.from("page_content").upsert({ slug, extra_videos: updated });
+  if (error) throw new Error(error.message);
+  revalidatePath(`/${slug}`);
+  revalidatePath(`/admin/content/${slug}`);
+}
