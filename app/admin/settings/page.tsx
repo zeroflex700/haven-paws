@@ -33,7 +33,7 @@ export default async function AdminSettingsPage() {
         <label className="block text-sm text-ink/80 mb-1">Bio</label>
         <textarea name="bio" defaultValue={settings.bio} rows={4} className={`${inputClass} mb-6`} />
 
-        <h2 className="font-display text-lg text-forest mb-3">Contact</h2>
+        <h2 className="font-display text-lg text-forest mb-3">Customer Contact</h2>
 
         <label className="block text-sm text-ink/80 mb-1">Support Phone Number</label>
         <input
@@ -45,6 +45,19 @@ export default async function AdminSettingsPage() {
 
         <label className="block text-sm text-ink/80 mb-1">Support Hours</label>
         <input name="support_hours" defaultValue={settings.supportHours} className={`${inputClass} mb-6`} />
+
+        <h2 className="font-display text-lg text-forest mb-3">Breeder Contact</h2>
+
+        <label className="block text-sm text-ink/80 mb-1">Breeder Relations Email</label>
+        <input name="breeder_email" defaultValue={settings.breederEmail} className={`${inputClass} mb-4`} />
+
+        <label className="block text-sm text-ink/80 mb-1">Breeder Office Hours</label>
+        <textarea
+          name="breeder_hours"
+          defaultValue={settings.breederHours}
+          rows={2}
+          className={`${inputClass} mb-6`}
+        />
 
         <h2 className="font-display text-lg text-forest mb-3">Social Media Links</h2>
 

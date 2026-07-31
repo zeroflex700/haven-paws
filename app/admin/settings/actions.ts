@@ -25,6 +25,8 @@ export async function updateSettings(formData: FormData) {
       instagram_url: formData.get("instagram_url") as string,
       youtube_url: formData.get("youtube_url") as string,
       twitter_url: formData.get("twitter_url") as string,
+      breeder_email: formData.get("breeder_email") as string,
+      breeder_hours: formData.get("breeder_hours") as string,
     })
     .eq("id", "main");
 

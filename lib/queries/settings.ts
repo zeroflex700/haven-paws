@@ -18,6 +18,8 @@ export type AppSettings = {
   instagramUrl: string;
   youtubeUrl: string;
   twitterUrl: string;
+  breederEmail: string;
+  breederHours: string;
 };
 
 const defaults: AppSettings = {
@@ -38,6 +40,8 @@ const defaults: AppSettings = {
   instagramUrl: "",
   youtubeUrl: "",
   twitterUrl: "",
+  breederEmail: "breederhelp@havenpaws.com",
+  breederHours: "Monday – Friday: 9:00 AM – 7:00 PM (ET)\nSaturday: 9:00 AM – 6:00 PM (ET)",
 };
 
 type RawSettingsRow = {
@@ -57,6 +61,8 @@ type RawSettingsRow = {
   instagram_url: string | null;
   youtube_url: string | null;
   twitter_url: string | null;
+  breeder_email: string | null;
+  breeder_hours: string | null;
 };
 
 function mapRow(data: RawSettingsRow): AppSettings {
@@ -77,11 +83,13 @@ function mapRow(data: RawSettingsRow): AppSettings {
     instagramUrl: data.instagram_url ?? "",
     youtubeUrl: data.youtube_url ?? "",
     twitterUrl: data.twitter_url ?? "",
+    breederEmail: data.breeder_email ?? defaults.breederEmail,
+    breederHours: data.breeder_hours ?? defaults.breederHours,
   };
 }
 
 const SELECT_FIELDS =
-  "breeder_name, years_experience, specialties, bio, badge_text, delivery_fee, starter_kit_price, health_guarantee_price, support_phone, support_hours, tagline, promise_text, facebook_url, instagram_url, youtube_url, twitter_url";
+  "breeder_name, years_experience, specialties, bio, badge_text, delivery_fee, starter_kit_price, health_guarantee_price, support_phone, support_hours, tagline, promise_text, facebook_url, instagram_url, youtube_url, twitter_url, breeder_email, breeder_hours";
 
 export async function getSettings(): Promise<AppSettings> {
   const { data } = await supabase.from("app_settings").select(SELECT_FIELDS).eq("id", "main").single();
