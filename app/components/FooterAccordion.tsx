@@ -30,7 +30,10 @@ const SECTIONS: Section[] = [
   },
   {
     title: "For Breeders",
-    links: [{ label: "Breeder Standards", href: "/breeder-standards" }],
+    links: [
+      { label: "New Breeder Application", href: "/contact#breeder-application" },
+      { label: "Breeder Standards", href: "/breeder-standards" },
+    ],
   },
   {
     title: "Support",

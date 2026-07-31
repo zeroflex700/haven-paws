@@ -73,7 +73,7 @@ export default async function ContactPage() {
         </div>
       </section>
 
-      <section className="bg-cream-alt py-10">
+      <section id="breeder-application" className="bg-cream-alt py-10 scroll-mt-20">
         <div className="max-w-2xl mx-auto px-6">
           <h3 className="font-display text-xl text-forest mb-2">Future Breeders</h3>
           <p className="text-ink/80 leading-relaxed mb-2">
