@@ -70,7 +70,7 @@ export default async function DeliveryPage() {
         <p className="text-ink/80 leading-relaxed">
           No matter where you live in the U.S., Haven Paws makes it easy to choose how your
           puppy comes home. Every option is coordinated by our team and trusted transport
-          partners, with your puppy's comfort and safety as the top priority. Explore the
+          partners, with your puppy&apos;s comfort and safety as the top priority. Explore the
           programs below to find the option that fits your schedule and budget.
         </p>
       </section>
@@ -86,8 +86,8 @@ export default async function DeliveryPage() {
           </h2>
           <p className="text-ink/80 leading-relaxed mb-8">
             Wherever you are in the country, Haven Paws works with experienced, trusted
-            transportation professionals who put your puppy's comfort and well-being first at
-            every stage of the journey — from departure to arrival at your door.
+            transportation professionals who put your puppy&apos;s comfort and well-being
+            first at every stage of the journey — from departure to arrival at your door.
           </p>
           {extraVideos.closing_video && (
             <div className="max-w-md mx-auto">
