@@ -27,7 +27,7 @@ export default async function DeliveryPage() {
         </section>
 
         <section className="max-w-2xl mx-auto px-4 pb-10">
-          <DeliveryTiers images={content?.extra_images ?? {}} />
+          <DeliveryTiers images={content?.extraImages ?? {}} />
         </section>
 
         <section className="bg-cream-alt py-12">
@@ -47,13 +47,13 @@ export default async function DeliveryPage() {
               and stress-free.
             </p>
 
-            {content?.hero_video_url && (
+            {content?.heroVideoUrl && (
               <div className="mt-6">
                 <p className="text-ink font-semibold mb-3">
                   Watch Haven Paws families welcome their puppies home
                 </p>
                 <ProtectedVideo
-                  src={content.hero_video_url}
+                  src={content.heroVideoUrl}
                   className="w-full rounded-lg aspect-video"
                 />
               </div>
