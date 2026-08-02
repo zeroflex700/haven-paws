@@ -27,6 +27,10 @@ export async function updateSettings(formData: FormData) {
       twitter_url: formData.get("twitter_url") as string,
       breeder_email: formData.get("breeder_email") as string,
       breeder_hours: formData.get("breeder_hours") as string,
+      delivery_home_price: Number(formData.get("delivery_home_price") || 0),
+      delivery_meet_price: Number(formData.get("delivery_meet_price") || 0),
+      delivery_express_price: Number(formData.get("delivery_express_price") || 0),
+      delivery_pickup_price_label: formData.get("delivery_pickup_price_label") as string,
     })
     .eq("id", "main");
 

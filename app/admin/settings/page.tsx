@@ -102,6 +102,43 @@ export default async function AdminSettingsPage() {
           className={`${inputClass} mb-6`}
         />
 
+        <h2 className="font-display text-lg text-forest mb-3">Delivery Programs Pricing</h2>
+
+        <label className="block text-sm text-ink/80 mb-1">Home Delivery Price ($)</label>
+        <input
+          name="delivery_home_price"
+          type="number"
+          step="0.01"
+          defaultValue={settings.deliveryHomePrice}
+          className={`${inputClass} mb-4`}
+        />
+
+        <label className="block text-sm text-ink/80 mb-1">Meet Near Your Location Price ($)</label>
+        <input
+          name="delivery_meet_price"
+          type="number"
+          step="0.01"
+          defaultValue={settings.deliveryMeetPrice}
+          className={`${inputClass} mb-4`}
+        />
+
+        <label className="block text-sm text-ink/80 mb-1">Priority Express Delivery Price ($)</label>
+        <input
+          name="delivery_express_price"
+          type="number"
+          step="0.01"
+          defaultValue={settings.deliveryExpressPrice}
+          className={`${inputClass} mb-4`}
+        />
+
+        <label className="block text-sm text-ink/80 mb-1">Pickup Price Label</label>
+        <input
+          name="delivery_pickup_price_label"
+          defaultValue={settings.deliveryPickupPriceLabel}
+          placeholder="e.g. $0–$60"
+          className={`${inputClass} mb-6`}
+        />
+
         <button type="submit" className="w-full bg-forest text-cream py-2.5 rounded-full hover:bg-forest-light">
           Save
         </button>

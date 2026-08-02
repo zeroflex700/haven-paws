@@ -1,76 +1,57 @@
 "use client";
 
-import Image from "next/image";
-
-interface ProtectedImageProps {
-  src: string;
-  alt: string;
-  className?: string;
-  sizes?: string;
-  priority?: boolean;
-}
+import { cldOptimized } from "@/lib/cloudinary";
 
 export function ProtectedImage({
   src,
   alt,
-  className = "",
-  sizes = "100vw",
-  priority = false,
-}: ProtectedImageProps) {
-  if (!src) return null;
-
+  className,
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+}) {
   return (
     <div
-      className={`relative select-none ${className}`}
+      className={`relative select-none ${className ?? ""}`}
       onContextMenu={(e) => e.preventDefault()}
     >
-      <Image
-        src={src}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={cldOptimized(src, 1000)}
         alt={alt}
-        fill
-        sizes={sizes}
-        priority={priority}
         draggable={false}
-        className="object-cover pointer-events-none"
-        style={{ WebkitTouchCallout: "none" } as React.CSSProperties}
+        className="w-full h-full object-cover pointer-events-none"
       />
     </div>
   );
 }
 
-interface ProtectedVideoProps {
-  src: string;
-  className?: string;
-  poster?: string;
-  autoPlay?: boolean;
-  loop?: boolean;
-  muted?: boolean;
-}
-
 export function ProtectedVideo({
   src,
-  className = "",
-  poster,
-  autoPlay = false,
-  loop = false,
-  muted = false,
-}: ProtectedVideoProps) {
-  if (!src) return null;
-
+  className,
+  autoPlay,
+  muted,
+  loop,
+}: {
+  src: string;
+  className?: string;
+  autoPlay?: boolean;
+  muted?: boolean;
+  loop?: boolean;
+}) {
   return (
     <video
       src={src}
-      poster={poster}
-      className={`select-none ${className}`}
-      controls
+      controls={!autoPlay}
+      autoPlay={autoPlay}
+      muted={muted}
+      loop={loop}
+      playsInline
       controlsList="nodownload noremoteplayback"
       disablePictureInPicture
-      playsInline
-      autoPlay={autoPlay}
-      loop={loop}
-      muted={muted}
       onContextMenu={(e) => e.preventDefault()}
-      style={{ WebkitTouchCallout: "none" } as React.CSSProperties}
+      className={className}
     />
   );
 }
