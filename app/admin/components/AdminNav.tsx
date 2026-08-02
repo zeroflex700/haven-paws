@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, PawPrint, MessageSquare, CalendarCheck, Settings } from "lucide-react";
+import { LayoutDashboard, PawPrint, MessageSquare, CalendarCheck, Truck, Settings } from "lucide-react";
 
 const tabs = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/puppies", label: "Puppies", icon: PawPrint },
   { href: "/admin/inquiries", label: "Inquiries", icon: MessageSquare },
   { href: "/admin/reservations", label: "Reservations", icon: CalendarCheck },
+  { href: "/admin/content/delivery-programs", label: "Delivery", icon: Truck },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
