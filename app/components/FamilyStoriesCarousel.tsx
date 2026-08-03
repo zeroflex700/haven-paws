@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Star } from "lucide-react";
 import { cldOptimized } from "@/lib/cloudinary";
 import type { Review } from "@/lib/queries/testimonials";
@@ -37,9 +38,9 @@ export default function FamilyStoriesCarousel({ reviews }: { reviews: Review[] }
                 </div>
               </div>
               <p className="text-sm text-ink/70 line-clamp-4 mb-2">{r.reviewText}</p>
-              <a href="/reviews" className="text-xs text-forest border-b border-gold pb-0.5">
+              <Link href="/reviews" className="text-xs text-forest border-b border-gold pb-0.5">
                 Read more
-              </a>
+              </Link>
             </div>
           ))}
         </div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Search, Star } from "lucide-react";
 import { ProtectedVideo } from "./ProtectedMedia";
 import { cldOptimized } from "@/lib/cloudinary";
@@ -63,12 +64,12 @@ export default function HomeHero({
           />
         </form>
 
-        <a
+        <Link
           href="/puppies"
           className="bg-gold text-forest px-6 py-3 rounded-full font-medium hover:opacity-90 transition-opacity"
         >
           Browse All Puppies
-        </a>
+        </Link>
 
         {reviewCount > 0 && avgRating && (
           <div className="flex items-center gap-2 mt-8 text-white/90 text-sm">
