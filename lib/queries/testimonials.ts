@@ -82,6 +82,15 @@ export async function getReviewsCount(): Promise<number> {
   return count ?? 0;
 }
 
+export async function getReviewStats(): Promise<{ count: number; avgRating: number | null }> {
+  const { data } = await supabase.from("reviews").select("rating");
+  const rows = data ?? [];
+  const rated = rows.filter((r) => r.rating != null);
+  if (rated.length === 0) return { count: rows.length, avgRating: null };
+  const avg = rated.reduce((sum, r) => sum + (r.rating ?? 0), 0) / rated.length;
+  return { count: rows.length, avgRating: Math.round(avg * 10) / 10 };
+}
+
 export async function getAllReviewsAdmin(): Promise<Review[]> {
   const supabase = await createClient();
   const { data } = await supabase

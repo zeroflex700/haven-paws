@@ -12,6 +12,7 @@ const ROUTE_MAP: Record<string, string> = {
   about: "/about",
   "delivery-programs": "/delivery",
   lifestyle: "/lifestyle",
+  homepage: "/",
 };
 
 function revalidateForSlug(slug: string) {
