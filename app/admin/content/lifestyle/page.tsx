@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getPageImagesAdmin } from "@/lib/queries/pageContent";
 import NamedImageUploader from "../../components/NamedImageUploader";
 import { LIFESTYLE_CATEGORIES } from "@/app/data/lifestyleCategories";
@@ -11,7 +12,7 @@ export default async function AdminLifestyleContentPage() {
       <h1 className="font-display text-2xl text-forest mb-2">Explore by Lifestyle Page</h1>
       <p className="text-sm text-sage mb-6">
         Upload one hero image per category. Breed photos come from{" "}
-        <a href="/admin/breeds" className="underline text-forest">/admin/breeds</a>.
+        <Link href="/admin/breeds" className="underline text-forest">/admin/breeds</Link>.
       </p>
 
       {LIFESTYLE_CATEGORIES.map((c) => (
