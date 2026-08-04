@@ -16,6 +16,11 @@ const ROUTE_MAP: Record<string, string> = {
 };
 
 function revalidateForSlug(slug: string) {
+  if (slug === "account-menu") {
+    revalidatePath("/", "layout");
+    revalidatePath(`/admin/content/${slug}`);
+    return;
+  }
   const route = ROUTE_MAP[slug] ?? `/${slug}`;
   revalidatePath(route);
   revalidatePath(`/admin/content/${slug}`);

@@ -4,11 +4,20 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { PawPrint, Menu, User } from "lucide-react";
 import MobileMenu from "./MobileMenu";
+import AccountPanel from "./AccountPanel";
 import { supabase } from "@/lib/supabase/client";
+
+type Thumbnails = { how_it_works: string | null; learning_center: string | null; our_standards: string | null };
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
+  const [thumbnails, setThumbnails] = useState<Thumbnails>({
+    how_it_works: null,
+    learning_center: null,
+    our_standards: null,
+  });
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -18,6 +27,22 @@ export default function Navbar() {
       setLoggedIn(!!session);
     });
     return () => listener.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    supabase
+      .from("page_content")
+      .select("extra_images")
+      .eq("slug", "account-menu")
+      .single()
+      .then(({ data }) => {
+        const images = (data?.extra_images as Record<string, string>) ?? {};
+        setThumbnails({
+          how_it_works: images.how_it_works ?? null,
+          learning_center: images.learning_center ?? null,
+          our_standards: images.our_standards ?? null,
+        });
+      });
   }, []);
 
   return (
@@ -40,16 +65,28 @@ export default function Navbar() {
             <Link href="/how-it-works" className="hover:text-forest">How It Works</Link>
             <Link href="/about" className="hover:text-forest">About</Link>
           </nav>
-          <Link
-            href={loggedIn ? "/account" : "/account/login"}
-            aria-label="Account"
-            className="w-10 h-10 rounded-full bg-cream-alt border border-sage/30 flex items-center justify-center hover:border-gold transition-colors"
-          >
-            <User size={18} className="text-forest" strokeWidth={1.5} />
-          </Link>
+
+          {loggedIn ? (
+            <button
+              onClick={() => setAccountOpen(true)}
+              aria-label="Account"
+              className="w-10 h-10 rounded-full bg-cream-alt border border-sage/30 flex items-center justify-center hover:border-gold transition-colors"
+            >
+              <User size={18} className="text-forest" strokeWidth={1.5} />
+            </button>
+          ) : (
+            <Link
+              href="/account/login"
+              aria-label="Account"
+              className="w-10 h-10 rounded-full bg-cream-alt border border-sage/30 flex items-center justify-center hover:border-gold transition-colors"
+            >
+              <User size={18} className="text-forest" strokeWidth={1.5} />
+            </Link>
+          )}
         </div>
       </header>
       <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <AccountPanel open={accountOpen} onClose={() => setAccountOpen(false)} thumbnails={thumbnails} />
     </>
   );
 }
