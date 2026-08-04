@@ -27,6 +27,7 @@ function buildSections(loggedIn: boolean): Section[] {
           label: loggedIn ? "My Account" : "Log In or Sign Up",
           href: loggedIn ? "/account" : "/account/login",
         },
+        { label: "Breed Guides", href: "/breed-guides" },
         { label: "AKC Registration", href: "/akc-registration" },
         { label: "AKC Benefits", href: "/akc-benefits" },
         { label: "Fetch Insurance", href: "/fetch-insurance" },

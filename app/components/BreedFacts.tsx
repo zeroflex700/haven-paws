@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cldOptimized } from "@/lib/cloudinary";
 import type { BreedInfo } from "@/lib/queries/breedInfo";
 
@@ -26,7 +27,7 @@ export default function BreedFacts({ breed }: { breed: BreedInfo | null }) {
         <p className="text-ink/80 leading-relaxed mb-6">{breed.blurb}</p>
       )}
 
-      <div className="grid grid-cols-2 gap-4 text-sm">
+      <div className="grid grid-cols-2 gap-4 text-sm mb-6">
         {breed.temperament && (
           <div>
             <p className="text-sage text-xs uppercase tracking-wider mb-1">Temperament</p>
@@ -46,6 +47,15 @@ export default function BreedFacts({ breed }: { breed: BreedInfo | null }) {
           </div>
         )}
       </div>
+
+      {breed.slug && (
+        <Link
+          href={`/breed-guides/${breed.slug}`}
+          className="inline-block text-forest border-b border-gold pb-0.5"
+        >
+          View Full Breed Guide →
+        </Link>
+      )}
     </section>
   );
 }

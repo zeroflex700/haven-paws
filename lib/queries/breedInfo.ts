@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 export type BreedInfo = {
   id: string;
   name: string;
+  slug: string | null;
   temperament: string | null;
   energyLevel: string | null;
   breedGroup: string | null;
@@ -14,7 +15,7 @@ export type BreedInfo = {
 export async function getBreedInfo(breedId: string): Promise<BreedInfo | null> {
   const { data } = await supabase
     .from("breeds")
-    .select("id, name, temperament, energy_level, breed_group, blurb, image_url")
+    .select("id, name, slug, temperament, energy_level, breed_group, blurb, image_url")
     .eq("id", breedId)
     .single();
 
@@ -23,6 +24,7 @@ export async function getBreedInfo(breedId: string): Promise<BreedInfo | null> {
   return {
     id: data.id,
     name: data.name,
+    slug: data.slug,
     temperament: data.temperament,
     energyLevel: data.energy_level,
     breedGroup: data.breed_group,
@@ -35,7 +37,7 @@ export async function getBreedInfoAdmin(breedId: string): Promise<BreedInfo | nu
   const supabase = await createClient();
   const { data } = await supabase
     .from("breeds")
-    .select("id, name, temperament, energy_level, breed_group, blurb, image_url")
+    .select("id, name, slug, temperament, energy_level, breed_group, blurb, image_url")
     .eq("id", breedId)
     .single();
 
@@ -44,6 +46,7 @@ export async function getBreedInfoAdmin(breedId: string): Promise<BreedInfo | nu
   return {
     id: data.id,
     name: data.name,
+    slug: data.slug,
     temperament: data.temperament,
     energyLevel: data.energy_level,
     breedGroup: data.breed_group,
