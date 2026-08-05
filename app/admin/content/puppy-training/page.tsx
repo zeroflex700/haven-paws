@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getPageImagesAdmin } from "@/lib/queries/pageContent";
 import PageHeroUploader from "../../components/PageHeroUploader";
 import NamedImageUploader from "../../components/NamedImageUploader";
@@ -12,7 +13,7 @@ export default async function AdminPuppyTrainingContentPage() {
       <h1 className="font-display text-2xl text-forest mb-2">Puppy Training Program</h1>
       <p className="text-sm text-sage mb-6">
         The testimonial shown in the locked popup is managed at{" "}
-        <a href="/admin/reviews/new" className="underline text-forest">/admin/reviews</a>{" "}
+        <Link href="/admin/reviews/new" className="underline text-forest">/admin/reviews</Link>{" "}
         — add one with category &quot;Puppy Training Program.&quot;
       </p>
 
