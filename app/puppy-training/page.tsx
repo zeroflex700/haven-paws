@@ -16,7 +16,7 @@ export default async function PuppyTrainingLandingPage() {
       <section className="max-w-2xl mx-auto px-6 pt-10 pb-6 flex items-start justify-between gap-4">
         <div>
           <p className="eyebrow mb-2">Puppy Training Program</p>
-          <h1 className="font-display text-3xl text-forest mb-4 leading-tight">
+          <h1 className="font-display text-2xl text-forest mb-4 leading-tight">
             Everything you need to become a confident puppy owner
           </h1>
           <p className="text-ink/70 mb-4">

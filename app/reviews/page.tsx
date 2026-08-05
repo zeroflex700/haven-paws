@@ -26,7 +26,7 @@ export default async function ReviewsPage() {
 
       <section className="bg-cream-alt py-16">
         <div className="max-w-2xl mx-auto px-6 text-center">
-          <h1 className="font-display text-3xl text-forest mb-4">Haven Paws Reviews</h1>
+          <h1 className="font-display text-2xl text-forest mb-4">Haven Paws Reviews</h1>
           <p className="text-ink/70 leading-relaxed mb-8">
             Families have shared heartwarming stories of how a puppy has brought joy into
             their lives.

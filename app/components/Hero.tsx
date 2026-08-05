@@ -5,7 +5,7 @@ export default function Hero() {
     <section className="max-w-6xl mx-auto px-6 pt-16 pb-20 grid md:grid-cols-2 gap-12 items-center">
       <div>
         <p className="eyebrow mb-4">A Curated Home for Every Puppy</p>
-        <h1 className="font-display text-4xl md:text-5xl text-forest leading-[1.1] mb-6">
+        <h1 className="font-display text-3xl md:text-4xl text-forest leading-[1.1] mb-6">
           Every puppy deserves a beginning as good as their future.
         </h1>
         <p className="text-ink/80 text-lg mb-8 max-w-md">

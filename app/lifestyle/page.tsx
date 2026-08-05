@@ -16,7 +16,7 @@ export default async function LifestylePage() {
 
       <div className="max-w-2xl mx-auto px-6 pt-10">
         <p className="eyebrow mb-2 text-center">Explore</p>
-        <h1 className="font-display text-3xl text-forest text-center mb-2">
+        <h1 className="font-display text-2xl text-forest text-center mb-2">
           Browse by Lifestyle
         </h1>
       </div>

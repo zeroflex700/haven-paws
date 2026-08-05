@@ -116,7 +116,7 @@ export default function FaqsPage() {
 
       <section className="bg-cream-alt py-12">
         <div className="max-w-7xl mx-auto px-6">
-          <h1 className="font-display text-3xl text-forest mb-2">
+          <h1 className="font-display text-2xl text-forest mb-2">
             FAQs About Bringing Home a Puppy from Haven Paws
           </h1>
         </div>

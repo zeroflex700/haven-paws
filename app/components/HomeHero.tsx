@@ -50,7 +50,7 @@ export default function HomeHero({
 
       <div className="relative z-10 h-full flex flex-col items-center justify-center px-6 text-center">
         <p className="eyebrow text-white/90 mb-2">Where New Beginnings Start</p>
-        <h1 className="font-display text-3xl text-white mb-6 max-w-md">
+        <h1 className="font-display text-2xl text-white mb-6 max-w-md">
           Trusted puppy placement, nationwide
         </h1>
 

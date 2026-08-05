@@ -57,7 +57,7 @@ export default async function PuppyDetailPage({
           >
             {puppy.status}
           </span>
-          <h1 className="font-display text-3xl text-forest mt-3 mb-1">{puppy.name}</h1>
+          <h1 className="font-display text-2xl text-forest mt-3 mb-1">{puppy.name}</h1>
           <p className="eyebrow mb-1">{puppy.breed}</p>
           <p className="text-sm text-ink/60 capitalize mb-4">
             {puppy.sex}

@@ -14,7 +14,7 @@ export default async function AboutPage() {
 
       <section className="max-w-2xl mx-auto px-6 py-14">
         <p className="eyebrow mb-3">About Haven Paws</p>
-        <h1 className="font-display text-3xl text-forest mb-6">Our Story</h1>
+        <h1 className="font-display text-2xl text-forest mb-6">Our Story</h1>
 
         {heroImage && (
           <div className="aspect-[4/3] rounded-lg overflow-hidden mb-6">

@@ -12,7 +12,7 @@ export default async function BreedGuidesIndexPage() {
       <Navbar />
       <section className="max-w-5xl mx-auto px-6 py-14">
         <p className="eyebrow mb-3">For Puppy Parents</p>
-        <h1 className="font-display text-3xl text-forest mb-8">Breed Guides</h1>
+        <h1 className="font-display text-2xl text-forest mb-8">Breed Guides</h1>
 
         {breeds.length === 0 ? (
           <p className="text-sage">No breed guides published yet — check back soon.</p>

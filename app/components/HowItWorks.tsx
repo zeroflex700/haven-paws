@@ -10,7 +10,7 @@ export default function HowItWorks() {
     <section className="bg-cream-alt py-20">
       <div className="max-w-6xl mx-auto px-6">
         <p className="eyebrow mb-3">The Process</p>
-        <h2 className="font-display text-3xl text-forest mb-12">
+        <h2 className="font-display text-2xl text-forest mb-12">
           How it works
         </h2>
         <div className="grid md:grid-cols-4 gap-8">

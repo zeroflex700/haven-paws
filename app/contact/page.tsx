@@ -13,7 +13,7 @@ export default async function ContactPage() {
 
       <section className="bg-cream-alt py-14">
         <div className="max-w-2xl mx-auto px-6 text-center">
-          <h1 className="font-display text-3xl text-forest mb-3">Contact Us</h1>
+          <h1 className="font-display text-2xl text-forest mb-3">Contact Us</h1>
           <p className="text-ink/70">We&apos;re here to help.</p>
         </div>
       </section>

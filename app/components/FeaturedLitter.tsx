@@ -9,7 +9,7 @@ export default async function FeaturedLitter() {
   return (
     <section className="max-w-6xl mx-auto px-6 py-20">
       <p className="eyebrow mb-3">Meet the Litter</p>
-      <h2 className="font-display text-3xl text-forest mb-10">
+      <h2 className="font-display text-2xl text-forest mb-10">
         Puppies available now
       </h2>
       {featured.length === 0 ? (

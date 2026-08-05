@@ -72,7 +72,7 @@ export default async function AkcRegistrationPage() {
 
       <section className="bg-cream-alt">
         <div className="max-w-7xl mx-auto px-6 py-12">
-          <h1 className="font-display text-3xl text-forest mb-6">AKC Registration</h1>
+          <h1 className="font-display text-2xl text-forest mb-6">AKC Registration</h1>
           <p className="text-ink/80 leading-relaxed mb-4">
             At Haven Paws, we proudly provide information and guidance regarding American
             Kennel Club (AKC) registration for eligible puppies. The AKC is one of the most

@@ -41,7 +41,7 @@ export default async function BreedGuidePage({
 
       <section className="max-w-3xl mx-auto px-6 pt-10 pb-6">
         <p className="eyebrow mb-2">Get to Know</p>
-        <h1 className="font-display text-4xl text-forest mb-4">{guide.breedName}s</h1>
+        <h1 className="font-display text-2xl text-forest mb-4">{guide.breedName}s</h1>
 
         {guide.authorName && (
           <div className="flex items-center gap-3 mb-6">

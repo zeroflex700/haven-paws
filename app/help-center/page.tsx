@@ -21,7 +21,7 @@ export default async function HelpCenterPage() {
           <div className="aspect-[4/3] sm:aspect-[16/7] bg-forest" />
         )}
         <div className="absolute inset-0 flex items-center justify-center bg-forest/40">
-          <h1 className="font-display text-3xl text-white text-center px-6">
+          <h1 className="font-display text-2xl text-white text-center px-6">
             We&apos;re here to help
           </h1>
         </div>

@@ -57,7 +57,7 @@ export default async function AkcBenefitsPage() {
 
       <section className="bg-cream-alt">
         <div className="max-w-7xl mx-auto px-6 py-12">
-          <h1 className="font-display text-3xl text-forest mb-3">AKC Benefits</h1>
+          <h1 className="font-display text-2xl text-forest mb-3">AKC Benefits</h1>
           <p className="eyebrow mb-4">How You Benefit</p>
           <p className="text-ink/80 leading-relaxed">
             At Haven Paws, we&apos;re committed to raising healthy, well-socialized puppies

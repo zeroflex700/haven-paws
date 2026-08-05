@@ -66,7 +66,7 @@ export default async function DeliveryPage() {
 
       <section className="max-w-2xl mx-auto px-6 py-14">
         <p className="eyebrow mb-3">Bringing Your Puppy Home</p>
-        <h1 className="font-display text-3xl text-forest mb-6">Delivery Programs</h1>
+        <h1 className="font-display text-2xl text-forest mb-6">Delivery Programs</h1>
         <p className="text-ink/80 leading-relaxed">
           No matter where you live in the U.S., Haven Paws makes it easy to choose how your
           puppy comes home. Every option is coordinated by our team and trusted transport
