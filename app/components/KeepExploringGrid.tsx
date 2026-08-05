@@ -13,7 +13,7 @@ export default function KeepExploringGrid({
   breeds: Breed[];
 }) {
   return (
-    <section className="max-w-5xl mx-auto px-6 py-14">
+    <section className="max-w-7xl mx-auto px-6 py-14">
       <div className="flex items-baseline justify-between mb-8">
         <h2 className="font-display text-2xl text-forest">Keep exploring</h2>
         <Link href="/faqs" className="text-sm text-forest border-b border-gold pb-0.5">

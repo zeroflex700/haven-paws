@@ -75,11 +75,11 @@ export default function TermsPage() {
     <main>
       <Navbar />
       <section className="bg-cream-alt py-12">
-        <div className="max-w-3xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-6">
           <h1 className="font-display text-3xl text-forest">Terms &amp; Conditions</h1>
         </div>
       </section>
-      <section className="max-w-3xl mx-auto px-6 py-12">
+      <section className="max-w-7xl mx-auto px-6 py-12">
         <FaqAccordion items={SECTIONS} />
       </section>
       <Footer />

@@ -2,7 +2,7 @@ import { Gavel } from "lucide-react";
 
 export default function AdvocacySection({ video }: { video: string | null }) {
   return (
-    <section className="max-w-3xl mx-auto px-6 py-12">
+    <section className="max-w-7xl mx-auto px-6 py-12">
       {video && <video src={video} controls className="w-full rounded-lg mb-6" />}
       <Gavel size={24} className="text-gold mb-3" strokeWidth={1.5} />
       <h2 className="font-display text-2xl text-forest mb-4">

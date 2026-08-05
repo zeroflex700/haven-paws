@@ -150,7 +150,7 @@ export default async function BreederStandardsPage() {
         </div>
       </section>
 
-      <section className="max-w-3xl mx-auto px-6 py-14">
+      <section className="max-w-7xl mx-auto px-6 py-14">
         <h2 className="font-display text-3xl text-forest mb-4">
           Every Great Journey Begins with a Trusted Breeder
         </h2>
@@ -170,7 +170,7 @@ export default async function BreederStandardsPage() {
       </section>
 
       <section className="bg-cream-alt py-14">
-        <div className="max-w-3xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-6">
           <h2 className="font-display text-2xl text-forest text-center mb-10">
             Our Breeder Vetting Process: Step-by-Step
           </h2>
@@ -178,7 +178,7 @@ export default async function BreederStandardsPage() {
         </div>
       </section>
 
-      <section className="max-w-3xl mx-auto px-6 py-14">
+      <section className="max-w-7xl mx-auto px-6 py-14">
         <h2 className="font-display text-2xl text-forest mb-4">
           Our Commitment to Health &amp; Happiness
         </h2>
@@ -192,7 +192,7 @@ export default async function BreederStandardsPage() {
 
       {boardMembers.length > 0 && (
         <section className="bg-cream-alt py-14">
-          <div className="max-w-5xl mx-auto px-6">
+          <div className="max-w-7xl mx-auto px-6">
             <p className="eyebrow mb-2 text-center">Science-Based Oversight</p>
             <h2 className="font-display text-2xl text-forest text-center mb-8">
               Our Scientific Advisory Board
@@ -209,7 +209,7 @@ export default async function BreederStandardsPage() {
 
       <AdvocacySection video={extraVideos.advocacy_video ?? null} />
 
-      <section className="max-w-3xl mx-auto px-6 pb-14 pt-4">
+      <section className="max-w-7xl mx-auto px-6 pb-14 pt-4">
         <div className="bg-white border border-gold/30 rounded-lg p-6 text-center">
           <h2 className="font-display text-xl text-forest mb-2">
             Join the Haven Paws Community as a Breeder
@@ -245,7 +245,7 @@ export default async function BreederStandardsPage() {
         </div>
       </section>
 
-      <section className="max-w-3xl mx-auto px-6 pb-14">
+      <section className="max-w-7xl mx-auto px-6 pb-14">
         <h2 className="font-display text-2xl text-forest text-center mb-2">
           Frequently Asked Questions About Our Breeders
         </h2>

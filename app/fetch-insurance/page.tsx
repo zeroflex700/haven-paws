@@ -21,7 +21,7 @@ export default async function FetchInsurancePage() {
         </div>
       )}
 
-      <article className="max-w-3xl mx-auto px-6 py-12">
+      <article className="max-w-7xl mx-auto px-6 py-12">
         <p className="eyebrow mb-3">Puppy Care</p>
         <h1 className="font-display text-3xl text-forest mb-6 leading-tight">
           Why You Should Consider Pet Insurance for Your Puppy

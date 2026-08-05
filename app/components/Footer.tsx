@@ -9,7 +9,7 @@ export default async function Footer() {
 
   return (
     <footer className="bg-[#283E53] text-white border-t border-white/10">
-      <div className="max-w-3xl mx-auto px-6 pt-16 pb-10 text-center">
+      <div className="max-w-7xl mx-auto px-6 pt-16 pb-10 text-center">
         <div className="flex justify-center mb-4">
           <HavenLogo size={56} />
         </div>

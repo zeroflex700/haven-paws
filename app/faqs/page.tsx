@@ -115,29 +115,29 @@ export default function FaqsPage() {
       <Navbar />
 
       <section className="bg-cream-alt py-12">
-        <div className="max-w-3xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-6">
           <h1 className="font-display text-3xl text-forest mb-2">
             FAQs About Bringing Home a Puppy from Haven Paws
           </h1>
         </div>
       </section>
 
-      <section className="max-w-3xl mx-auto px-6 py-10">
+      <section className="max-w-7xl mx-auto px-6 py-10">
         <p className="eyebrow mb-4">About Haven Paws</p>
         <FaqAccordion items={ABOUT_HAVEN_PAWS} />
       </section>
 
-      <section className="max-w-3xl mx-auto px-6 py-10">
+      <section className="max-w-7xl mx-auto px-6 py-10">
         <p className="eyebrow mb-4">Trust &amp; Pricing</p>
         <FaqAccordion items={TRUST_AND_PRICING} />
       </section>
 
-      <section className="max-w-3xl mx-auto px-6 py-10">
+      <section className="max-w-7xl mx-auto px-6 py-10">
         <p className="eyebrow mb-4">Puppies &amp; Delivery</p>
         <FaqAccordion items={PUPPIES_AND_DELIVERY} />
       </section>
 
-      <section className="max-w-3xl mx-auto px-6 py-10">
+      <section className="max-w-7xl mx-auto px-6 py-10">
         <p className="eyebrow mb-4">Our Services</p>
         <FaqAccordion items={SERVICES} />
       </section>

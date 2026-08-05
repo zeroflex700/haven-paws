@@ -7,7 +7,7 @@ export default function BreedsPage() {
   return (
     <main>
       <Navbar />
-      <section className="max-w-3xl mx-auto px-6 py-16">
+      <section className="max-w-7xl mx-auto px-6 py-16">
         <p className="eyebrow mb-3">Explore</p>
         <h1 className="font-display text-3xl text-forest mb-8">Available Breeds</h1>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
