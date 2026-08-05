@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --color-cream: #FFFFFF;
+  --color-cream: #FAFAF8;
   --color-cream-alt: #F3F4F6;
   --color-forest: #4E5D78;
   --color-forest-light: #6B7A94;
@@ -16,6 +16,7 @@
 body {
   background-color: var(--color-cream);
   color: var(--color-ink);
+  font-size: 15px;
 }
 
 img,
@@ -29,9 +30,26 @@ video {
 }
 
 .eyebrow {
-  @apply text-xs uppercase tracking-[0.2em] text-sage font-body font-medium;
+  @apply text-[11px] uppercase tracking-[0.2em] text-sage font-body font-medium;
 }
 
 .gold-rule {
   @apply w-10 h-px bg-gold;
+}
+
+/* Typography scale — use these instead of raw text-3xl/text-2xl etc. going forward */
+.h1 {
+  @apply font-display text-2xl sm:text-3xl lg:text-4xl text-forest leading-tight;
+}
+.h2 {
+  @apply font-display text-xl sm:text-2xl text-forest leading-snug;
+}
+.h3 {
+  @apply font-display text-lg text-forest leading-snug;
+}
+.body-text {
+  @apply text-sm sm:text-[15px] text-ink/80 leading-relaxed;
+}
+.small-text {
+  @apply text-xs sm:text-sm text-sage;
 }

@@ -2,26 +2,26 @@ import Link from "next/link";
 
 export default function Hero() {
   return (
-    <section className="max-w-6xl mx-auto px-6 pt-16 pb-20 grid md:grid-cols-2 gap-12 items-center">
+    <section className="max-w-7xl mx-auto px-6 lg:px-10 pt-12 pb-16 grid md:grid-cols-2 gap-10 items-center">
       <div>
-        <p className="eyebrow mb-4">A Curated Home for Every Puppy</p>
-        <h1 className="font-display text-3xl md:text-4xl text-forest leading-[1.1] mb-6">
+        <p className="eyebrow mb-3">A Curated Home for Every Puppy</p>
+        <h1 className="font-display text-3xl md:text-4xl text-forest leading-[1.15] mb-5">
           Every puppy deserves a beginning as good as their future.
         </h1>
-        <p className="text-ink/80 text-lg mb-8 max-w-md">
+        <p className="text-ink/80 text-base mb-7 max-w-md">
           Health-guaranteed puppies, transparent bloodlines, and a concierge
           process from first meeting to homecoming.
         </p>
-        <div className="flex gap-4">
+        <div className="flex gap-3">
           <Link
             href="/puppies"
-            className="bg-forest text-cream px-6 py-3 rounded-full hover:bg-forest-light transition-colors"
+            className="bg-forest text-cream text-sm px-5 py-2.5 rounded-full hover:bg-forest-light transition-colors"
           >
             Meet the Litter
           </Link>
           <Link
             href="/how-it-works"
-            className="border border-forest/30 text-forest px-6 py-3 rounded-full hover:border-forest transition-colors"
+            className="border border-forest/30 text-forest text-sm px-5 py-2.5 rounded-full hover:border-forest transition-colors"
           >
             How It Works
           </Link>
