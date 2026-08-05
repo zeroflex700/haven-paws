@@ -15,6 +15,7 @@ type ReviewData = {
   videoUrl?: string | null;
   verified?: boolean;
   isSpotlight?: boolean;
+  category?: string;
 };
 
 export default function ReviewForm({ review }: { review?: ReviewData }) {
@@ -25,6 +26,7 @@ export default function ReviewForm({ review }: { review?: ReviewData }) {
   const [reviewText, setReviewText] = useState(review?.reviewText ?? "");
   const [verified, setVerified] = useState(review?.verified ?? true);
   const [isSpotlight, setIsSpotlight] = useState(review?.isSpotlight ?? false);
+  const [category, setCategory] = useState(review?.category ?? "general");
   const [photoUrl, setPhotoUrl] = useState<string | null>(review?.photoUrl ?? null);
   const [videoUrl, setVideoUrl] = useState<string | null>(review?.videoUrl ?? null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -35,7 +37,6 @@ export default function ReviewForm({ review }: { review?: ReviewData }) {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
-
     const res = await fetch(
       `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/${type}/upload`,
       { method: "POST", body: formData }
@@ -83,6 +84,7 @@ export default function ReviewForm({ review }: { review?: ReviewData }) {
       videoUrl,
       verified,
       isSpotlight,
+      category,
     };
     try {
       if (review?.id) {
@@ -101,6 +103,12 @@ export default function ReviewForm({ review }: { review?: ReviewData }) {
 
   return (
     <form onSubmit={handleSubmit} className="pb-10">
+      <label className="block text-sm text-ink/80 mb-1 mt-4">Category</label>
+      <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass}>
+        <option value="general">General (site-wide reviews)</option>
+        <option value="puppy_training">Puppy Training Program</option>
+      </select>
+
       <label className="block text-sm text-ink/80 mb-1 mt-4">Customer Name</label>
       <input
         value={customerName}

@@ -106,3 +106,14 @@ export async function getReviewAdmin(id: string): Promise<Review | null> {
   const { data } = await supabase.from("reviews").select(FIELDS).eq("id", id).single();
   return data ? mapReview(data as unknown as RawReview) : null;
 }
+export async function getPuppyTrainingTestimonial(): Promise<Review | null> {
+  const { data } = await supabase
+    .from("reviews")
+    .select(FIELDS)
+    .eq("category", "puppy_training")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  return data ? mapReview(data as unknown as RawReview) : null;
+}

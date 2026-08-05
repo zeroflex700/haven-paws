@@ -13,6 +13,7 @@ type ReviewInput = {
   videoUrl: string | null;
   verified: boolean;
   isSpotlight: boolean;
+  category: string;
 };
 
 export async function createReview(input: ReviewInput) {
@@ -27,11 +28,13 @@ export async function createReview(input: ReviewInput) {
     video_url: input.videoUrl,
     verified: input.verified,
     is_spotlight: input.isSpotlight,
+    category: input.category,
   });
 
   if (error) throw new Error(error.message);
 
   revalidatePath("/reviews");
+  revalidatePath("/puppy-training");
   revalidatePath("/admin/reviews");
   redirect("/admin/reviews");
 }
@@ -50,12 +53,14 @@ export async function updateReview(id: string, input: ReviewInput) {
       video_url: input.videoUrl,
       verified: input.verified,
       is_spotlight: input.isSpotlight,
+      category: input.category,
     })
     .eq("id", id);
 
   if (error) throw new Error(error.message);
 
   revalidatePath("/reviews");
+  revalidatePath("/puppy-training");
   revalidatePath("/admin/reviews");
   redirect("/admin/reviews");
 }
@@ -65,5 +70,6 @@ export async function deleteReview(id: string) {
   const { error } = await supabase.from("reviews").delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/reviews");
+  revalidatePath("/puppy-training");
   revalidatePath("/admin/reviews");
 }

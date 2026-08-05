@@ -26,7 +26,7 @@ const MENU_ITEMS = [
   { icon: PawPrint, label: "Your Puppy", href: "/account/your-puppy" },
   { icon: Heart, label: "Favorites", href: "/account/favorites" },
   { icon: CreditCard, label: "Payments", href: "/account/payments" },
-  { icon: Settings, label: "Account Settings", href: "/account" },
+  { icon: Settings, label: "Account Settings", href: "/account/settings" },
 ];
 
 export default function AccountPanel({

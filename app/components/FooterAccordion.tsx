@@ -28,6 +28,7 @@ function buildSections(loggedIn: boolean): Section[] {
           href: loggedIn ? "/account" : "/account/login",
         },
         { label: "Breed Guides", href: "/breed-guides" },
+        { label: "Puppy Training Program", href: "/puppy-training" },
         { label: "AKC Registration", href: "/akc-registration" },
         { label: "AKC Benefits", href: "/akc-benefits" },
         { label: "Fetch Insurance", href: "/fetch-insurance" },
