@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cldOptimized } from "@/lib/cloudinary";
+import { getCategoryColor } from "@/lib/categoryColors";
 import type { ExploringCard } from "@/lib/queries/homepageCollections";
 
 type Breed = { id: string; name: string; image_url: string | null };
@@ -22,9 +23,11 @@ export default function KeepExploringGrid({
 
       {cards.length > 0 && (
         <div className="grid grid-cols-4 gap-3 mb-12">
-          {cards.map((c) => (
+          {cards.map((c, i) => (
             <Link key={c.id} href={c.linkHref} className="text-center">
-              <div className="aspect-square rounded-lg overflow-hidden bg-cream-alt mb-2">
+              <div
+                className={`aspect-square rounded-lg overflow-hidden mb-2 flex items-center justify-center ${getCategoryColor(i)}`}
+              >
                 {c.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
