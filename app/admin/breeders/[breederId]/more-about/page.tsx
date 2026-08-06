@@ -10,6 +10,9 @@ export default async function MoreAboutPage({ params }: { params: Promise<{ bree
   const { data: breeder } = await supabase.from("breeders").select("name, slug").eq("id", breederId).single();
   if (!breeder) notFound();
 
+  const breederName = breeder.name;
+  const breederSlug = breeder.slug;
+
   const { data: items } = await supabase
     .from("breeder_more_about")
     .select("id, icon_key, heading, body")
@@ -18,13 +21,13 @@ export default async function MoreAboutPage({ params }: { params: Promise<{ bree
 
   const removeItem = async (id: string) => {
     "use server";
-    await deleteMoreAbout(id, breeder.slug);
+    await deleteMoreAbout(id, breederSlug);
   };
   async function handleAdd(formData: FormData) {
     "use server";
     await addMoreAbout(
       breederId,
-      breeder.slug,
+      breederSlug,
       formData.get("icon_key") as string,
       formData.get("heading") as string,
       formData.get("body") as string
@@ -34,7 +37,7 @@ export default async function MoreAboutPage({ params }: { params: Promise<{ bree
   return (
     <main className="px-5 pt-6 pb-10">
       <p className="eyebrow mb-1">Haven Paws Admin</p>
-      <h1 className="font-display text-xl text-forest mb-6">More About {breeder.name}</h1>
+      <h1 className="font-display text-xl text-forest mb-6">More About {breederName}</h1>
 
       <form action={handleAdd} className="bg-white border border-sage/20 rounded-lg p-4 mb-6">
         <label className="block text-sm text-ink/80 mb-1">Icon</label>

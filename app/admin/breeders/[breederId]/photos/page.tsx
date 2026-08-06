@@ -10,6 +10,9 @@ export default async function BreederPhotosPage({ params }: { params: Promise<{ 
   const { data: breeder } = await supabase.from("breeders").select("name, slug").eq("id", breederId).single();
   if (!breeder) notFound();
 
+  const breederName = breeder.name;
+  const breederSlug = breeder.slug;
+
   const { data: photos } = await supabase
     .from("breeder_photos")
     .select("id, image_url")
@@ -18,17 +21,17 @@ export default async function BreederPhotosPage({ params }: { params: Promise<{ 
 
   const upload = async (url: string) => {
     "use server";
-    await addBreederPhoto(breederId, breeder.slug, url);
+    await addBreederPhoto(breederId, breederSlug, url);
   };
   const remove = async (id: string) => {
     "use server";
-    await deleteBreederPhoto(id, breeder.slug);
+    await deleteBreederPhoto(id, breederSlug);
   };
 
   return (
     <main className="px-5 pt-6 pb-10">
       <p className="eyebrow mb-1">Haven Paws Admin</p>
-      <h1 className="font-display text-xl text-forest mb-1">{breeder.name}&apos;s Photos</h1>
+      <h1 className="font-display text-xl text-forest mb-1">{breederName}&apos;s Photos</h1>
       <p className="text-sm text-sage mb-4">Unbounded — add as many as you like.</p>
 
       <SimpleImageUploadForm onUpload={upload} label="Upload Photo" />

@@ -10,6 +10,8 @@ export default async function QualificationsPage({ params }: { params: Promise<{
   const { data: breeder } = await supabase.from("breeders").select("name, slug").eq("id", breederId).single();
   if (!breeder) notFound();
 
+  const breederSlug = breeder.slug;
+
   const { data: items } = await supabase
     .from("breeder_qualifications")
     .select("id, badge_image_url, label_line, title_line")
@@ -19,14 +21,14 @@ export default async function QualificationsPage({ params }: { params: Promise<{
   const count = items?.length ?? 0;
   const removeItem = async (id: string) => {
     "use server";
-    await deleteQualification(id, breeder.slug);
+    await deleteQualification(id, breederSlug);
   };
   async function handleAdd(formData: FormData) {
     "use server";
     const imageUrl = formData.get("badge_image_url") as string;
     await addQualification(
       breederId,
-      breeder.slug,
+      breederSlug,
       imageUrl || null,
       formData.get("label_line") as string,
       formData.get("title_line") as string

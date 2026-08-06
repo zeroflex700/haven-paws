@@ -10,8 +10,8 @@ export default async function HealthTestingPage({ params }: { params: Promise<{ 
   const { data: breeder } = await supabase.from("breeders").select("name, slug").eq("id", breederId).single();
   if (!breeder) notFound();
 
-  const breederSlug = breeder.slug;
   const breederName = breeder.name;
+  const breederSlug = breeder.slug;
 
   const { data: items } = await supabase
     .from("breeder_health_testing")
