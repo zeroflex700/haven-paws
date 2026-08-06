@@ -1,7 +1,14 @@
 import { ShieldCheck, CreditCard, Wallet } from "lucide-react";
 
 export default function SecurePaymentsRow() {
-  const methods = ["Visa", "Mastercard", "Amex", "PayPal", "Apple Pay", "Google Pay"];
+  const methods = [
+    "Visa",
+    "Mastercard",
+    "Amex",
+    "PayPal",
+    "Apple Pay",
+    "Google Pay",
+  ];
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-6">
@@ -14,7 +21,7 @@ export default function SecurePaymentsRow() {
         {methods.map((m) => (
           <span
             key={m}
-            className="flex items-center gap-1.5 text-xs text-white/80 border border-white/15 rounded-md px-2.5 py-1.5"
+            className="flex items-center gap-1.5 rounded-md border border-white/20 px-2.5 py-1.5 text-xs text-white/80"
           >
             {m === "PayPal" || m === "Apple Pay" || m === "Google Pay" ? (
               <Wallet size={12} />
