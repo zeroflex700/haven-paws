@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { addQualification, deleteQualification } from "../../content-actions";
-import SimpleImageUploadForm from "../../../components/SimpleImageUploadForm";
+import { deleteQualification } from "../../content-actions";
+import QualificationForm from "../../../components/QualificationForm";
 import DeleteGenericButton from "../../../components/DeleteGenericButton";
 import { notFound } from "next/navigation";
 
@@ -23,17 +23,6 @@ export default async function QualificationsPage({ params }: { params: Promise<{
     "use server";
     await deleteQualification(id, breederSlug);
   };
-  async function handleAdd(formData: FormData) {
-    "use server";
-    const imageUrl = formData.get("badge_image_url") as string;
-    await addQualification(
-      breederId,
-      breederSlug,
-      imageUrl || null,
-      formData.get("label_line") as string,
-      formData.get("title_line") as string
-    );
-  }
 
   return (
     <main className="px-5 pt-6 pb-10">
@@ -42,21 +31,7 @@ export default async function QualificationsPage({ params }: { params: Promise<{
       <p className="text-sm text-sage mb-6">{count}/8 slots used</p>
 
       {count < 8 ? (
-        <form action={handleAdd} className="bg-white border border-sage/20 rounded-lg p-4 mb-6">
-          <label className="block text-sm text-ink/80 mb-1">Badge Image URL (upload below first, then paste here)</label>
-          <input name="badge_image_url" placeholder="Paste uploaded image URL" className="w-full border border-sage/30 rounded-md px-3 py-2 mb-2" />
-          <SimpleImageUploadForm
-            onUpload={async () => {}}
-            label="Upload Badge (copy the URL manually for now)"
-          />
-          <label className="block text-sm text-ink/80 mb-1 mt-3">Label Line</label>
-          <input name="label_line" placeholder="e.g. Recognized as a:" required className="w-full border border-sage/30 rounded-md px-3 py-2 mb-3" />
-          <label className="block text-sm text-ink/80 mb-1">Title Line</label>
-          <input name="title_line" placeholder="e.g. State-Licensed Dog Breeder" required className="w-full border border-sage/30 rounded-md px-3 py-2 mb-4" />
-          <button type="submit" className="w-full bg-forest text-cream py-2.5 rounded-full hover:bg-forest-light">
-            Add Qualification
-          </button>
-        </form>
+        <QualificationForm breederId={breederId} breederSlug={breederSlug} />
       ) : (
         <p className="text-sm text-sage mb-6">Maximum of 8 reached — delete one to add another.</p>
       )}

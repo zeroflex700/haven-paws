@@ -1,5 +1,6 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import PageContainer from "../components/PageContainer";
 import FaqAccordion from "../components/FaqAccordion";
 
 const ABOUT_HAVEN_PAWS = [
@@ -114,33 +115,31 @@ export default function FaqsPage() {
     <main>
       <Navbar />
 
-      <section className="bg-cream-alt py-12">
-        <div className="max-w-7xl mx-auto px-6">
-          <h1 className="font-display text-2xl text-forest mb-2">
-            FAQs About Bringing Home a Puppy from Haven Paws
-          </h1>
-        </div>
+      <section className="bg-cream-alt py-10">
+        <PageContainer className="max-w-3xl">
+          <h1 className="h1">FAQs About Bringing Home a Puppy from Haven Paws</h1>
+        </PageContainer>
       </section>
 
-      <section className="max-w-7xl mx-auto px-6 py-10">
-        <p className="eyebrow mb-4">About Haven Paws</p>
+      <PageContainer className="max-w-3xl py-8">
+        <p className="eyebrow mb-3">About Haven Paws</p>
         <FaqAccordion items={ABOUT_HAVEN_PAWS} />
-      </section>
+      </PageContainer>
 
-      <section className="max-w-7xl mx-auto px-6 py-10">
-        <p className="eyebrow mb-4">Trust &amp; Pricing</p>
+      <PageContainer className="max-w-3xl py-8">
+        <p className="eyebrow mb-3">Trust &amp; Pricing</p>
         <FaqAccordion items={TRUST_AND_PRICING} />
-      </section>
+      </PageContainer>
 
-      <section className="max-w-7xl mx-auto px-6 py-10">
-        <p className="eyebrow mb-4">Puppies &amp; Delivery</p>
+      <PageContainer className="max-w-3xl py-8">
+        <p className="eyebrow mb-3">Puppies &amp; Delivery</p>
         <FaqAccordion items={PUPPIES_AND_DELIVERY} />
-      </section>
+      </PageContainer>
 
-      <section className="max-w-7xl mx-auto px-6 py-10">
-        <p className="eyebrow mb-4">Our Services</p>
+      <PageContainer className="max-w-3xl py-8">
+        <p className="eyebrow mb-3">Our Services</p>
         <FaqAccordion items={SERVICES} />
-      </section>
+      </PageContainer>
 
       <Footer />
     </main>

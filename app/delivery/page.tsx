@@ -1,5 +1,6 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import PageContainer from "../components/PageContainer";
 import DeliveryTierAccordion from "../components/DeliveryTierAccordion";
 import { ProtectedImage, ProtectedVideo } from "../components/ProtectedMedia";
 import { getPageImages } from "@/lib/queries/pageContent";
@@ -64,40 +65,36 @@ export default async function DeliveryPage() {
         </div>
       )}
 
-      <section className="max-w-2xl mx-auto px-6 py-14">
-        <p className="eyebrow mb-3">Bringing Your Puppy Home</p>
-        <h1 className="font-display text-2xl text-forest mb-6">Delivery Programs</h1>
-        <p className="text-ink/80 leading-relaxed">
+      <PageContainer className="max-w-2xl py-10">
+        <p className="eyebrow mb-2">Bringing Your Puppy Home</p>
+        <h1 className="h1 mb-5">Delivery Programs</h1>
+        <p className="body-text">
           No matter where you live in the U.S., Haven Paws makes it easy to choose how your
           puppy comes home. Every option is coordinated by our team and trusted transport
           partners, with your puppy&apos;s comfort and safety as the top priority. Explore the
           programs below to find the option that fits your schedule and budget.
         </p>
-      </section>
+      </PageContainer>
 
-      <section className="max-w-2xl mx-auto px-6 pb-14">
+      <PageContainer className="max-w-2xl pb-10">
         <DeliveryTierAccordion tiers={tiers} />
-      </section>
+      </PageContainer>
 
-      <section className="bg-cream-alt py-14">
-        <div className="max-w-2xl mx-auto px-6 text-center">
-          <h2 className="font-display text-2xl text-forest mb-4">
-            Safe Nationwide Puppy Delivery
-          </h2>
-          <p className="text-ink/80 leading-relaxed mb-8">
+      <section className="bg-cream-alt py-10 text-center">
+        <PageContainer className="max-w-2xl">
+          <h2 className="h2 mb-3">Safe Nationwide Puppy Delivery</h2>
+          <p className="body-text mb-6">
             Wherever you are in the country, Haven Paws works with experienced, trusted
             transportation professionals who put your puppy&apos;s comfort and well-being
             first at every stage of the journey — from departure to arrival at your door.
           </p>
           {extraVideos.closing_video && (
             <div className="max-w-md mx-auto">
-              <p className="text-sm text-sage mb-3">
-                Watch families welcome their newest companions home
-              </p>
+              <p className="small-text mb-2">Watch families welcome their newest companions home</p>
               <ProtectedVideo src={extraVideos.closing_video} className="w-full rounded-lg" />
             </div>
           )}
-        </div>
+        </PageContainer>
       </section>
 
       <Footer />

@@ -1,5 +1,6 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import PageContainer from "../components/PageContainer";
 import FaqAccordion from "../components/FaqAccordion";
 
 const SECTIONS = [
@@ -74,14 +75,14 @@ export default function TermsPage() {
   return (
     <main>
       <Navbar />
-      <section className="bg-cream-alt py-12">
-        <div className="max-w-7xl mx-auto px-6">
-          <h1 className="font-display text-2xl text-forest">Terms &amp; Conditions</h1>
-        </div>
+      <section className="bg-cream-alt py-8">
+        <PageContainer className="max-w-3xl">
+          <h1 className="h1">Terms &amp; Conditions</h1>
+        </PageContainer>
       </section>
-      <section className="max-w-7xl mx-auto px-6 py-12">
+      <PageContainer className="max-w-3xl py-8">
         <FaqAccordion items={SECTIONS} />
-      </section>
+      </PageContainer>
       <Footer />
     </main>
   );

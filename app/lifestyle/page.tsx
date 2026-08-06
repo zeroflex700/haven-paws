@@ -1,5 +1,6 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import PageContainer from "../components/PageContainer";
 import LifestyleFilterDropdown from "../components/LifestyleFilterDropdown";
 import LifestyleCategorySection from "../components/LifestyleCategorySection";
 import { getPageImages } from "@/lib/queries/pageContent";
@@ -14,12 +15,10 @@ export default async function LifestylePage() {
     <main>
       <Navbar />
 
-      <div className="max-w-2xl mx-auto px-6 pt-10">
+      <PageContainer className="max-w-2xl pt-8">
         <p className="eyebrow mb-2 text-center">Explore</p>
-        <h1 className="font-display text-2xl text-forest text-center mb-2">
-          Browse by Lifestyle
-        </h1>
-      </div>
+        <h1 className="h1 text-center mb-2">Browse by Lifestyle</h1>
+      </PageContainer>
 
       <LifestyleFilterDropdown categories={LIFESTYLE_CATEGORIES} />
 

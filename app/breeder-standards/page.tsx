@@ -1,5 +1,6 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import PageContainer from "../components/PageContainer";
 import StandardsAccordion from "../components/StandardsAccordion";
 import ProcessSteps from "../components/ProcessSteps";
 import BoardCarousel from "../components/BoardCarousel";
@@ -144,118 +145,106 @@ export default async function BreederStandardsPage() {
           <div className="w-full aspect-[4/3] sm:aspect-[16/7] bg-cream-alt" />
         )}
         <div className="absolute inset-0 bg-forest/40 flex items-center justify-center px-6">
-          <h1 className="font-display text-2xl sm:text-3xl text-white text-center max-w-lg">
+          <h1 className="font-display text-xl sm:text-2xl text-white text-center max-w-lg">
             Every happy beginning starts with a trusted, vetted breeder
           </h1>
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-6 py-14">
-        <h2 className="font-display text-3xl text-forest mb-4">
-          Every Great Journey Begins with a Trusted Breeder
-        </h2>
-        <p className="text-ink/80 leading-relaxed mb-8">
+      <PageContainer className="max-w-2xl py-10">
+        <h2 className="h1 mb-3">Every Great Journey Begins with a Trusted Breeder</h2>
+        <p className="body-text mb-6">
           At Haven Paws, we believe every puppy deserves the best possible beginning. That&apos;s
           why we partner only with carefully evaluated breeders who meet our strict standards
           for health, ethical care, and responsible breeding.
         </p>
 
-        <p className="eyebrow mb-2">What Sets Our Breeder Standards Apart</p>
-        <p className="text-ink/70 mb-6">
+        <p className="eyebrow mb-1">What Sets Our Breeder Standards Apart</p>
+        <p className="body-text mb-5">
           Breeders who work with us meet strict health, safety, and care standards so you can
           find your perfect puppy with confidence.
         </p>
 
         <StandardsAccordion items={standardsWithImages} />
-      </section>
+      </PageContainer>
 
-      <section className="bg-cream-alt py-14">
-        <div className="max-w-7xl mx-auto px-6">
-          <h2 className="font-display text-2xl text-forest text-center mb-10">
-            Our Breeder Vetting Process: Step-by-Step
-          </h2>
+      <section className="bg-cream-alt py-10">
+        <PageContainer className="max-w-2xl">
+          <h2 className="h2 text-center mb-8">Our Breeder Vetting Process: Step-by-Step</h2>
           <ProcessSteps steps={stepsWithVideos} />
-        </div>
+        </PageContainer>
       </section>
 
-      <section className="max-w-7xl mx-auto px-6 py-14">
-        <h2 className="font-display text-2xl text-forest mb-4">
-          Our Commitment to Health &amp; Happiness
-        </h2>
-        <p className="text-ink/80 leading-relaxed">
+      <PageContainer className="max-w-2xl py-10">
+        <h2 className="h2 mb-3">Our Commitment to Health &amp; Happiness</h2>
+        <p className="body-text">
           At Haven Paws, our mission is simple: connect families with healthy, well-cared-for
           puppies raised by responsible breeders who consistently meet the highest standards of
           care, safety, and ethical breeding. Every decision we make is guided by the
           well-being of our puppies and the confidence of the families we serve.
         </p>
-      </section>
+      </PageContainer>
 
       {boardMembers.length > 0 && (
-        <section className="bg-cream-alt py-14">
-          <div className="max-w-7xl mx-auto px-6">
-            <p className="eyebrow mb-2 text-center">Science-Based Oversight</p>
-            <h2 className="font-display text-2xl text-forest text-center mb-8">
-              Our Scientific Advisory Board
-            </h2>
-            <p className="text-ink/70 text-center max-w-xl mx-auto mb-8">
+        <section className="bg-cream-alt py-10">
+          <PageContainer className="max-w-5xl">
+            <p className="eyebrow mb-1 text-center">Science-Based Oversight</p>
+            <h2 className="h2 text-center mb-3">Our Scientific Advisory Board</h2>
+            <p className="body-text text-center max-w-xl mx-auto mb-6">
               Made up of veterinarians and animal welfare experts, our Scientific Advisory
               Board continuously reviews and refines our health standards to reflect the
               latest in veterinary science.
             </p>
             <BoardCarousel members={boardMembers} />
-          </div>
+          </PageContainer>
         </section>
       )}
 
       <AdvocacySection video={extraVideos.advocacy_video ?? null} />
 
-      <section className="max-w-7xl mx-auto px-6 pb-14 pt-4">
-        <div className="bg-white border border-gold/30 rounded-lg p-6 text-center">
-          <h2 className="font-display text-xl text-forest mb-2">
-            Join the Haven Paws Community as a Breeder
-          </h2>
-          <p className="text-ink/70 mb-4">
+      <PageContainer className="max-w-2xl pb-10 pt-2">
+        <div className="bg-white border border-gold/30 rounded-lg p-5 text-center">
+          <h2 className="h3 mb-2">Join the Haven Paws Community as a Breeder</h2>
+          <p className="body-text mb-4">
             Partner with Haven Paws to simplify your breeding process so you can focus on
             what you do best.
           </p>
           <a
             href="/contact"
-            className="inline-block bg-forest text-cream px-6 py-2.5 rounded-full hover:bg-forest-light transition-colors mb-6"
+            className="inline-block bg-forest text-cream text-sm px-5 py-2.5 rounded-full hover:bg-forest-light transition-colors mb-5"
           >
             Apply Now
           </a>
-          <div className="text-left grid sm:grid-cols-2 gap-4 text-sm text-ink/70">
+          <div className="text-left grid sm:grid-cols-2 gap-3 text-sm text-ink/70">
             <div>
-              <p className="text-forest font-medium mb-1">Nationwide reach</p>
+              <p className="text-forest font-medium text-sm mb-1">Nationwide reach</p>
               <p>We connect you with families across the U.S. and provide support for everything in between.</p>
             </div>
             <div>
-              <p className="text-forest font-medium mb-1">Free listings & trusted platform</p>
+              <p className="text-forest font-medium text-sm mb-1">Free listings &amp; trusted platform</p>
               <p>It&apos;s free to list with us, giving your puppies national visibility on a trusted platform.</p>
             </div>
             <div>
-              <p className="text-forest font-medium mb-1">Marketing & logistics covered</p>
+              <p className="text-forest font-medium text-sm mb-1">Marketing &amp; logistics covered</p>
               <p>We help with marketing, customer communication, and coordinate travel through vetted transport partners.</p>
             </div>
             <div>
-              <p className="text-forest font-medium mb-1">Resources & expert support</p>
+              <p className="text-forest font-medium text-sm mb-1">Resources &amp; expert support</p>
               <p>Gain access to tools, resources, and expert guidance to support best health and breeding practices.</p>
             </div>
           </div>
         </div>
-      </section>
+      </PageContainer>
 
-      <section className="max-w-7xl mx-auto px-6 pb-14">
-        <h2 className="font-display text-2xl text-forest text-center mb-2">
-          Frequently Asked Questions About Our Breeders
-        </h2>
-        <p className="text-ink/70 text-center mb-8">
+      <PageContainer className="max-w-2xl pb-10">
+        <h2 className="h2 text-center mb-2">Frequently Asked Questions About Our Breeders</h2>
+        <p className="body-text text-center mb-6">
           Need guidance? The Haven Paws support team is available to answer your questions,
           help you choose the right puppy, explain our breeder standards, and provide
           assistance throughout your journey.
         </p>
         <FaqAccordion items={FAQS} />
-      </section>
+      </PageContainer>
 
       <Footer />
     </main>

@@ -13,6 +13,10 @@
   --font-body: var(--font-inter), sans-serif;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: var(--color-cream);
   color: var(--color-ink);
@@ -29,6 +33,40 @@ video {
   -ms-user-select: none;
 }
 
+/* Accessible focus indicators — visible only for keyboard nav, not mouse clicks */
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast support */
+@media (prefers-contrast: more) {
+  body {
+    color: #000000;
+  }
+  .text-sage,
+  .text-ink\/70,
+  .text-ink\/80 {
+    color: #1a1a1a !important;
+  }
+}
+
 .eyebrow {
   @apply text-[11px] uppercase tracking-[0.2em] text-sage font-body font-medium;
 }
@@ -37,7 +75,6 @@ video {
   @apply w-10 h-px bg-gold;
 }
 
-/* Typography scale — use these instead of raw text-3xl/text-2xl etc. going forward */
 .h1 {
   @apply font-display text-2xl sm:text-3xl lg:text-4xl text-forest leading-tight;
 }
@@ -52,4 +89,27 @@ video {
 }
 .small-text {
   @apply text-xs sm:text-sm text-sage;
+}
+
+/* Screen-reader-only utility for the skip link */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+.focus\:not-sr-only:focus {
+  position: fixed;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
 }
