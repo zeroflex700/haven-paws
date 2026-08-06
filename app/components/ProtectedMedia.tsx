@@ -1,6 +1,6 @@
 "use client";
 
-import { cldOptimized } from "@/lib/cloudinary";
+import OptimizedImage from "./OptimizedImage";
 
 export function ProtectedImage({
   src,
@@ -11,20 +11,7 @@ export function ProtectedImage({
   alt: string;
   className?: string;
 }) {
-  return (
-    <div
-      className={`relative select-none ${className ?? ""}`}
-      onContextMenu={(e) => e.preventDefault()}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={cldOptimized(src, 1000)}
-        alt={alt}
-        draggable={false}
-        className="w-full h-full object-cover pointer-events-none"
-      />
-    </div>
-  );
+  return <OptimizedImage src={src} alt={alt} fill containerClassName={className} />;
 }
 
 export function ProtectedVideo({

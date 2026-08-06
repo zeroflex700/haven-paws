@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
+import Breadcrumbs from "../../components/Breadcrumbs";
+import RecordPuppyView from "../../components/RecordPuppyView";
 import PuppyGallery from "../../components/PuppyGallery";
 import InquiryForm from "../../components/InquiryForm";
 import PuppyIncluded from "../../components/PuppyIncluded";
@@ -49,7 +51,19 @@ export default async function PuppyDetailPage({
   return (
     <main className="pb-20 md:pb-0">
       <Navbar />
-      <section className="max-w-5xl mx-auto px-6 py-12 grid md:grid-cols-2 gap-10">
+      <RecordPuppyView id={puppy.id} name={puppy.name} image={coverImage} />
+
+      <section className="max-w-7xl mx-auto px-6 lg:px-10 pt-6">
+        <Breadcrumbs
+          items={[
+            { label: "Home", href: "/" },
+            { label: "Puppies", href: "/puppies" },
+            { label: puppy.name },
+          ]}
+        />
+      </section>
+
+      <section className="max-w-5xl mx-auto px-6 py-6 grid md:grid-cols-2 gap-10">
         <PuppyGallery media={puppy.media} name={puppy.name} />
 
         <div>

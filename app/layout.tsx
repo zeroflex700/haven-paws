@@ -5,6 +5,8 @@ import MediaProtection from "./components/MediaProtection";
 import TopLoadingBar from "./components/TopLoadingBar";
 import ScrollToTop from "./components/ScrollToTop";
 import SkipToContent from "./components/SkipToContent";
+import PageTransition from "./components/PageTransition";
+import BackToTopButton from "./components/BackToTopButton";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -37,7 +39,10 @@ export default function RootLayout({
         <MediaProtection />
         <TopLoadingBar />
         <ScrollToTop />
-        <div id="main-content">{children}</div>
+        <div id="main-content">
+          <PageTransition>{children}</PageTransition>
+        </div>
+        <BackToTopButton />
       </body>
     </html>
   );

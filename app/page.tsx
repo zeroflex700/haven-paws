@@ -2,6 +2,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import HomeHero from "./components/HomeHero";
 import BreedDiscoveryRow from "./components/BreedDiscoveryRow";
+import RecentlyViewedStrip from "./components/RecentlyViewedStrip";
 import TrustBanner from "./components/TrustBanner";
 import HowItWorksAccordion from "./components/HowItWorksAccordion";
 import VideoStoryCarousel from "./components/VideoStoryCarousel";
@@ -37,6 +38,7 @@ export default async function Home() {
         avgRating={avgRating}
       />
       <BreedDiscoveryRow breeds={breeds ?? []} />
+      <RecentlyViewedStrip />
       <TrustBanner />
       <HowItWorksAccordion />
       <VideoStoryCarousel stories={videoStories} />

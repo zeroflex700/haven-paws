@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Video } from "lucide-react";
-import { cldOptimized } from "@/lib/cloudinary";
+import OptimizedImage from "./OptimizedImage";
 
 type Status = "available" | "reserved" | "sold";
 
@@ -26,21 +26,14 @@ export default function PedigreeCard({
   hasVideo?: boolean;
 }) {
   return (
-    <Link href={`/puppies/${id}`} className="block">
+    <Link href={`/puppies/${id}`} className="block group">
       <div className="aspect-square rounded-lg overflow-hidden bg-cream-alt relative">
-        {image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={cldOptimized(image, 500)}
-            alt={name}
-            loading="lazy"
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-sage text-xs">
-            Photo coming soon
-          </div>
-        )}
+        <OptimizedImage
+          src={image}
+          alt={name}
+          sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 18vw"
+          className="group-active:scale-[0.98] transition-transform duration-200"
+        />
         {status !== "available" && (
           <span className="absolute top-2 left-2 text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/90 text-ink">
             {status}

@@ -6,6 +6,7 @@ import { PawPrint, Menu, User } from "lucide-react";
 import MobileMenu from "./MobileMenu";
 import AccountPanel from "./AccountPanel";
 import { supabase } from "@/lib/supabase/client";
+import { useScrollDirection } from "@/lib/hooks/useScrollDirection";
 
 type Thumbnails = { how_it_works: string | null; learning_center: string | null; our_standards: string | null };
 
@@ -18,6 +19,7 @@ export default function Navbar() {
     learning_center: null,
     our_standards: null,
   });
+  const scrollDirection = useScrollDirection();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -47,7 +49,11 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-cream/90 backdrop-blur border-b border-sage/20">
+      <header
+        className={`sticky top-0 z-50 bg-cream/90 backdrop-blur border-b border-sage/20 transition-transform duration-300 ${
+          scrollDirection === "down" ? "-translate-y-full" : "translate-y-0"
+        }`}
+      >
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-10 py-3">
           <div className="flex items-center gap-3">
             <button onClick={() => setMenuOpen(true)} className="md:hidden" aria-label="Open menu">
@@ -61,16 +67,16 @@ export default function Navbar() {
             </Link>
           </div>
           <nav className="hidden md:flex items-center gap-7 text-sm text-ink">
-            <Link href="/puppies" className="hover:text-forest">Available Puppies</Link>
-            <Link href="/how-it-works" className="hover:text-forest">How It Works</Link>
-            <Link href="/about" className="hover:text-forest">About</Link>
+            <Link href="/puppies" className="hover:text-forest transition-colors">Available Puppies</Link>
+            <Link href="/how-it-works" className="hover:text-forest transition-colors">How It Works</Link>
+            <Link href="/about" className="hover:text-forest transition-colors">About</Link>
           </nav>
 
           {loggedIn ? (
             <button
               onClick={() => setAccountOpen(true)}
               aria-label="Account"
-              className="w-9 h-9 rounded-full bg-cream-alt border border-sage/30 flex items-center justify-center hover:border-gold transition-colors"
+              className="w-9 h-9 rounded-full bg-cream-alt border border-sage/30 flex items-center justify-center hover:border-gold active:scale-95 transition-all"
             >
               <User size={16} className="text-forest" strokeWidth={1.5} />
             </button>
@@ -78,7 +84,7 @@ export default function Navbar() {
             <Link
               href="/account/login"
               aria-label="Account"
-              className="w-9 h-9 rounded-full bg-cream-alt border border-sage/30 flex items-center justify-center hover:border-gold transition-colors"
+              className="w-9 h-9 rounded-full bg-cream-alt border border-sage/30 flex items-center justify-center hover:border-gold active:scale-95 transition-all"
             >
               <User size={16} className="text-forest" strokeWidth={1.5} />
             </Link>

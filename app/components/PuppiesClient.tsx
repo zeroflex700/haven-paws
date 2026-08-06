@@ -1,10 +1,19 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import PedigreeCard from "./PedigreeCard";
 import PuppyFilters, { Filters } from "./PuppyFilters";
+import { usePersistentFilters } from "@/lib/hooks/usePersistentFilters";
 import type { PuppyRecord } from "@/lib/queries/puppies";
+
+const DEFAULT_FILTERS: Filters = {
+  search: "",
+  breed: "all",
+  sex: "all",
+  readyNow: false,
+  sort: "none",
+};
 
 export default function PuppiesClient({
   initialPuppies,
@@ -12,13 +21,10 @@ export default function PuppiesClient({
   initialPuppies: PuppyRecord[];
 }) {
   const searchParams = useSearchParams();
-
-  const [filters, setFilters] = useState<Filters>({
+  const [filters, setFilters] = usePersistentFilters<Filters>("havenpaws_puppy_filters", {
+    ...DEFAULT_FILTERS,
     search: searchParams.get("search") ?? "",
     breed: searchParams.get("breed") ?? "all",
-    sex: "all",
-    readyNow: false,
-    sort: "none",
   });
 
   const filtered = useMemo(() => {
