@@ -28,7 +28,7 @@ function LoadingBarInner() {
   return (
     <div
       aria-hidden="true"
-      className={`fixed top-0 left-0 h-0.5 bg-gold z-[100] transition-all duration-200 ease-out ${
+      className={`fixed top-0 left-0 h-1 bg-gold shadow-[0_0_8px_rgba(34,197,94,0.5)] z-[100] transition-all duration-200 ease-out ${
         visible ? "opacity-100" : "opacity-0"
       }`}
       style={{ width: `${width}%` }}
