@@ -42,23 +42,23 @@ export default function PedigreeCard({
           </div>
         )}
         {status !== "available" && (
-          <span className="absolute top-2 left-2 text-[9px] uppercase tracking-wider px-2 py-1 rounded-full bg-white/90 text-ink">
+          <span className="absolute top-2 left-2 text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/90 text-ink">
             {status}
           </span>
         )}
         {hasVideo && (
-          <span className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center">
-            <Video size={14} className="text-white" />
+          <span className="absolute bottom-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center">
+            <Video size={12} className="text-white" />
           </span>
         )}
       </div>
-      <p className="text-xs text-sage mt-2">{breed}</p>
-      <p className="text-forest font-medium border-b border-gold/60 inline-block">{name}</p>
-      <p className="text-sm text-ink/70 capitalize mt-0.5">
+      <p className="text-[11px] text-sage mt-1.5">{breed}</p>
+      <p className="text-sm text-forest font-medium border-b border-gold/60 inline-block">{name}</p>
+      <p className="text-xs text-ink/70 capitalize mt-0.5">
         {sex}
         {ageWeeks !== null ? ` · ${ageWeeks} weeks` : ""}
       </p>
-      <p className="text-xs text-ink/60">{readyLabel}</p>
+      <p className="text-[11px] text-ink/60">{readyLabel}</p>
     </Link>
   );
 }

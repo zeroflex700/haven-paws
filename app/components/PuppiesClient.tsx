@@ -28,8 +28,7 @@ export default function PuppiesClient({
       if (filters.readyNow && p.readyLabel !== "Ready to go home") return false;
       if (filters.search.trim()) {
         const term = filters.search.trim().toLowerCase();
-        const matches =
-          p.name.toLowerCase().includes(term) || p.breed.toLowerCase().includes(term);
+        const matches = p.name.toLowerCase().includes(term) || p.breed.toLowerCase().includes(term);
         if (!matches) return false;
       }
       return true;
@@ -45,24 +44,24 @@ export default function PuppiesClient({
   }, [filters, initialPuppies]);
 
   return (
-    <section className="max-w-6xl mx-auto px-6 pt-8 pb-20">
-      <div className="relative mb-4">
+    <section className="max-w-7xl mx-auto px-6 lg:px-10 pt-6 pb-16">
+      <div className="relative mb-3">
         <input
           value={filters.search}
           onChange={(e) => setFilters({ ...filters, search: e.target.value })}
           placeholder="Search by breed or puppy name"
-          className="w-full border border-sage/30 rounded-full px-5 py-3 text-sm focus:outline-none focus:border-gold"
+          className="w-full border border-sage/30 rounded-full px-5 py-2.5 text-sm focus:outline-none focus:border-gold"
         />
       </div>
 
       <PuppyFilters filters={filters} onChange={setFilters} />
 
       {filtered.length === 0 ? (
-        <p className="text-sage py-12 text-center">
+        <p className="small-text py-10 text-center">
           No puppies match these filters. Try adjusting your search.
         </p>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-7">
           {filtered.map((p) => (
             <PedigreeCard key={p.id} {...p} image={p.coverImage} />
           ))}

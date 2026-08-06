@@ -31,6 +31,8 @@ export type PuppyDetail = {
   media: { url: string; mediaType: "image" | "video"; isCover: boolean }[];
   mom: ParentInfo;
   dad: ParentInfo;
+  breederName: string | null;
+  breederSlug: string | null;
 };
 
 function calcAgeWeeks(birthDate: string | null): number | null {
@@ -48,6 +50,7 @@ export async function getPuppyDetail(id: string): Promise<PuppyDetail | null> {
        mom_name, mom_breed, mom_weight, mom_registration, mom_photo_url,
        dad_name, dad_breed, dad_weight, dad_registration, dad_photo_url,
        breeds ( name ),
+       breeders ( name, slug ),
        puppy_media ( url, media_type, is_cover, sort_order )`
     )
     .eq("id", id)
@@ -84,6 +87,7 @@ export async function getPuppyDetail(id: string): Promise<PuppyDetail | null> {
     dad_registration: string | null;
     dad_photo_url: string | null;
     breeds: { name: string } | null;
+    breeders: { name: string; slug: string } | null;
     puppy_media: { url: string; media_type: "image" | "video"; is_cover: boolean; sort_order: number }[] | null;
   };
 
@@ -123,5 +127,7 @@ export async function getPuppyDetail(id: string): Promise<PuppyDetail | null> {
       registration: raw.dad_registration,
       photoUrl: raw.dad_photo_url,
     },
+    breederName: raw.breeders?.name ?? null,
+    breederSlug: raw.breeders?.slug ?? null,
   };
 }

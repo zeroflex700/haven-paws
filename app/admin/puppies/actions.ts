@@ -10,15 +10,14 @@ export async function createPuppy(formData: FormData) {
   const { error } = await supabase.from("puppies").insert({
     name: formData.get("name") as string,
     breed_id: formData.get("breed_id") as string,
+    breeder_id: (formData.get("breeder_id") as string) || null,
     sex: formData.get("sex") as string,
     price: Number(formData.get("price")),
     deposit_amount: Number(formData.get("deposit_amount") || 0),
     description: formData.get("description") as string,
     status: formData.get("status") as string,
     color: formData.get("color") as string,
-    weight_estimate: formData.get("weight_estimate")
-      ? Number(formData.get("weight_estimate"))
-      : null,
+    weight_estimate: formData.get("weight_estimate") ? Number(formData.get("weight_estimate")) : null,
     litter_id: (formData.get("litter_id") as string) || null,
     ready_date: (formData.get("ready_date") as string) || null,
     included_items: formData.getAll("included_items"),
@@ -42,15 +41,14 @@ export async function updatePuppy(id: string, formData: FormData) {
     .update({
       name: formData.get("name") as string,
       breed_id: formData.get("breed_id") as string,
+      breeder_id: (formData.get("breeder_id") as string) || null,
       sex: formData.get("sex") as string,
       price: Number(formData.get("price")),
       deposit_amount: Number(formData.get("deposit_amount") || 0),
       description: formData.get("description") as string,
       status: formData.get("status") as string,
       color: formData.get("color") as string,
-      weight_estimate: formData.get("weight_estimate")
-        ? Number(formData.get("weight_estimate"))
-        : null,
+      weight_estimate: formData.get("weight_estimate") ? Number(formData.get("weight_estimate")) : null,
       litter_id: (formData.get("litter_id") as string) || null,
       ready_date: (formData.get("ready_date") as string) || null,
       included_items: formData.getAll("included_items"),

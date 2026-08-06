@@ -12,6 +12,7 @@ import RelatedPuppies from "../../components/RelatedPuppies";
 import Testimonials from "../../components/Testimonials";
 import DeliveryInfo from "../../components/DeliveryInfo";
 import PuppyBookingWidget from "../../components/PuppyBookingWidget";
+import Link from "next/link";
 import { getPuppyDetail } from "@/lib/queries/puppyDetail";
 import { getRelatedPuppies } from "@/lib/queries/relatedPuppies";
 import { getReviews } from "@/lib/queries/testimonials";
@@ -52,12 +53,10 @@ export default async function PuppyDetailPage({
         <PuppyGallery media={puppy.media} name={puppy.name} />
 
         <div>
-          <span
-            className={`text-[10px] uppercase tracking-wider px-3 py-1 rounded-full ${statusColor[puppy.status]}`}
-          >
+          <span className={`text-[10px] uppercase tracking-wider px-3 py-1 rounded-full ${statusColor[puppy.status]}`}>
             {puppy.status}
           </span>
-          <h1 className="font-display text-2xl text-forest mt-3 mb-1">{puppy.name}</h1>
+          <h1 className="font-display text-3xl text-forest mt-3 mb-1">{puppy.name}</h1>
           <p className="eyebrow mb-1">{puppy.breed}</p>
           <p className="text-sm text-ink/60 capitalize mb-4">
             {puppy.sex}
@@ -65,9 +64,7 @@ export default async function PuppyDetailPage({
           </p>
           <div className="gold-rule mb-4" />
 
-          <p className="text-2xl text-ink font-medium mb-4">
-            ${puppy.price.toLocaleString()}
-          </p>
+          <p className="text-2xl text-ink font-medium mb-4">${puppy.price.toLocaleString()}</p>
 
           <PuppyBookingWidget
             puppy={{
@@ -85,9 +82,7 @@ export default async function PuppyDetailPage({
 
           {puppy.description && (
             <div className="mb-6">
-              <h3 className="font-display text-lg text-forest mb-2">
-                About {puppy.name}
-              </h3>
+              <h3 className="font-display text-lg text-forest mb-2">About {puppy.name}</h3>
               <p className="text-ink/80 leading-relaxed">{puppy.description}</p>
             </div>
           )}
@@ -99,9 +94,7 @@ export default async function PuppyDetailPage({
             </div>
             <div>
               <p className="text-sage text-xs uppercase tracking-wider">Est. Weight</p>
-              <p className="text-ink">
-                {puppy.weightEstimate ? `${puppy.weightEstimate} lbs` : "—"}
-              </p>
+              <p className="text-ink">{puppy.weightEstimate ? `${puppy.weightEstimate} lbs` : "—"}</p>
             </div>
             <div>
               <p className="text-sage text-xs uppercase tracking-wider">Vet Checked</p>
@@ -118,6 +111,15 @@ export default async function PuppyDetailPage({
               </div>
             )}
           </div>
+
+          {puppy.breederSlug && (
+            <Link
+              href={`/breeders/${puppy.breederSlug}`}
+              className="inline-block text-sm text-forest border-b border-gold pb-0.5 mb-6"
+            >
+              Meet the Breeder →
+            </Link>
+          )}
 
           <PuppyIncluded items={puppy.includedItems} />
 
