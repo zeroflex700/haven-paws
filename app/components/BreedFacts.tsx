@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { cldOptimized } from "@/lib/cloudinary";
+import OptimizedImage from "./OptimizedImage";
 import type { BreedInfo } from "@/lib/queries/breedInfo";
 
 export default function BreedFacts({ breed }: { breed: BreedInfo | null }) {
@@ -9,23 +9,14 @@ export default function BreedFacts({ breed }: { breed: BreedInfo | null }) {
     <section className="max-w-3xl mx-auto px-6 pb-16">
       {breed.imageUrl && (
         <div className="aspect-video rounded-lg overflow-hidden mb-6">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={cldOptimized(breed.imageUrl, 800)}
-            alt={breed.name}
-            className="w-full h-full object-cover"
-          />
+          <OptimizedImage src={breed.imageUrl} alt={breed.name} sizes="(max-width: 768px) 100vw, 700px" />
         </div>
       )}
 
       <p className="eyebrow mb-3">About the Breed</p>
-      <h2 className="font-display text-2xl text-forest mb-4">
-        Quick facts about {breed.name}s
-      </h2>
+      <h2 className="h2 mb-4">Quick facts about {breed.name}s</h2>
 
-      {breed.blurb && (
-        <p className="text-ink/80 leading-relaxed mb-6">{breed.blurb}</p>
-      )}
+      {breed.blurb && <p className="body-text mb-6">{breed.blurb}</p>}
 
       <div className="grid grid-cols-2 gap-4 text-sm mb-6">
         {breed.temperament && (
@@ -49,10 +40,7 @@ export default function BreedFacts({ breed }: { breed: BreedInfo | null }) {
       </div>
 
       {breed.slug && (
-        <Link
-          href={`/breed-guides/${breed.slug}`}
-          className="inline-block text-forest border-b border-gold pb-0.5"
-        >
+        <Link href={`/breed-guides/${breed.slug}`} className="inline-block text-forest border-b border-gold pb-0.5">
           View Full Breed Guide →
         </Link>
       )}

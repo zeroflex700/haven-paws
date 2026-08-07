@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
-import { cldOptimized } from "@/lib/cloudinary";
+import OptimizedImage from "./OptimizedImage";
 
 type Breed = { id: string; name: string; image_url: string | null };
 
@@ -24,12 +24,10 @@ export default function BreedDiscoveryRow({ breeds }: { breeds: Breed[] }) {
     scrollRef.current?.scrollBy({ left: amount, behavior: "smooth" });
   }
 
-  const filtered = breeds.filter((b) =>
-    b.name.toLowerCase().includes(breedSearch.toLowerCase())
-  );
+  const filtered = breeds.filter((b) => b.name.toLowerCase().includes(breedSearch.toLowerCase()));
 
   return (
-    <section className="max-w-5xl mx-auto px-6 py-14">
+    <section className="max-w-7xl mx-auto px-6 lg:px-10 py-14">
       <div className="flex gap-3 mb-5">
         <div className="relative flex-1">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-sage" />
@@ -62,20 +60,9 @@ export default function BreedDiscoveryRow({ breeds }: { breeds: Breed[] }) {
 
       <div ref={scrollRef} className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 snap-x scroll-smooth">
         {filtered.map((b) => (
-          <Link
-            key={b.id}
-            href={`/puppies?breed=${encodeURIComponent(b.name)}`}
-            className="w-36 shrink-0 snap-start"
-          >
+          <Link key={b.id} href={`/puppies?breed=${encodeURIComponent(b.name)}`} className="w-36 shrink-0 snap-start">
             <div className="aspect-square rounded-lg overflow-hidden bg-cream-alt mb-2">
-              {b.image_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={cldOptimized(b.image_url, 300)}
-                  alt={b.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : null}
+              <OptimizedImage src={b.image_url} alt={b.name} sizes="144px" />
             </div>
             <p className="text-sm text-forest font-medium text-center">{b.name}</p>
           </Link>
@@ -86,14 +73,14 @@ export default function BreedDiscoveryRow({ breeds }: { breeds: Breed[] }) {
         <button
           onClick={() => scrollBy(-160)}
           aria-label="Scroll left"
-          className="w-9 h-9 rounded-full border border-sage/30 flex items-center justify-center"
+          className="w-9 h-9 rounded-full border border-sage/30 flex items-center justify-center active:scale-95 transition-transform"
         >
           <ChevronLeft size={16} className="text-forest" />
         </button>
         <button
           onClick={() => scrollBy(160)}
           aria-label="Scroll right"
-          className="w-9 h-9 rounded-full border border-sage/30 flex items-center justify-center"
+          className="w-9 h-9 rounded-full border border-sage/30 flex items-center justify-center active:scale-95 transition-transform"
         >
           <ChevronRight size={16} className="text-forest" />
         </button>

@@ -1,5 +1,5 @@
 import { Star, BadgeCheck } from "lucide-react";
-import { cldOptimized } from "@/lib/cloudinary";
+import OptimizedImage from "./OptimizedImage";
 import type { Review } from "@/lib/queries/testimonials";
 
 export default function ReviewCard({ review }: { review: Review }) {
@@ -12,18 +12,11 @@ export default function ReviewCard({ review }: { review: Review }) {
           ))}
         </div>
       )}
-      <p className="text-ink/80 leading-relaxed mb-3 whitespace-pre-line">
-        {review.reviewText}
-      </p>
+      <p className="text-ink/80 leading-relaxed mb-3 whitespace-pre-line">{review.reviewText}</p>
 
       {review.photoUrl && (
         <div className="w-24 h-24 rounded-lg overflow-hidden mb-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={cldOptimized(review.photoUrl, 300)}
-            alt=""
-            className="w-full h-full object-cover"
-          />
+          <OptimizedImage src={review.photoUrl} alt="" sizes="96px" />
         </div>
       )}
 

@@ -1,23 +1,32 @@
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
+import PageContainer from "../../components/PageContainer";
+import Breadcrumbs from "../../components/Breadcrumbs";
 import TrainingCard from "../../components/TrainingCard";
 
 export default function CrateTrainingFullPage() {
   return (
     <main>
       <Navbar />
-      <section className="max-w-2xl mx-auto px-6 py-10">
+      <PageContainer className="max-w-2xl py-8">
+        <Breadcrumbs
+          items={[
+            { label: "Home", href: "/" },
+            { label: "Puppy Training", href: "/puppy-training/hub" },
+            { label: "Crate Training" },
+          ]}
+        />
         <p className="eyebrow mb-2">Courses</p>
-        <h1 className="font-display text-2xl text-forest mb-8">Crate Training</h1>
+        <h1 className="h1 mb-8">Crate Training</h1>
 
-        <h2 className="font-display text-lg text-forest mb-3">Crate Training Basics</h2>
+        <h2 className="h3 mb-3">Crate Training Basics</h2>
         <div className="grid grid-cols-3 gap-3 mb-10">
           <TrainingCard title="Intro" color="orange" />
           <TrainingCard title="Supplies" color="orange" />
           <TrainingCard title="FAQs" color="orange" />
         </div>
 
-        <h2 className="font-display text-lg text-forest mb-3">Crate Training Lessons</h2>
+        <h2 className="h3 mb-3">Crate Training Lessons</h2>
         <div className="grid grid-cols-2 gap-3">
           {[
             "Love the Crate",
@@ -32,7 +41,7 @@ export default function CrateTrainingFullPage() {
             <TrainingCard key={title} title={title} number={i + 1} color="orange" />
           ))}
         </div>
-      </section>
+      </PageContainer>
       <Footer />
     </main>
   );

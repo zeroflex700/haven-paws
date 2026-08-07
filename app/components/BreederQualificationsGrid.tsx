@@ -1,3 +1,4 @@
+import OptimizedImage from "./OptimizedImage";
 import type { BreederQualification } from "@/lib/queries/breeders";
 
 export default function BreederQualificationsGrid({ items }: { items: BreederQualification[] }) {
@@ -10,8 +11,9 @@ export default function BreederQualificationsGrid({ items }: { items: BreederQua
         {items.map((item) => (
           <div key={item.id} className="bg-forest/5 border border-forest/15 rounded-lg p-4">
             {item.badgeImageUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={item.badgeImageUrl} alt="" className="w-10 h-10 rounded-lg object-cover mb-2" />
+              <div className="w-10 h-10 rounded-lg overflow-hidden mb-2">
+                <OptimizedImage src={item.badgeImageUrl} alt="" sizes="40px" />
+              </div>
             )}
             {item.labelLine && <p className="text-xs text-sage">{item.labelLine}</p>}
             {item.titleLine && <p className="text-sm text-forest font-medium">{item.titleLine}</p>}

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
-import { cldOptimized, cldThumb } from "@/lib/cloudinary";
+import OptimizedImage from "./OptimizedImage";
 
 export default function PuppyGallery({
   media,
@@ -26,7 +26,6 @@ export default function PuppyGallery({
   function goPrev() {
     setActive((i) => (i === 0 ? media.length - 1 : i - 1));
   }
-
   function goNext() {
     setActive((i) => (i === media.length - 1 ? 0 : i + 1));
   }
@@ -35,12 +34,7 @@ export default function PuppyGallery({
     <div>
       <div className="relative aspect-square rounded-lg overflow-hidden bg-cream-alt">
         {current.mediaType === "image" ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={cldOptimized(current.url, 800)}
-            alt={name}
-            className="w-full h-full object-cover"
-          />
+          <OptimizedImage src={current.url} alt={name} priority sizes="(max-width: 768px) 100vw, 50vw" />
         ) : (
           <video src={current.url} controls className="w-full h-full object-cover" />
         )}
@@ -50,14 +44,14 @@ export default function PuppyGallery({
             <button
               onClick={goPrev}
               aria-label="Previous photo"
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 flex items-center justify-center"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 flex items-center justify-center active:scale-95 transition-transform"
             >
               <ChevronLeft size={20} className="text-forest" />
             </button>
             <button
               onClick={goNext}
               aria-label="Next photo"
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 flex items-center justify-center"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 flex items-center justify-center active:scale-95 transition-transform"
             >
               <ChevronRight size={20} className="text-forest" />
             </button>
@@ -79,12 +73,7 @@ export default function PuppyGallery({
               }`}
             >
               {m.mediaType === "image" ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={cldThumb(m.url, 128)}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
+                <OptimizedImage src={m.url} alt="" sizes="64px" />
               ) : (
                 <div className="w-full h-full bg-forest flex items-center justify-center">
                   <Play size={18} className="text-cream fill-cream" />

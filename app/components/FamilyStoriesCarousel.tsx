@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Star } from "lucide-react";
-import { cldOptimized } from "@/lib/cloudinary";
+import OptimizedImage from "./OptimizedImage";
 import type { Review } from "@/lib/queries/testimonials";
 
 export default function FamilyStoriesCarousel({ reviews }: { reviews: Review[] }) {
@@ -8,22 +8,15 @@ export default function FamilyStoriesCarousel({ reviews }: { reviews: Review[] }
 
   return (
     <section className="bg-cream-alt py-14">
-      <div className="max-w-5xl mx-auto px-6">
-        <h2 className="font-display text-2xl text-forest text-center mb-8">
-          Stories from Haven Paws families
-        </h2>
+      <div className="max-w-7xl mx-auto px-6 lg:px-10">
+        <h2 className="h2 text-center mb-8">Stories from Haven Paws families</h2>
         <div className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 snap-x">
           {reviews.map((r) => (
             <div key={r.id} className="w-64 shrink-0 snap-start bg-white rounded-lg border border-sage/20 p-4">
               <div className="flex items-center gap-3 mb-2">
                 {r.photoUrl && (
                   <div className="w-9 h-9 rounded-full overflow-hidden bg-cream-alt shrink-0">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={cldOptimized(r.photoUrl, 100)}
-                      alt={r.customerName}
-                      className="w-full h-full object-cover"
-                    />
+                    <OptimizedImage src={r.photoUrl} alt={r.customerName} sizes="36px" />
                   </div>
                 )}
                 <div>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Search, Star } from "lucide-react";
 import { ProtectedVideo } from "./ProtectedMedia";
-import { cldOptimized } from "@/lib/cloudinary";
+import OptimizedImage from "./OptimizedImage";
 
 export default function HomeHero({
   heroImage,
@@ -37,12 +37,9 @@ export default function HomeHero({
           className="absolute inset-0 w-full h-full object-cover"
         />
       ) : heroImage ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={cldOptimized(heroImage, 1200)}
-          alt="Haven Paws"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        <div className="absolute inset-0">
+          <OptimizedImage src={heroImage} alt="Haven Paws" priority sizes="100vw" />
+        </div>
       ) : (
         <div className="absolute inset-0 bg-forest" />
       )}
@@ -50,7 +47,7 @@ export default function HomeHero({
 
       <div className="relative z-10 h-full flex flex-col items-center justify-center px-6 text-center">
         <p className="eyebrow text-white/90 mb-2">Where New Beginnings Start</p>
-        <h1 className="font-display text-2xl text-white mb-6 max-w-md">
+        <h1 className="font-display text-3xl text-white mb-6 max-w-md">
           Trusted puppy placement, nationwide
         </h1>
 
@@ -66,7 +63,7 @@ export default function HomeHero({
 
         <Link
           href="/puppies"
-          className="bg-gold text-forest px-6 py-3 rounded-full font-medium hover:opacity-90 transition-opacity"
+          className="bg-gold text-forest px-6 py-3 rounded-full font-medium hover:opacity-90 active:scale-95 transition-all"
         >
           Browse All Puppies
         </Link>
