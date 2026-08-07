@@ -27,12 +27,12 @@ export default function PedigreeCard({
 }) {
   return (
     <Link href={`/puppies/${id}`} className="block group">
-      <div className="aspect-square rounded-lg overflow-hidden bg-cream-alt relative">
+      <div className="aspect-square rounded-lg overflow-hidden bg-cream-alt relative transition-transform duration-200 group-active:scale-[0.98] group-hover:shadow-md">
         <OptimizedImage
           src={image}
           alt={name}
           sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 18vw"
-          className="group-active:scale-[0.98] transition-transform duration-200"
+          className="transition-transform duration-500 group-hover:scale-105"
         />
         {status !== "available" && (
           <span className="absolute top-2 left-2 text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/90 text-ink">

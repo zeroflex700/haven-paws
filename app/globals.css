@@ -47,6 +47,18 @@ video {
   display: none;
 }
 
+.interactive-card {
+  transition: transform 200ms ease-out, box-shadow 200ms ease-out;
+}
+.interactive-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+.interactive-card:active {
+  transform: scale(0.98);
+  box-shadow: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

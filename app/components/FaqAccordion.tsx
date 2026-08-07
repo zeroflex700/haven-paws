@@ -3,33 +3,37 @@
 import { useState } from "react";
 import { Plus, Minus } from "lucide-react";
 
-type FaqItem = { question: string; answer: string };
+export type FaqItem = { question: string; answer: string };
 
 export default function FaqAccordion({ items }: { items: FaqItem[] }) {
-  const [open, setOpen] = useState<number | null>(null);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <div>
+    <div className="divide-y divide-sage/15 border-t border-b border-sage/15">
       {items.map((item, i) => {
-        const isOpen = open === i;
+        const isOpen = openIndex === i;
         return (
-          <div key={i} className="border-b border-sage/20">
+          <div key={item.question}>
             <button
-              onClick={() => setOpen(isOpen ? null : i)}
-              className="w-full flex items-center justify-between py-5 text-left gap-4"
+              onClick={() => setOpenIndex(isOpen ? null : i)}
+              aria-expanded={isOpen}
+              className="w-full flex items-center justify-between gap-4 py-4 text-left"
             >
-              <span className="font-display text-lg text-forest">{item.question}</span>
-              {isOpen ? (
-                <Minus size={20} className="text-sage shrink-0" />
-              ) : (
-                <Plus size={20} className="text-sage shrink-0" />
-              )}
+              <span className="text-sm font-medium text-ink">{item.question}</span>
+              <span className="shrink-0 w-6 h-6 rounded-full bg-cream-alt flex items-center justify-center transition-transform duration-300">
+                {isOpen ? <Minus size={13} className="text-forest" /> : <Plus size={13} className="text-forest" />}
+              </span>
             </button>
-            {isOpen && (
-              <p className="text-ink/80 leading-relaxed pb-5 whitespace-pre-line">
-                {item.answer}
-              </p>
-            )}
+            <div
+              className="grid transition-[grid-template-rows] duration-300 ease-out"
+              style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
+            >
+              <div className="overflow-hidden">
+                <p className="text-sm text-ink/70 leading-relaxed whitespace-pre-line pb-4">
+                  {item.answer}
+                </p>
+              </div>
+            </div>
           </div>
         );
       })}

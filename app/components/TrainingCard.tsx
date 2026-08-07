@@ -29,7 +29,7 @@ export default function TrainingCard({
   return (
     <button
       onClick={open}
-      className={`text-left rounded-lg p-4 w-full h-full ${COLOR_MAP[color]}`}
+      className={`text-left rounded-lg p-4 w-full h-full transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] active:shadow-none ${COLOR_MAP[color]}`}
     >
       {number && <p className="font-display text-lg mb-1">{`0${number}`.slice(-2)}</p>}
       <p className="font-medium mb-1">{title}</p>

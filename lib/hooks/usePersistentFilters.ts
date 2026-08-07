@@ -14,7 +14,6 @@ export function usePersistentFilters<T>(key: string, defaultValue: T) {
       // ignore
     }
     setHydrated(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
   useEffect(() => {
