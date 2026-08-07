@@ -14,7 +14,11 @@ export default function PageTransition({ children }: { children: React.ReactNode
   }, [pathname]);
 
   return (
-    <div className={`transition-opacity duration-300 ease-out ${visible ? "opacity-100" : "opacity-0"}`}>
+    <div
+      className={`transition-all duration-300 ease-out ${
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1.5"
+      }`}
+    >
       {children}
     </div>
   );

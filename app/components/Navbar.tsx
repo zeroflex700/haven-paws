@@ -5,8 +5,10 @@ import Link from "next/link";
 import { PawPrint, Menu, User } from "lucide-react";
 import MobileMenu from "./MobileMenu";
 import AccountPanel from "./AccountPanel";
+import AnimatedLink from "./AnimatedLink";
 import { supabase } from "@/lib/supabase/client";
 import { useScrollDirection } from "@/lib/hooks/useScrollDirection";
+import { useStickyNavigation } from "@/lib/hooks/useStickyNavigation";
 
 type Thumbnails = { how_it_works: string | null; learning_center: string | null; our_standards: string | null };
 
@@ -20,6 +22,7 @@ export default function Navbar() {
     our_standards: null,
   });
   const scrollDirection = useScrollDirection();
+  const scrolled = useStickyNavigation();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -50,13 +53,14 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`sticky top-0 z-50 bg-cream/90 backdrop-blur border-b border-sage/20 transition-transform duration-300 ${
-          scrollDirection === "down" ? "-translate-y-full" : "translate-y-0"
-        }`}
+        className={`sticky top-0 z-50 backdrop-blur border-b transition-all duration-300 ${
+          scrolled ? "bg-cream/95 border-sage/20 shadow-sm" : "bg-cream/80 border-transparent"
+        } ${scrollDirection === "down" ? "-translate-y-full" : "translate-y-0"}`}
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-10 py-3">
           <div className="flex items-center gap-3">
-            <button onClick={() => setMenuOpen(true)} className="md:hidden" aria-label="Open menu">
+            <button onClick={() => setMenuOpen(true)} className="md:hidden active:scale-90 transition-transform" aria-label="Open menu">
               <Menu size={20} className="text-forest" />
             </button>
             <Link href="/" className="flex items-center gap-2">
@@ -66,10 +70,10 @@ export default function Navbar() {
               </span>
             </Link>
           </div>
-          <nav className="hidden md:flex items-center gap-7 text-sm text-ink">
-            <Link href="/puppies" className="hover:text-forest transition-colors">Available Puppies</Link>
-            <Link href="/how-it-works" className="hover:text-forest transition-colors">How It Works</Link>
-            <Link href="/about" className="hover:text-forest transition-colors">About</Link>
+          <nav className="hidden md:flex items-center gap-7 text-sm">
+            <AnimatedLink href="/puppies">Available Puppies</AnimatedLink>
+            <AnimatedLink href="/how-it-works">How It Works</AnimatedLink>
+            <AnimatedLink href="/about">About</AnimatedLink>
           </nav>
 
           {loggedIn ? (
