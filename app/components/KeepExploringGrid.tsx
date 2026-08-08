@@ -24,9 +24,14 @@ export default function KeepExploringGrid({
       {cards.length > 0 && (
         <div className="grid grid-cols-4 gap-3 mb-12">
           {cards.map((c, i) => (
-            <Link key={c.id} href={c.linkHref} className="text-center">
-              <div className={`aspect-square rounded-lg overflow-hidden mb-2 ${getCategoryColor(i)}`}>
-                <OptimizedImage src={c.imageUrl} alt={c.caption} sizes="120px" />
+            <Link key={c.id} href={c.linkHref} className="text-center group tap-feedback">
+              <div className={`aspect-square rounded-lg overflow-hidden mb-2 transition-shadow duration-200 group-hover:shadow-md ${getCategoryColor(i)}`}>
+                <OptimizedImage
+                  src={c.imageUrl}
+                  alt={c.caption}
+                  sizes="120px"
+                  className="transition-transform duration-500 group-hover:scale-105"
+                />
               </div>
               <p className="text-xs text-ink/70">{c.caption}</p>
             </Link>
@@ -39,9 +44,14 @@ export default function KeepExploringGrid({
 
       <div className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 snap-x">
         {breeds.slice(0, 8).map((b) => (
-          <Link key={b.id} href={`/puppies?breed=${encodeURIComponent(b.name)}`} className="w-32 shrink-0 snap-start">
-            <div className="aspect-square rounded-lg overflow-hidden bg-cream-alt mb-2">
-              <OptimizedImage src={b.image_url} alt={b.name} sizes="128px" />
+          <Link key={b.id} href={`/puppies?breed=${encodeURIComponent(b.name)}`} className="w-32 shrink-0 snap-start group">
+            <div className="aspect-square rounded-lg overflow-hidden bg-cream-alt mb-2 transition-shadow duration-200 group-hover:shadow-md">
+              <OptimizedImage
+                src={b.image_url}
+                alt={b.name}
+                sizes="128px"
+                className="transition-transform duration-500 group-hover:scale-105"
+              />
             </div>
             <p className="text-sm text-forest font-medium text-center">{b.name}</p>
           </Link>

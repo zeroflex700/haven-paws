@@ -51,7 +51,7 @@ export default function BreedDiscoveryRow({ breeds }: { breeds: Breed[] }) {
           <Link
             key={f.key}
             href={f.key === "popular" ? "/puppies" : `/lifestyle#${f.key}`}
-            className="shrink-0 bg-cream-alt text-ink text-sm px-4 py-2 rounded-full whitespace-nowrap"
+            className="shrink-0 bg-cream-alt text-ink text-sm px-4 py-2 rounded-full whitespace-nowrap tap-feedback"
           >
             {f.label}
           </Link>
@@ -60,9 +60,14 @@ export default function BreedDiscoveryRow({ breeds }: { breeds: Breed[] }) {
 
       <div ref={scrollRef} className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 snap-x scroll-smooth">
         {filtered.map((b) => (
-          <Link key={b.id} href={`/puppies?breed=${encodeURIComponent(b.name)}`} className="w-36 shrink-0 snap-start">
-            <div className="aspect-square rounded-lg overflow-hidden bg-cream-alt mb-2">
-              <OptimizedImage src={b.image_url} alt={b.name} sizes="144px" />
+          <Link key={b.id} href={`/puppies?breed=${encodeURIComponent(b.name)}`} className="w-36 shrink-0 snap-start group">
+            <div className="aspect-square rounded-lg overflow-hidden bg-cream-alt mb-2 transition-shadow duration-200 group-hover:shadow-md">
+              <OptimizedImage
+                src={b.image_url}
+                alt={b.name}
+                sizes="144px"
+                className="transition-transform duration-500 group-hover:scale-105"
+              />
             </div>
             <p className="text-sm text-forest font-medium text-center">{b.name}</p>
           </Link>

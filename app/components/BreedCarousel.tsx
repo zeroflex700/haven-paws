@@ -23,9 +23,14 @@ export default function BreedCarousel({
     <div className="relative">
       <div ref={scrollRef} className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 snap-x scroll-smooth">
         {breeds.map((b) => (
-          <Link key={b.name} href={`/puppies?breed=${encodeURIComponent(b.name)}`} className="w-40 shrink-0 snap-start">
-            <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-cream-alt">
-              <OptimizedImage src={imageMap[b.name] ?? null} alt={b.name} sizes="160px" />
+          <Link key={b.name} href={`/puppies?breed=${encodeURIComponent(b.name)}`} className="w-40 shrink-0 snap-start group">
+            <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-cream-alt transition-shadow duration-200 group-hover:shadow-md">
+              <OptimizedImage
+                src={imageMap[b.name] ?? null}
+                alt={b.name}
+                sizes="160px"
+                className="transition-transform duration-500 group-hover:scale-105"
+              />
             </div>
             <p className="text-forest font-medium text-sm mt-2">{b.name}</p>
             <p className="text-xs text-sage">{b.trait}</p>

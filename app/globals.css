@@ -59,6 +59,14 @@ video {
   box-shadow: none;
 }
 
+.tap-feedback {
+  transition: transform 150ms ease-out, opacity 150ms ease-out;
+}
+.tap-feedback:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

@@ -12,9 +12,9 @@ export default function VideoStoryCarousel({ stories }: { stories: VideoStory[] 
 
   return (
     <section className="bg-forest py-14">
-      <div className="max-w-5xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-6 lg:px-10">
         <p className="eyebrow text-cream/70 mb-2 text-center">Behind the Scenes</p>
-        <h2 className="font-display text-2xl text-cream text-center mb-10">
+        <h2 className="h2 text-center mb-10" style={{ color: "var(--color-cream)" }}>
           See how your future puppy is raised
         </h2>
 
@@ -30,9 +30,9 @@ export default function VideoStoryCarousel({ stories }: { stories: VideoStory[] 
                     <button
                       onClick={() => setPlayingId(s.id)}
                       aria-label="Play video"
-                      className="absolute inset-0 flex items-center justify-center"
+                      className="absolute inset-0 flex items-center justify-center group"
                     >
-                      <span className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
+                      <span className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center transition-transform duration-200 group-hover:scale-110 group-active:scale-90">
                         <Play size={20} className="text-forest ml-0.5" />
                       </span>
                     </button>

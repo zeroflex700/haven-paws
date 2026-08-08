@@ -23,9 +23,14 @@ export default function RelatedPuppies({
       <h2 className="h2 mb-6">Other {breedName} Puppies</h2>
       <div className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 snap-x">
         {puppies.map((p) => (
-          <Link key={p.id} href={`/puppies/${p.id}`} className="block w-40 shrink-0 snap-start">
-            <div className="aspect-square rounded-lg overflow-hidden bg-cream-alt relative">
-              <OptimizedImage src={p.image} alt={p.name} sizes="160px" />
+          <Link key={p.id} href={`/puppies/${p.id}`} className="block w-40 shrink-0 snap-start group">
+            <div className="aspect-square rounded-lg overflow-hidden bg-cream-alt relative transition-shadow duration-200 group-hover:shadow-md group-active:scale-[0.98] transition-transform">
+              <OptimizedImage
+                src={p.image}
+                alt={p.name}
+                sizes="160px"
+                className="transition-transform duration-500 group-hover:scale-105"
+              />
               <span
                 className={`absolute top-2 right-2 text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full ${statusColor[p.status]}`}
               >
