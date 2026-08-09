@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Video } from "lucide-react";
 import OptimizedImage from "./OptimizedImage";
+import FavoriteButton from "./FavoriteButton";
 
 type Status = "available" | "reserved" | "sold";
 
@@ -34,6 +35,9 @@ export default function PedigreeCard({
           sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 18vw"
           className="transition-transform duration-500 group-hover:scale-105"
         />
+        <div className="absolute top-2 right-2">
+          <FavoriteButton puppyId={id} size={14} />
+        </div>
         {status !== "available" && (
           <span className="absolute top-2 left-2 text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/90 text-ink">
             {status}

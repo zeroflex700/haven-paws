@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Search, Star } from "lucide-react";
 import { ProtectedVideo } from "./ProtectedMedia";
 import OptimizedImage from "./OptimizedImage";
+import SearchSuggestionsDropdown from "./SearchSuggestionsDropdown";
+import { useSearchHistory } from "@/lib/hooks/useSearchHistory";
 
 export default function HomeHero({
   heroImage,
@@ -20,10 +22,26 @@ export default function HomeHero({
 }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const { terms, addTerm, clearHistory } = useSearchHistory();
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (boxRef.current && !boxRef.current.contains(e.target as Node)) setSuggestOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  function goSearch(term: string) {
+    if (term.trim()) addTerm(term.trim());
+    router.push(`/puppies?search=${encodeURIComponent(term)}`);
+  }
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    router.push(`/puppies?search=${encodeURIComponent(search)}`);
+    goSearch(search);
   }
 
   return (
@@ -51,15 +69,29 @@ export default function HomeHero({
           Trusted puppy placement, nationwide
         </h1>
 
-        <form onSubmit={handleSearch} className="w-full max-w-md relative mb-4">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-sage" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by breed or puppy name"
-            className="w-full bg-white rounded-full pl-11 pr-4 py-3 text-sm focus:outline-none"
-          />
-        </form>
+        <div ref={boxRef} className="w-full max-w-md relative mb-4">
+          <form onSubmit={handleSearch} className="relative">
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-sage" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onFocus={() => setSuggestOpen(true)}
+              placeholder="Search by breed or puppy name"
+              className="w-full bg-white rounded-full pl-11 pr-4 py-3 text-sm focus:outline-none"
+            />
+          </form>
+          {suggestOpen && (
+            <SearchSuggestionsDropdown
+              query={search}
+              history={terms}
+              onSelect={(term) => {
+                setSuggestOpen(false);
+                goSearch(term);
+              }}
+              onClearHistory={clearHistory}
+            />
+          )}
+        </div>
 
         <Link
           href="/puppies"

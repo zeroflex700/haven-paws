@@ -1,10 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import PedigreeCard from "./PedigreeCard";
 import PuppyFilters, { Filters } from "./PuppyFilters";
+import FilterChips from "./FilterChips";
+import SearchSuggestionsDropdown from "./SearchSuggestionsDropdown";
 import { usePersistentFilters } from "@/lib/hooks/usePersistentFilters";
+import { useSearchHistory } from "@/lib/hooks/useSearchHistory";
 import type { PuppyRecord } from "@/lib/queries/puppies";
 
 const DEFAULT_FILTERS: Filters = {
@@ -26,6 +29,25 @@ export default function PuppiesClient({
     search: searchParams.get("search") ?? "",
     breed: searchParams.get("breed") ?? "all",
   });
+  const { terms, addTerm, clearHistory } = useSearchHistory();
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const searchBoxRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(e.target as Node)) {
+        setSuggestOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  function commitSearch(term: string) {
+    setFilters({ ...filters, search: term });
+    if (term.trim()) addTerm(term.trim());
+    setSuggestOpen(false);
+  }
 
   const filtered = useMemo(() => {
     let result = initialPuppies.filter((p) => {
@@ -51,14 +73,28 @@ export default function PuppiesClient({
 
   return (
     <section className="max-w-7xl mx-auto px-6 lg:px-10 pt-6 pb-16">
-      <div className="relative mb-3">
+      <div ref={searchBoxRef} className="relative mb-3">
         <input
           value={filters.search}
           onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+          onFocus={() => setSuggestOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") commitSearch(filters.search);
+          }}
           placeholder="Search by breed or puppy name"
           className="w-full border border-sage/30 rounded-full px-5 py-2.5 text-sm focus:outline-none focus:border-gold"
         />
+        {suggestOpen && (
+          <SearchSuggestionsDropdown
+            query={filters.search}
+            history={terms}
+            onSelect={commitSearch}
+            onClearHistory={clearHistory}
+          />
+        )}
       </div>
+
+      <FilterChips filters={filters} onChange={setFilters} />
 
       <PuppyFilters filters={filters} onChange={setFilters} />
 
