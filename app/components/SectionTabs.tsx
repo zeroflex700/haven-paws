@@ -43,7 +43,7 @@ export default function SectionTabs({
   return (
     <div
       className="sticky z-30 bg-cream/95 backdrop-blur border-b border-sage/20"
-      style={{ top: topOffset }}
+      style={{ top: `calc(${topOffset}px + env(safe-area-inset-top, 0px))` }}
     >
       <nav aria-label="Section navigation">
         <div
