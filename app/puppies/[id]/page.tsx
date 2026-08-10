@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
@@ -27,6 +28,42 @@ const statusColor: Record<string, string> = {
   reserved: "bg-sage text-cream",
   sold: "border border-ink/40 text-ink/60",
 };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const puppy = await getPuppyDetail(id);
+
+  if (!puppy) {
+    return { title: "Puppy Not Found" };
+  }
+
+  const title = `${puppy.name} — ${puppy.breed} Puppy for Adoption`;
+  const description = puppy.description
+    ? puppy.description.slice(0, 155)
+    : `Meet ${puppy.name}, a ${puppy.breed} puppy available through Haven Paws.`;
+  const image = puppy.media.find((m) => m.isCover)?.url ?? puppy.media[0]?.url;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: image ? [image] : undefined,
+      url: `/puppies/${id}`,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
+  };
+}
 
 export default async function PuppyDetailPage({
   params,

@@ -21,10 +21,30 @@ const inter = Inter({
   display: "swap",
 });
 
+const SITE_URL = "https://haven-paws-pi.vercel.app";
+const SITE_TITLE = "Haven Paws — A Curated Home for Every Puppy";
+const SITE_DESCRIPTION =
+  "Ethically bred, health-guaranteed puppies matched with families through a concierge adoption process.";
+
 export const metadata: Metadata = {
-  title: "Haven Paws — A Curated Home for Every Puppy",
-  description:
-    "Ethically bred, health-guaranteed puppies matched with families through a concierge adoption process.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_TITLE,
+    template: "%s | Haven Paws",
+  },
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    type: "website",
+    siteName: "Haven Paws",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export default function RootLayout({

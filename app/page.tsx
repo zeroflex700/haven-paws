@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import HomeHero from "./components/HomeHero";
@@ -15,6 +16,13 @@ import { getPageImages } from "@/lib/queries/pageContent";
 import { getReviewStats, getReviews } from "@/lib/queries/testimonials";
 import { getVideoStories, getLocationCards, getExploringCards } from "@/lib/queries/homepageCollections";
 import { supabase } from "@/lib/supabase/client";
+
+export const metadata: Metadata = {
+  title: "Haven Paws — A Curated Home for Every Puppy",
+  description:
+    "Ethically bred, health-guaranteed puppies matched with families through a concierge adoption process. Trusted breeders, nationwide delivery, and support the whole way through.",
+  alternates: { canonical: "/" },
+};
 
 export default async function Home() {
   const { heroImage, heroVideo, extraImages } = await getPageImages("homepage");
