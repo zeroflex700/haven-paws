@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PuppiesClient from "../components/PuppiesClient";
@@ -11,7 +12,9 @@ export default async function PuppiesPage() {
     <main>
       <Navbar />
       <TrendingSearches />
-      <PuppiesClient initialPuppies={puppies} />
+      <Suspense fallback={null}>
+        <PuppiesClient initialPuppies={puppies} />
+      </Suspense>
       <Footer />
     </main>
   );

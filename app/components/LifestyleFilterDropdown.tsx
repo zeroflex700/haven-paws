@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Check } from "lucide-react";
+import { ChevronDown, Check } from "lucide-react";
 import type { LifestyleCategory } from "../data/lifestyleCategories";
 import { useMountedTransition } from "@/lib/hooks/useMountedTransition";
 
