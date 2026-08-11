@@ -19,6 +19,8 @@ type CheckoutData = {
   amount: number;
 };
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://haven-paws-pi.vercel.app";
+
 export async function submitTakeMeHome(
   puppyId: string,
   puppyName: string,
@@ -59,6 +61,8 @@ export async function submitTakeMeHome(
 
   if (apiKey && storeId && variantId) {
     try {
+      const redirectUrl = `${SITE_URL}/account/your-puppy?checkout=success&puppy=${puppyId}&reservation=${reservation.id}`;
+
       const res = await fetch("https://api.lemonsqueezy.com/v1/checkouts", {
         method: "POST",
         headers: {
@@ -71,6 +75,9 @@ export async function submitTakeMeHome(
             type: "checkouts",
             attributes: {
               custom_price: Math.round(data.amount * 100),
+              product_options: {
+                redirect_url: redirectUrl,
+              },
               checkout_data: {
                 email: data.email,
                 name: `${data.firstName} ${data.lastName}`,

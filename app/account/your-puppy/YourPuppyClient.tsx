@@ -24,9 +24,10 @@ function SuccessBanner({ onDismiss }: { onDismiss: () => void }) {
     <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 flex items-start gap-3">
       <CheckCircle2 size={18} className="text-green-600 shrink-0 mt-0.5" />
       <div className="flex-1">
-        <p className="text-sm text-green-800 font-medium">Reservation confirmed</p>
+        <p className="text-sm text-green-800 font-medium">Reservation submitted</p>
         <p className="text-xs text-green-700 mt-0.5">
-          Your payment was received. You can track everything about your puppy right here.
+          You&apos;ve completed checkout with Lemon Squeezy. We&apos;ll confirm your payment and
+          update your reservation status shortly — you can track everything here.
         </p>
       </div>
       <button onClick={onDismiss} aria-label="Dismiss" className="shrink-0 text-green-700">
@@ -167,6 +168,19 @@ export default function YourPuppyClient() {
       .then(setReservations)
       .finally(() => setLoading(false));
   }, []);
+
+  // Clear the saved checkout draft for the puppy that was just paid for,
+  // so the abandoned-checkout banner doesn't reappear for a completed flow.
+  useEffect(() => {
+    if (searchParams.get("checkout") !== "success") return;
+    const puppyId = searchParams.get("puppy");
+    if (!puppyId) return;
+    try {
+      localStorage.removeItem(`havenpaws_checkout_${puppyId}`);
+    } catch {
+      // ignore
+    }
+  }, [searchParams]);
 
   if (loading) {
     return (
