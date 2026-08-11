@@ -1,6 +1,15 @@
+import type { Metadata } from "next";
 import TrainingPopupProvider from "../components/TrainingPopupProvider";
 import { getPageImages } from "@/lib/queries/pageContent";
 import { getPuppyTrainingTestimonial } from "@/lib/queries/testimonials";
+
+export const metadata: Metadata = {
+  title: {
+    default: "Puppy Training Program",
+    template: "%s | Puppy Training",
+  },
+  description: "Guided lessons, live coaching, and community support to help your puppy build good habits from day one.",
+};
 
 export default async function PuppyTrainingLayout({
   children,

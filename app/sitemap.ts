@@ -50,5 +50,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
     }));
 
-  return [...staticEntries, ...puppyEntries, ...breedGuideEntries];
+  const { data: breeders } = await supabase.from("breeders").select("slug");
+
+  const breederEntries: MetadataRoute.Sitemap = (breeders ?? []).map((b) => ({
+    url: `${SITE_URL}/breeders/${b.slug}`,
+    lastModified: new Date(),
+  }));
+
+  return [...staticEntries, ...puppyEntries, ...breedGuideEntries, ...breederEntries];
 }
