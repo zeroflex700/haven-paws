@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -20,6 +20,8 @@ import { cldOptimized } from "@/lib/cloudinary";
 import { useBodyScrollLock } from "@/lib/hooks/useBodyScrollLock";
 import { useDismissableOverlay } from "@/lib/hooks/useDismissableOverlay";
 import { useMountedTransition } from "@/lib/hooks/useMountedTransition";
+import { useSearchHistory } from "@/lib/hooks/useSearchHistory";
+import SearchSuggestionsDropdown from "./SearchSuggestionsDropdown";
 
 type Thumbnails = { how_it_works: string | null; learning_center: string | null; our_standards: string | null };
 
@@ -45,6 +47,9 @@ export default function AccountPanel({
   const pathname = usePathname();
   const [firstName, setFirstName] = useState("there");
   const [search, setSearch] = useState("");
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const { terms, addTerm, clearHistory } = useSearchHistory();
+  const searchBoxRef = useRef<HTMLDivElement>(null);
   const { mounted, entered } = useMountedTransition(open);
   const panelRef = useDismissableOverlay(open, onClose);
   useBodyScrollLock(open);
@@ -62,12 +67,27 @@ export default function AccountPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(e.target as Node)) {
+        setSuggestOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   if (!mounted) return null;
+
+  function goSearch(term: string) {
+    if (term.trim()) addTerm(term.trim());
+    router.push(`/puppies?search=${encodeURIComponent(term)}`);
+    onClose();
+  }
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    router.push(`/puppies?search=${encodeURIComponent(search)}`);
-    onClose();
+    goSearch(search);
   }
 
   async function handleLogout() {
@@ -121,15 +141,29 @@ export default function AccountPanel({
             </button>
           </div>
 
-          <form onSubmit={handleSearch} className="px-5 mb-5 relative">
-            <Search size={16} className="absolute left-9 top-1/2 -translate-y-1/2 text-sage" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search a breed"
-              className="w-full border border-sage/30 rounded-full pl-11 pr-4 py-2.5 text-sm focus:outline-none focus:border-gold"
-            />
-          </form>
+          <div ref={searchBoxRef} className="px-5 mb-5 relative">
+            <form onSubmit={handleSearch} className="relative">
+              <Search size={16} className="absolute left-9 top-1/2 -translate-y-1/2 text-sage" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onFocus={() => setSuggestOpen(true)}
+                placeholder="Search a breed"
+                className="w-full border border-sage/30 rounded-full pl-11 pr-4 py-2.5 text-sm focus:outline-none focus:border-gold"
+              />
+            </form>
+            {suggestOpen && (
+              <SearchSuggestionsDropdown
+                query={search}
+                history={terms}
+                onSelect={(term) => {
+                  setSuggestOpen(false);
+                  goSearch(term);
+                }}
+                onClearHistory={clearHistory}
+              />
+            )}
+          </div>
 
           <div className="px-5">
             {MENU_ITEMS.map(({ icon: Icon, label, href }) => (

@@ -88,7 +88,7 @@ export default async function PuppyDetailPage({
   return (
     <main className="pb-20 md:pb-0">
       <Navbar />
-      <RecordPuppyView id={puppy.id} name={puppy.name} image={coverImage} />
+      <RecordPuppyView id={puppy.id} name={puppy.name} breed={puppy.breed} image={coverImage} />
 
       <section className="max-w-7xl mx-auto px-6 lg:px-10 pt-6">
         <Breadcrumbs

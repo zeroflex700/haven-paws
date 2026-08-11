@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { X, Search, ChevronRight, ChevronDown, PawPrint } from "lucide-react";
@@ -8,6 +8,8 @@ import { BREEDS } from "../data/breeds";
 import { useBodyScrollLock } from "@/lib/hooks/useBodyScrollLock";
 import { useDismissableOverlay } from "@/lib/hooks/useDismissableOverlay";
 import { useMountedTransition } from "@/lib/hooks/useMountedTransition";
+import { useSearchHistory } from "@/lib/hooks/useSearchHistory";
+import SearchSuggestionsDropdown from "./SearchSuggestionsDropdown";
 
 export default function MobileMenu({
   open,
@@ -20,6 +22,9 @@ export default function MobileMenu({
   const pathname = usePathname();
   const [search, setSearch] = useState("");
   const [breedsOpen, setBreedsOpen] = useState(false);
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const { terms, addTerm, clearHistory } = useSearchHistory();
+  const searchBoxRef = useRef<HTMLDivElement>(null);
   const { mounted, entered } = useMountedTransition(open);
   const panelRef = useDismissableOverlay(open, onClose);
   useBodyScrollLock(open);
@@ -29,12 +34,27 @@ export default function MobileMenu({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(e.target as Node)) {
+        setSuggestOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   if (!mounted) return null;
+
+  function goSearch(term: string) {
+    if (term.trim()) addTerm(term.trim());
+    router.push(`/puppies?search=${encodeURIComponent(term)}`);
+    onClose();
+  }
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    router.push(`/puppies?search=${encodeURIComponent(search)}`);
-    onClose();
+    goSearch(search);
   }
 
   return (
@@ -64,15 +84,29 @@ export default function MobileMenu({
       </div>
 
       <div className="px-5 py-6">
-        <form onSubmit={handleSearch} className="relative mb-8">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-sage" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by breed or puppy name"
-            className="w-full border border-sage/30 rounded-full pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-gold"
-          />
-        </form>
+        <div ref={searchBoxRef} className="relative mb-8">
+          <form onSubmit={handleSearch} className="relative">
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-sage" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onFocus={() => setSuggestOpen(true)}
+              placeholder="Search by breed or puppy name"
+              className="w-full border border-sage/30 rounded-full pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-gold"
+            />
+          </form>
+          {suggestOpen && (
+            <SearchSuggestionsDropdown
+              query={search}
+              history={terms}
+              onSelect={(term) => {
+                setSuggestOpen(false);
+                goSearch(term);
+              }}
+              onClearHistory={clearHistory}
+            />
+          )}
+        </div>
 
         <p className="eyebrow mb-3">Browse available puppies by</p>
 

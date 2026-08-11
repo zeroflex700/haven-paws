@@ -3,7 +3,9 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import HomeHero from "./components/HomeHero";
 import BreedDiscoveryRow from "./components/BreedDiscoveryRow";
+import ContinueBrowsingBanner from "./components/ContinueBrowsingBanner";
 import RecentlyViewedStrip from "./components/RecentlyViewedStrip";
+import RecommendedPuppies from "./components/RecommendedPuppies";
 import TrustBanner from "./components/TrustBanner";
 import HowItWorksAccordion from "./components/HowItWorksAccordion";
 import VideoStoryCarousel from "./components/VideoStoryCarousel";
@@ -45,8 +47,10 @@ export default async function Home() {
         reviewCount={count}
         avgRating={avgRating}
       />
+      <ContinueBrowsingBanner />
       <BreedDiscoveryRow breeds={breeds ?? []} />
       <RecentlyViewedStrip />
+      <RecommendedPuppies />
       <TrustBanner />
       <HowItWorksAccordion />
       <VideoStoryCarousel stories={videoStories} />

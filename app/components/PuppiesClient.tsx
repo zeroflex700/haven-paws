@@ -2,10 +2,12 @@
 
 import { useMemo, useState, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { SearchX } from "lucide-react";
 import PedigreeCard from "./PedigreeCard";
 import PuppyFilters, { Filters } from "./PuppyFilters";
 import FilterChips from "./FilterChips";
 import SearchSuggestionsDropdown from "./SearchSuggestionsDropdown";
+import SavedSearchesBar from "./SavedSearchesBar";
 import { usePersistentFilters } from "@/lib/hooks/usePersistentFilters";
 import { useSearchHistory } from "@/lib/hooks/useSearchHistory";
 import type { PuppyRecord } from "@/lib/queries/puppies";
@@ -71,6 +73,13 @@ export default function PuppiesClient({
     return result;
   }, [filters, initialPuppies]);
 
+  const hasActiveFilters =
+    filters.search.trim() !== "" ||
+    filters.breed !== "all" ||
+    filters.sex !== "all" ||
+    filters.readyNow ||
+    filters.sort !== "none";
+
   return (
     <section className="max-w-7xl mx-auto px-6 lg:px-10 pt-6 pb-16">
       <div ref={searchBoxRef} className="relative mb-3">
@@ -94,14 +103,26 @@ export default function PuppiesClient({
         )}
       </div>
 
+      <SavedSearchesBar filters={filters} onApply={setFilters} />
+
       <FilterChips filters={filters} onChange={setFilters} />
 
       <PuppyFilters filters={filters} onChange={setFilters} />
 
       {filtered.length === 0 ? (
-        <p className="small-text py-10 text-center">
-          No puppies match these filters. Try adjusting your search.
-        </p>
+        <div className="py-14 text-center">
+          <SearchX size={28} className="text-sage mx-auto mb-3" strokeWidth={1.5} />
+          <p className="text-ink font-medium text-sm mb-1">No puppies match these filters</p>
+          <p className="small-text mb-4">Try adjusting your search or clearing filters below.</p>
+          {hasActiveFilters && (
+            <button
+              onClick={() => setFilters(DEFAULT_FILTERS)}
+              className="text-sm text-forest border border-forest/30 px-5 py-2 rounded-full hover:border-forest transition-colors"
+            >
+              Clear all filters
+            </button>
+          )}
+        </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-7">
           {filtered.map((p) => (

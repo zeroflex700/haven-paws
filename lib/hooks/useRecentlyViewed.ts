@@ -7,6 +7,7 @@ type RecentItem = {
   id: string;
   type: "puppy" | "breed";
   name: string;
+  breed?: string;
   image: string | null;
   href: string;
   viewedAt: number;

@@ -9,25 +9,34 @@ import type { PuppyRecord } from "@/lib/queries/puppies";
 export default function RecommendedPuppies({ excludeId }: { excludeId?: string }) {
   const { items } = useRecentlyViewed();
   const [puppies, setPuppies] = useState<PuppyRecord[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const breedNames = Array.from(
-      new Set(items.filter((i) => i.type === "puppy").map((i) => i.name.split(" ").slice(-1)[0]))
+      new Set(
+        items
+          .filter((i) => i.type === "puppy" && i.breed)
+          .map((i) => i.breed as string)
+      )
     );
-    // Recently-viewed items store the puppy's display name, not breed —
-    // so instead we re-derive breed interest from the puppy detail pages
-    // themselves isn't available here; use the breed filter already
-    // present in recent /puppies?breed= visits stored via search history
-    // is out of scope for this simple pass. Fall back to nothing if we
-    // can't confidently infer a breed.
+
     if (breedNames.length === 0) {
       setPuppies([]);
+      setLoading(false);
       return;
     }
-    getRecommendedPuppies(breedNames, excludeId ? [excludeId] : []).then(setPuppies);
+
+    const excludeIds = [excludeId, ...items.map((i) => i.id)].filter(
+      (id): id is string => !!id
+    );
+
+    setLoading(true);
+    getRecommendedPuppies(breedNames, excludeIds)
+      .then(setPuppies)
+      .finally(() => setLoading(false));
   }, [items, excludeId]);
 
-  if (puppies.length === 0) return null;
+  if (loading || puppies.length === 0) return null;
 
   return (
     <section className="max-w-7xl mx-auto px-6 lg:px-10 py-14">
