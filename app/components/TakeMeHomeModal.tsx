@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { X, User, Truck, Heart, CreditCard, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, User, Truck, Heart, CreditCard, ChevronDown, AlertCircle } from "lucide-react";
+import Link from "next/link";
 import { cldOptimized } from "@/lib/cloudinary";
 import { submitTakeMeHome } from "../puppies/[id]/checkout-actions";
 import CheckoutSummarySheet from "./CheckoutSummarySheet";
+import { useCheckoutRecovery } from "@/lib/hooks/useCheckoutRecovery";
+import { estimateDeliveryWindow } from "@/lib/deliveryEstimate";
 import type { AppSettings } from "@/lib/queries/settings";
 
 type Puppy = {
@@ -25,19 +28,34 @@ const STEPS = [
   { key: "payment", label: "Payment", icon: CreditCard },
 ];
 
+function isValidEmail(v: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+}
+function isValidPhone(v: string) {
+  return v.replace(/\D/g, "").length >= 10;
+}
+function isValidZip(v: string) {
+  return /^\d{5}(-\d{4})?$/.test(v.trim());
+}
+
 export default function TakeMeHomeModal({
   puppy,
   settings,
+  initialStep,
   onClose,
 }: {
   puppy: Puppy;
   settings: AppSettings;
+  initialStep?: number;
   onClose: () => void;
 }) {
-  const [step, setStep] = useState(0);
+  const { draft, save, clear } = useCheckoutRecovery(puppy.id);
+  const [step, setStep] = useState(initialStep ?? 0);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const [form, setForm] = useState({
     email: "",
@@ -55,6 +73,50 @@ export default function TakeMeHomeModal({
     healthGuarantee: false,
     paymentType: "deposit" as "deposit" | "full",
   });
+
+  // Load any saved draft once, on open.
+  useEffect(() => {
+    if (draft) {
+      setForm((f) => ({
+        ...f,
+        email: draft.email ?? f.email,
+        firstName: draft.firstName ?? f.firstName,
+        lastName: draft.lastName ?? f.lastName,
+        phone: draft.phone ?? f.phone,
+        address: draft.address ?? f.address,
+        city: draft.city ?? f.city,
+        state: draft.state ?? f.state,
+        zip: draft.zip ?? f.zip,
+        deliveryMethod: draft.deliveryMethod ?? f.deliveryMethod,
+        starterKit: draft.starterKit ?? f.starterKit,
+        healthGuarantee: draft.healthGuarantee ?? f.healthGuarantee,
+      }));
+      if (typeof draft.step === "number" && initialStep === undefined) {
+        setStep(draft.step);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Save progress whenever the step advances (not on every keystroke).
+  useEffect(() => {
+    if (step === 0) return; // nothing meaningful to resume before step 1
+    save({
+      step,
+      email: form.email,
+      firstName: form.firstName,
+      lastName: form.lastName,
+      phone: form.phone,
+      address: form.address,
+      city: form.city,
+      state: form.state,
+      zip: form.zip,
+      deliveryMethod: form.deliveryMethod,
+      starterKit: form.starterKit,
+      healthGuarantee: form.healthGuarantee,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
 
   const deliveryCost = form.deliveryMethod === "delivery" ? settings.deliveryFee : 0;
   const essentialsCost =
@@ -77,11 +139,31 @@ export default function TakeMeHomeModal({
     setForm((f) => ({ ...f, [key]: value }));
   }
 
+  function markTouched(field: string) {
+    setTouched((t) => ({ ...t, [field]: true }));
+  }
+
+  const emailError = touched.email && form.email && !isValidEmail(form.email) ? "Enter a valid email address" : null;
+  const phoneError = touched.phone && form.phone && !isValidPhone(form.phone) ? "Enter a valid phone number" : null;
+  const zipError = touched.zip && form.zip && !isValidZip(form.zip) ? "Enter a valid ZIP code" : null;
+
   const canContinueDetails =
-    form.email && form.firstName && form.lastName && form.phone && form.address && form.city && form.state && form.zip && form.over18;
+    form.email &&
+    isValidEmail(form.email) &&
+    form.firstName &&
+    form.lastName &&
+    form.phone &&
+    isValidPhone(form.phone) &&
+    form.address &&
+    form.city &&
+    form.state &&
+    form.zip &&
+    isValidZip(form.zip) &&
+    form.over18;
 
   async function handleSubmit() {
     setSubmitting(true);
+    setSubmitError(null);
     try {
       const essentials: string[] = [];
       if (form.starterKit) essentials.push("Starter Care Kit");
@@ -108,15 +190,17 @@ export default function TakeMeHomeModal({
         return;
       }
 
+      clear();
       setDone(true);
     } catch {
-      alert("Something went wrong. Please try again.");
+      setSubmitError("Something went wrong submitting your reservation. Please try again.");
     }
     setSubmitting(false);
   }
 
   const inputClass =
     "w-full border border-sage/30 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-gold";
+  const errorInputClass = "w-full border border-red-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-red-400";
 
   return (
     <div className="fixed inset-0 z-[70] bg-cream overflow-y-auto">
@@ -183,12 +267,20 @@ export default function TakeMeHomeModal({
                 Thank you for choosing {puppy.name}. Our concierge team will reach out within
                 24 hours with a secure payment link — you&apos;ll be able to pay by card or PayPal.
               </p>
-              <button
-                onClick={onClose}
-                className="bg-forest text-cream px-6 py-2.5 rounded-full hover:bg-forest-light"
-              >
-                Done
-              </button>
+              <div className="flex flex-col gap-3">
+                <Link
+                  href="/account/your-puppy"
+                  className="bg-forest text-cream px-6 py-2.5 rounded-full hover:bg-forest-light"
+                >
+                  Track Your Reservation
+                </Link>
+                <button
+                  onClick={onClose}
+                  className="text-sm text-sage underline"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           ) : (
             <>
@@ -204,9 +296,11 @@ export default function TakeMeHomeModal({
                     placeholder="Email"
                     value={form.email}
                     onChange={(e) => update("email", e.target.value)}
-                    className={`${inputClass} mb-3`}
+                    onBlur={() => markTouched("email")}
+                    className={`${emailError ? errorInputClass : inputClass} mb-1`}
                   />
-                  <div className="flex gap-3 mb-3">
+                  {emailError && <p className="text-xs text-red-600 mb-2">{emailError}</p>}
+                  <div className="flex gap-3 mb-3 mt-2">
                     <input
                       placeholder="First name"
                       value={form.firstName}
@@ -224,9 +318,11 @@ export default function TakeMeHomeModal({
                     placeholder="Phone number"
                     value={form.phone}
                     onChange={(e) => update("phone", e.target.value)}
-                    className={`${inputClass} mb-3`}
+                    onBlur={() => markTouched("phone")}
+                    className={`${phoneError ? errorInputClass : inputClass} mb-1`}
                   />
-                  <p className="text-xs text-sage mb-3">
+                  {phoneError && <p className="text-xs text-red-600 mb-2">{phoneError}</p>}
+                  <p className="text-xs text-sage mb-3 mt-2">
                     Full address is needed for {puppy.name}&apos;s health certificate and to
                     determine delivery options.
                   </p>
@@ -248,21 +344,25 @@ export default function TakeMeHomeModal({
                     onChange={(e) => update("city", e.target.value)}
                     className={`${inputClass} mb-3`}
                   />
-                  <div className="flex gap-3 mb-4">
+                  <div className="flex gap-3 mb-1">
                     <input
                       placeholder="State"
                       value={form.state}
                       onChange={(e) => update("state", e.target.value)}
                       className={inputClass}
                     />
-                    <input
-                      placeholder="Zip Code"
-                      value={form.zip}
-                      onChange={(e) => update("zip", e.target.value)}
-                      className={inputClass}
-                    />
+                    <div className="flex-1">
+                      <input
+                        placeholder="Zip Code"
+                        value={form.zip}
+                        onChange={(e) => update("zip", e.target.value)}
+                        onBlur={() => markTouched("zip")}
+                        className={zipError ? errorInputClass : inputClass}
+                      />
+                    </div>
                   </div>
-                  <label className="flex items-center gap-2 text-sm text-ink/80 mb-6">
+                  {zipError && <p className="text-xs text-red-600 mb-3">{zipError}</p>}
+                  <label className="flex items-center gap-2 text-sm text-ink/80 mb-6 mt-3">
                     <input
                       type="checkbox"
                       checked={form.over18}
@@ -296,6 +396,9 @@ export default function TakeMeHomeModal({
                   >
                     <p className="text-forest font-medium">Local Pickup</p>
                     <p className="text-sm text-ink/70">Meet us in person — free</p>
+                    <p className="text-xs text-sage mt-1">
+                      Estimated ready window: {estimateDeliveryWindow("pickup", new Date().toISOString())}
+                    </p>
                   </button>
 
                   <button
@@ -307,6 +410,9 @@ export default function TakeMeHomeModal({
                     <p className="text-forest font-medium">Nationwide Delivery</p>
                     <p className="text-sm text-ink/70">
                       Door-to-door delivery — ${settings.deliveryFee.toLocaleString()}
+                    </p>
+                    <p className="text-xs text-sage mt-1">
+                      Estimated arrival window: {estimateDeliveryWindow("home", new Date().toISOString())}
                     </p>
                   </button>
 
@@ -433,9 +539,16 @@ export default function TakeMeHomeModal({
                     </div>
                   )}
 
-                  <p className="text-xs text-sage mb-6 text-center">
+                  <p className="text-xs text-sage mb-4 text-center">
                     You&apos;ll securely pay by card or PayPal on the next screen.
                   </p>
+
+                  {submitError && (
+                    <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                      <AlertCircle size={15} className="text-red-600 shrink-0 mt-0.5" />
+                      <p className="text-xs text-red-700">{submitError}</p>
+                    </div>
+                  )}
 
                   <div className="flex gap-3">
                     <button

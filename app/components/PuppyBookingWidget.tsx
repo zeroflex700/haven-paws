@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import TakeMeHomeModal from "./TakeMeHomeModal";
+import AbandonedCheckoutBanner from "./AbandonedCheckoutBanner";
+import { useCheckoutRecovery } from "@/lib/hooks/useCheckoutRecovery";
 import type { AppSettings } from "@/lib/queries/settings";
 
 type Puppy = {
@@ -23,9 +25,22 @@ export default function PuppyBookingWidget({
   settings: AppSettings;
 }) {
   const [open, setOpen] = useState(false);
+  const [resumeStep, setResumeStep] = useState<number | null>(null);
+  const { draft } = useCheckoutRecovery(puppy.id);
+
+  function openModal(step?: number) {
+    setResumeStep(step ?? null);
+    setOpen(true);
+  }
 
   return (
     <>
+      <AbandonedCheckoutBanner
+        puppyId={puppy.id}
+        puppyName={puppy.name}
+        onResume={() => openModal(draft?.step)}
+      />
+
       <div className="flex gap-3 mb-6">
         <a
           href="#inquiry-form"
@@ -34,7 +49,7 @@ export default function PuppyBookingWidget({
           Reserve a Visit
         </a>
         <button
-          onClick={() => setOpen(true)}
+          onClick={() => openModal()}
           className="flex-1 text-center bg-forest text-cream px-4 py-2.5 rounded-full hover:bg-forest-light transition-colors"
         >
           Take Me Home
@@ -43,7 +58,7 @@ export default function PuppyBookingWidget({
 
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-sage/20 px-5 py-3 z-40 md:hidden">
         <button
-          onClick={() => setOpen(true)}
+          onClick={() => openModal()}
           className="w-full text-center bg-forest text-cream py-3 rounded-full hover:bg-forest-light transition-colors"
         >
           Take Me Home
@@ -51,7 +66,12 @@ export default function PuppyBookingWidget({
       </div>
 
       {open && (
-        <TakeMeHomeModal puppy={puppy} settings={settings} onClose={() => setOpen(false)} />
+        <TakeMeHomeModal
+          puppy={puppy}
+          settings={settings}
+          initialStep={resumeStep ?? undefined}
+          onClose={() => setOpen(false)}
+        />
       )}
     </>
   );
