@@ -10,6 +10,7 @@ import BreederIncludedList from "../../components/BreederIncludedList";
 import BreederIconTextSection from "../../components/BreederIconTextSection";
 import BreederQualificationsGrid from "../../components/BreederQualificationsGrid";
 import { cldOptimized } from "@/lib/cloudinary";
+import { ShieldCheck, BadgeCheck } from "lucide-react";
 import {
   getBreederBySlug,
   getBreederHomePhotos,
@@ -46,7 +47,7 @@ export default async function BreederProfilePage({
       <Navbar />
 
       <PageContainer className="py-8 max-w-3xl">
-        <div className="flex items-center gap-4 mb-10">
+        <div className="flex items-center gap-4 mb-3">
           <div className="w-16 h-16 rounded-full overflow-hidden bg-cream-alt shrink-0">
             {breeder.photoUrl && (
               // eslint-disable-next-line @next/next/no-img-element
@@ -61,6 +62,19 @@ export default async function BreederProfilePage({
             <h1 className="h2">{breeder.name}</h1>
             {breeder.breedName && <p className="small-text">Breeder of {breeder.breedName}</p>}
           </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-ink/70 mb-10">
+          <span className="flex items-center gap-1.5">
+            <ShieldCheck size={13} className="text-gold" strokeWidth={1.5} />
+            Reviewed and approved by Haven Paws
+          </span>
+          {qualifications.length > 0 && (
+            <span className="flex items-center gap-1.5">
+              <BadgeCheck size={13} className="text-gold" strokeWidth={1.5} />
+              {qualifications.length} verified qualification{qualifications.length !== 1 ? "s" : ""}
+            </span>
+          )}
         </div>
 
         <section className="mb-12">

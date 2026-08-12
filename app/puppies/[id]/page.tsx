@@ -15,10 +15,13 @@ import RelatedPuppies from "../../components/RelatedPuppies";
 import Testimonials from "../../components/Testimonials";
 import DeliveryInfo from "../../components/DeliveryInfo";
 import PuppyBookingWidget from "../../components/PuppyBookingWidget";
+import TrustBadgeRow from "../../components/TrustBadgeRow";
+import PaymentExplainer from "../../components/PaymentExplainer";
+import PurchaseTimeline from "../../components/PurchaseTimeline";
 import Link from "next/link";
 import { getPuppyDetail } from "@/lib/queries/puppyDetail";
 import { getRelatedPuppies } from "@/lib/queries/relatedPuppies";
-import { getReviews } from "@/lib/queries/testimonials";
+import { getReviews, getReviewStats } from "@/lib/queries/testimonials";
 import { getSiblings } from "@/lib/queries/siblings";
 import { getSettings } from "@/lib/queries/settings";
 import { getBreedInfo } from "@/lib/queries/breedInfo";
@@ -75,9 +78,10 @@ export default async function PuppyDetailPage({
 
   if (!puppy) notFound();
 
-  const [related, reviews, siblings, settings, breedInfo] = await Promise.all([
+  const [related, reviews, reviewStats, siblings, settings, breedInfo] = await Promise.all([
     getRelatedPuppies(puppy.breedId, puppy.id),
     getReviews(4),
+    getReviewStats(),
     getSiblings(puppy.litterId, puppy.id),
     getSettings(),
     getBreedInfo(puppy.breedId),
@@ -109,10 +113,17 @@ export default async function PuppyDetailPage({
           </span>
           <h1 className="font-display text-3xl text-forest mt-3 mb-1">{puppy.name}</h1>
           <p className="eyebrow mb-1">{puppy.breed}</p>
-          <p className="text-sm text-ink/60 capitalize mb-4">
+          <p className="text-sm text-ink/60 capitalize mb-3">
             {puppy.sex}
             {puppy.ageWeeks !== null ? ` · ${puppy.ageWeeks} weeks old` : ""}
           </p>
+
+          <TrustBadgeRow
+            hasBreederProfile={!!puppy.breederSlug}
+            avgRating={reviewStats.avgRating}
+            reviewCount={reviewStats.count}
+          />
+
           <div className="gold-rule mb-4" />
 
           <p className="text-2xl text-ink font-medium mb-4">${puppy.price.toLocaleString()}</p>
@@ -130,6 +141,8 @@ export default async function PuppyDetailPage({
             }}
             settings={settings}
           />
+
+          <PaymentExplainer price={puppy.price} depositAmount={puppy.depositAmount} />
 
           {puppy.description && (
             <div className="mb-6">
@@ -173,6 +186,11 @@ export default async function PuppyDetailPage({
           )}
 
           <PuppyIncluded items={puppy.includedItems} />
+
+          <div className="mt-6 border-t border-sage/15 pt-5">
+            <h3 className="font-display text-lg text-forest mb-4">What happens next</h3>
+            <PurchaseTimeline />
+          </div>
 
           <div id="inquiry-form" className="mt-6">
             <InquiryForm puppyId={puppy.id} puppyName={puppy.name} />

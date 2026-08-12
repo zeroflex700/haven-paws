@@ -5,7 +5,7 @@ export default async function AdminBreedsPage() {
   const supabase = await createClient();
   const { data: breeds } = await supabase
     .from("breeds")
-    .select("id, name, temperament")
+    .select("id, name, temperament, image_url, slug")
     .order("name");
 
   return (
@@ -24,11 +24,23 @@ export default async function AdminBreedsPage() {
             className="flex items-center justify-between bg-white border border-sage/20 rounded-lg px-4 py-3"
           >
             <span className="text-forest">{b.name}</span>
-            {!b.temperament && (
-              <span className="text-[10px] uppercase tracking-wider text-sage">
-                Not filled in
-              </span>
-            )}
+            <div className="flex gap-2">
+              {!b.temperament && (
+                <span className="text-[10px] uppercase tracking-wider text-sage">
+                  No info
+                </span>
+              )}
+              {!b.image_url && (
+                <span className="text-[10px] uppercase tracking-wider text-sage">
+                  No photo
+                </span>
+              )}
+              {!b.slug && (
+                <span className="text-[10px] uppercase tracking-wider text-red-500">
+                  No slug
+                </span>
+              )}
+            </div>
           </Link>
         ))}
       </div>
