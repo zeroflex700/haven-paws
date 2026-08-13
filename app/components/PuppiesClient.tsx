@@ -35,6 +35,23 @@ export default function PuppiesClient({
   const [suggestOpen, setSuggestOpen] = useState(false);
   const searchBoxRef = useRef<HTMLDivElement>(null);
 
+  // Ensures navigation with a breed/search query param (Popular breed chips,
+  // breed carousels, breed guides, lifestyle pages, etc.) always wins over a
+  // previously persisted session filter, instead of being silently
+  // overwritten by usePersistentFilters' sessionStorage hydration.
+  useEffect(() => {
+    const urlBreed = searchParams.get("breed");
+    const urlSearch = searchParams.get("search");
+    if (urlBreed || urlSearch) {
+      setFilters((f) => ({
+        ...f,
+        breed: urlBreed ?? f.breed,
+        search: urlSearch ?? f.search,
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (searchBoxRef.current && !searchBoxRef.current.contains(e.target as Node)) {
