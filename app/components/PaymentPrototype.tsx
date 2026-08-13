@@ -88,7 +88,6 @@ export default function PaymentPrototype({
     setTimeout(() => {
       setSubmitting(false);
       setTestSuccess(true);
-
       clear();
 
       setTimeout(() => {
@@ -114,9 +113,8 @@ export default function PaymentPrototype({
 
         <p className="text-sm text-ink/70 leading-relaxed mb-1">
           This was a{" "}
-          <strong>Test Mode / Prototype Payment</strong>. No real
-          charge was made and no card details were collected or
-          stored.
+          <strong>Test Mode / Prototype Payment</strong>. No real charge was
+          made and no card details were collected or stored.
         </p>
 
         <p className="text-xs text-sage mt-4">
@@ -136,15 +134,16 @@ export default function PaymentPrototype({
         </p>
 
         <p className="text-xs text-sage mt-2 leading-relaxed">
-          This payment is for your reservation of {puppyName}.
-          Review the details below before continuing.
+          This payment is for your reservation of {puppyName}. Review the
+          details below before continuing.
         </p>
       </div>
 
-      {/* Reservation Card */}
+      {/* Reservation Summary */}
       <div className="bg-gold/10 border border-gold/30 rounded-2xl p-5 mb-6">
 
         <div className="flex items-start justify-between mb-4">
+
           <div className="flex items-center gap-3">
 
             <div className="w-12 h-12 rounded-full overflow-hidden bg-cream-alt shrink-0">
@@ -178,13 +177,13 @@ export default function PaymentPrototype({
               className="text-forest"
             />
           </button>
+
         </div>
 
         <div className="inline-flex items-center bg-forest text-cream text-lg font-medium px-4 py-2 rounded-full">
           ${amount.toLocaleString()}
         </div>
 
-        {/* Personal Message */}
         <div className="mt-5 pt-4 border-t border-gold/20">
 
           <label className="block text-xs text-ink/70 mb-2">
@@ -201,7 +200,6 @@ export default function PaymentPrototype({
 
         </div>
 
-        {/* Safety Message */}
         <div className="flex items-start gap-2 mt-4 text-[11px] text-ink/60">
 
           <ShieldCheck
@@ -210,9 +208,9 @@ export default function PaymentPrototype({
           />
 
           <p>
-            For your safety, always complete puppy payments through
-            Haven Paws&apos; checkout — never by wire transfer,
-            gift card, or a direct request outside the platform.
+            For your safety, always complete puppy payments through Haven
+            Paws&apos; checkout — never by wire transfer, gift card, or a
+            direct request outside the platform.
           </p>
 
         </div>
@@ -301,55 +299,54 @@ export default function PaymentPrototype({
               Card number
             </label>
 
-            <input
-              value={cardNumber}
-              onChange={(e) =>
-                setCardNumber(
-                  formatCardNumber(e.target.value)
-                )
-              }
-              placeholder="1234 1234 1234 1234"
-              inputMode="numeric"
-              autoComplete="cc-number"
-              className="w-full border border-sage/30 rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:border-gold"
-            />
+            <div className="relative">
 
-            {/* Colorful Payment Logos */}
-            <div className="flex items-center justify-end gap-1.5 mt-2">
+              <input
+                value={cardNumber}
+                onChange={(e) =>
+                  setCardNumber(
+                    formatCardNumber(e.target.value)
+                  )
+                }
+                placeholder="1234 1234 1234 1234"
+                inputMode="numeric"
+                autoComplete="cc-number"
+                className="w-full border border-sage/30 rounded-xl pl-3.5 pr-[190px] py-3 text-sm focus:outline-none focus:border-gold"
+              />
 
-              {/* Visa */}
-              <div className="h-7 min-w-[48px] rounded-md bg-[#1A1F71] flex items-center justify-center px-2">
-                <span className="text-white text-[10px] font-bold italic tracking-tight">
-                  VISA
-                </span>
-              </div>
+              {/* Colorful payment logos */}
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
 
-              {/* Mastercard */}
-              <div className="h-7 min-w-[48px] rounded-md bg-white border border-sage/20 flex items-center justify-center">
-                <div className="relative w-7 h-5">
-
-                  <span className="absolute left-0 top-0.5 w-5 h-5 rounded-full bg-[#EB001B]" />
-
-                  <span className="absolute right-0 top-0.5 w-5 h-5 rounded-full bg-[#F79E1B]" />
-
+                {/* VISA */}
+                <div className="h-7 w-11 rounded-md bg-[#1A1F71] flex items-center justify-center shrink-0">
+                  <span className="text-white text-[9px] font-bold italic tracking-tight">
+                    VISA
+                  </span>
                 </div>
-              </div>
 
-              {/* American Express */}
-              <div className="h-7 min-w-[48px] rounded-md bg-[#2E77BC] flex items-center justify-center px-1.5">
-                <span className="text-white text-[8px] font-bold tracking-tight">
-                  AMEX
-                </span>
-              </div>
+                {/* MASTERCARD */}
+                <div className="h-7 w-11 rounded-md bg-white border border-sage/20 flex items-center justify-center shrink-0">
+                  <div className="relative w-7 h-5">
+                    <span className="absolute left-0 top-0.5 w-5 h-5 rounded-full bg-[#EB001B]" />
+                    <span className="absolute right-0 top-0.5 w-5 h-5 rounded-full bg-[#F79E1B]" />
+                  </div>
+                </div>
 
-              {/* Discover */}
-              <div className="h-7 min-w-[48px] rounded-md bg-white border border-sage/20 flex items-center justify-center gap-0.5 px-1">
+                {/* AMERICAN EXPRESS */}
+                <div className="h-7 w-11 rounded-md bg-[#2E77BC] flex items-center justify-center shrink-0">
+                  <span className="text-white text-[7px] font-bold tracking-tight">
+                    AMEX
+                  </span>
+                </div>
 
-                <span className="text-[7px] font-bold text-gray-600">
-                  DISC
-                </span>
+                {/* DISCOVER */}
+                <div className="h-7 w-11 rounded-md bg-white border border-sage/20 flex items-center justify-center gap-0.5 shrink-0">
+                  <span className="text-[6px] font-bold text-gray-600">
+                    DISC
+                  </span>
 
-                <span className="w-3 h-3 rounded-full bg-[#F76B1C]" />
+                  <span className="w-3 h-3 rounded-full bg-[#F76B1C]" />
+                </div>
 
               </div>
 
@@ -360,7 +357,6 @@ export default function PaymentPrototype({
           {/* Expiration + Security Code */}
           <div className="flex gap-3">
 
-            {/* Expiration */}
             <div className="flex-1">
 
               <label className="block text-xs text-ink/70 mb-1.5">
@@ -382,7 +378,6 @@ export default function PaymentPrototype({
 
             </div>
 
-            {/* Security Code */}
             <div className="flex-1">
 
               <label className="block text-xs text-ink/70 mb-1.5">
@@ -442,7 +437,7 @@ export default function PaymentPrototype({
               }
               className="w-full flex items-center justify-between border border-sage/30 rounded-xl px-3.5 py-3 text-sm text-left"
             >
-              {country}
+              <span>{country}</span>
 
               <ChevronDown
                 size={16}
@@ -484,8 +479,8 @@ export default function PaymentPrototype({
         <div className="bg-white border border-sage/20 rounded-xl p-5 mb-6 text-center">
 
           <p className="text-sm text-ink/70">
-            Bank account payment details will appear here once
-            this option is available.
+            Bank account payment details will appear here once this option
+            is available.
           </p>
 
         </div>
