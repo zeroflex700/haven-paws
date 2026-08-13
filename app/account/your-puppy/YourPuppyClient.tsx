@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { PawPrint, ShieldCheck, FileText, CreditCard, Package, CheckCircle2, X } from "lucide-react";
+import { PawPrint, ShieldCheck, FileText, CreditCard, Package, CheckCircle2, X, FlaskConical } from "lucide-react";
 import OptimizedImage from "../../components/OptimizedImage";
 import TransactionStatusBadge from "../../components/TransactionStatusBadge";
 import ExpandableSection from "../../components/ExpandableSection";
@@ -19,7 +19,25 @@ function progressPercent(status: ReservationStatus, depositPaid: boolean): numbe
   return 20;
 }
 
-function SuccessBanner({ onDismiss }: { onDismiss: () => void }) {
+function SuccessBanner({ testMode, onDismiss }: { testMode: boolean; onDismiss: () => void }) {
+  if (testMode) {
+    return (
+      <div className="bg-gold/10 border border-gold/30 rounded-lg p-4 mb-6 flex items-start gap-3">
+        <FlaskConical size={18} className="text-forest shrink-0 mt-0.5" />
+        <div className="flex-1">
+          <p className="text-sm text-forest font-medium">Test Mode / Prototype Payment</p>
+          <p className="text-xs text-ink/70 mt-0.5">
+            You completed a simulated test payment. No real charge was made, and no reservation
+            has been created yet — this was a preview of the checkout experience only.
+          </p>
+        </div>
+        <button onClick={onDismiss} aria-label="Dismiss" className="shrink-0 text-forest">
+          <X size={16} />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 flex items-start gap-3">
       <CheckCircle2 size={18} className="text-green-600 shrink-0 mt-0.5" />
@@ -162,6 +180,7 @@ export default function YourPuppyClient() {
   const [reservations, setReservations] = useState<ReservationWithStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSuccess, setShowSuccess] = useState(searchParams.get("checkout") === "success");
+  const isTestMode = searchParams.get("mode") === "test";
 
   useEffect(() => {
     getMyReservations()
@@ -169,10 +188,8 @@ export default function YourPuppyClient() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Clear the saved checkout draft for the puppy that was just paid for,
-  // so the abandoned-checkout banner doesn't reappear for a completed flow.
   useEffect(() => {
-    if (searchParams.get("checkout") !== "success") return;
+    if (searchParams.get("checkout") !== "success" || isTestMode) return;
     const puppyId = searchParams.get("puppy");
     if (!puppyId) return;
     try {
@@ -180,7 +197,7 @@ export default function YourPuppyClient() {
     } catch {
       // ignore
     }
-  }, [searchParams]);
+  }, [searchParams, isTestMode]);
 
   if (loading) {
     return (
@@ -194,23 +211,26 @@ export default function YourPuppyClient() {
 
   if (reservations.length === 0) {
     return (
-      <div className="text-center py-14">
-        <PawPrint size={28} className="text-sage mx-auto mb-3" strokeWidth={1.5} />
-        <p className="text-ink font-medium text-sm mb-1">No puppies reserved yet</p>
-        <p className="small-text mb-5">Once you reserve a puppy, you&apos;ll track your purchase here.</p>
-        <Link
-          href="/puppies"
-          className="inline-block bg-forest text-cream text-sm px-6 py-2.5 rounded-full hover:bg-forest-light transition-colors"
-        >
-          Browse Puppies
-        </Link>
+      <div>
+        {showSuccess && <SuccessBanner testMode={isTestMode} onDismiss={() => setShowSuccess(false)} />}
+        <div className="text-center py-14">
+          <PawPrint size={28} className="text-sage mx-auto mb-3" strokeWidth={1.5} />
+          <p className="text-ink font-medium text-sm mb-1">No puppies reserved yet</p>
+          <p className="small-text mb-5">Once you reserve a puppy, you&apos;ll track your purchase here.</p>
+          <Link
+            href="/puppies"
+            className="inline-block bg-forest text-cream text-sm px-6 py-2.5 rounded-full hover:bg-forest-light transition-colors"
+          >
+            Browse Puppies
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
     <div>
-      {showSuccess && <SuccessBanner onDismiss={() => setShowSuccess(false)} />}
+      {showSuccess && <SuccessBanner testMode={isTestMode} onDismiss={() => setShowSuccess(false)} />}
       {reservations.map((r) => (
         <TransactionCard key={r.id} r={r} />
       ))}

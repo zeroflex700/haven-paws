@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { X, User, Truck, Heart, CreditCard, ChevronDown, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { cldOptimized } from "@/lib/cloudinary";
@@ -8,6 +9,7 @@ import { submitTakeMeHome } from "../puppies/[id]/checkout-actions";
 import CheckoutSummarySheet from "./CheckoutSummarySheet";
 import { useCheckoutRecovery } from "@/lib/hooks/useCheckoutRecovery";
 import { estimateDeliveryWindow } from "@/lib/deliveryEstimate";
+import { PAYMENT_TEST_MODE } from "@/lib/paymentConfig";
 import type { AppSettings } from "@/lib/queries/settings";
 
 type Puppy = {
@@ -49,6 +51,7 @@ export default function TakeMeHomeModal({
   initialStep?: number;
   onClose: () => void;
 }) {
+  const router = useRouter();
   const { draft, save, clear } = useCheckoutRecovery(puppy.id);
   const [step, setStep] = useState(initialStep ?? 0);
   const [submitting, setSubmitting] = useState(false);
@@ -74,7 +77,6 @@ export default function TakeMeHomeModal({
     paymentType: "deposit" as "deposit" | "full",
   });
 
-  // Load any saved draft once, on open.
   useEffect(() => {
     if (draft) {
       setForm((f) => ({
@@ -98,9 +100,8 @@ export default function TakeMeHomeModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Save progress whenever the step advances (not on every keystroke).
   useEffect(() => {
-    if (step === 0) return; // nothing meaningful to resume before step 1
+    if (step === 0) return;
     save({
       step,
       email: form.email,
@@ -160,6 +161,15 @@ export default function TakeMeHomeModal({
     form.zip &&
     isValidZip(form.zip) &&
     form.over18;
+
+  function goToPaymentPrototype() {
+    const params = new URLSearchParams({
+      amount: String(dueNow),
+      subtotal: String(subtotal),
+      lineItems: JSON.stringify(lineItems),
+    });
+    router.push(`/payment-preview/${puppy.id}?${params.toString()}`);
+  }
 
   async function handleSubmit() {
     setSubmitting(true);
@@ -274,10 +284,7 @@ export default function TakeMeHomeModal({
                 >
                   Track Your Reservation
                 </Link>
-                <button
-                  onClick={onClose}
-                  className="text-sm text-sage underline"
-                >
+                <button onClick={onClose} className="text-sm text-sage underline">
                   Close
                 </button>
               </div>
@@ -499,7 +506,14 @@ export default function TakeMeHomeModal({
 
               {step === 3 && (
                 <div>
-                  <h2 className="font-display text-lg text-forest mb-4">Payment</h2>
+                  <div className="flex items-center gap-2 mb-4">
+                    <h2 className="font-display text-lg text-forest">Payment</h2>
+                    {PAYMENT_TEST_MODE && (
+                      <span className="text-[10px] uppercase tracking-wider bg-gold/15 text-forest px-2 py-0.5 rounded-full">
+                        Test Mode
+                      </span>
+                    )}
+                  </div>
 
                   <div className="border border-sage/20 rounded-lg p-4 mb-6 text-sm space-y-1.5">
                     {lineItems.map((item) => (
@@ -540,7 +554,9 @@ export default function TakeMeHomeModal({
                   )}
 
                   <p className="text-xs text-sage mb-4 text-center">
-                    You&apos;ll securely pay by card or PayPal on the next screen.
+                    {PAYMENT_TEST_MODE
+                      ? "You'll continue to a test payment screen — no real charge will be made."
+                      : "You'll securely pay by card or PayPal on the next screen."}
                   </p>
 
                   {submitError && (
@@ -558,11 +574,15 @@ export default function TakeMeHomeModal({
                       Back
                     </button>
                     <button
-                      onClick={handleSubmit}
+                      onClick={PAYMENT_TEST_MODE ? goToPaymentPrototype : handleSubmit}
                       disabled={submitting}
                       className="flex-1 bg-forest text-cream py-3 rounded-full hover:bg-forest-light disabled:opacity-50"
                     >
-                      {submitting ? "Processing..." : `Pay $${dueNow.toLocaleString()}`}
+                      {PAYMENT_TEST_MODE
+                        ? `Continue — $${dueNow.toLocaleString()}`
+                        : submitting
+                        ? "Processing..."
+                        : `Pay $${dueNow.toLocaleString()}`}
                     </button>
                   </div>
                 </div>
