@@ -2,13 +2,79 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, ShieldCheck, ChevronDown, CreditCard, Landmark, Loader2, CheckCircle2 } from "lucide-react";
+import {
+  Pencil,
+  ShieldCheck,
+  ChevronDown,
+  CreditCard,
+  Landmark,
+  Loader2,
+  CheckCircle2,
+} from "lucide-react";
 import OptimizedImage from "./OptimizedImage";
 import { useCheckoutRecovery } from "@/lib/hooks/useCheckoutRecovery";
 
 type LineItem = { label: string; amount: number };
 
-const COUNTRIES = ["United States", "Canada", "United Kingdom", "Australia"];
+const COUNTRIES = [
+  "United States",
+  "Canada",
+  "United Kingdom",
+  "Australia",
+];
+
+function VisaLogo() {
+  return (
+    <div className="h-7 min-w-[42px] rounded-md bg-[#1A1F71] px-2 flex items-center justify-center">
+      <span className="text-white text-[11px] font-extrabold italic tracking-tight">
+        VISA
+      </span>
+    </div>
+  );
+}
+
+function MastercardLogo() {
+  return (
+    <div className="h-7 min-w-[42px] rounded-md bg-white border border-gray-200 flex items-center justify-center">
+      <div className="flex -space-x-2">
+        <span className="block w-5 h-5 rounded-full bg-[#EB001B]" />
+        <span className="block w-5 h-5 rounded-full bg-[#F79E1B] opacity-95" />
+      </div>
+    </div>
+  );
+}
+
+function AmexLogo() {
+  return (
+    <div className="h-7 min-w-[42px] rounded-md bg-[#2E77BC] px-1.5 flex items-center justify-center">
+      <span className="text-white text-[8px] font-bold tracking-tight">
+        AMEX
+      </span>
+    </div>
+  );
+}
+
+function DiscoverLogo() {
+  return (
+    <div className="h-7 min-w-[42px] rounded-md bg-white border border-gray-200 px-1 flex items-center justify-center overflow-hidden">
+      <span className="text-[7px] font-bold text-[#222] tracking-tight">
+        DISC
+      </span>
+      <span className="ml-0.5 w-2 h-2 rounded-full bg-[#F58220]" />
+    </div>
+  );
+}
+
+function CardBrandLogos() {
+  return (
+    <div className="flex items-center gap-1.5 shrink-0">
+      <VisaLogo />
+      <MastercardLogo />
+      <AmexLogo />
+      <DiscoverLogo />
+    </div>
+  );
+}
 
 export default function PaymentPrototype({
   puppyId,
@@ -46,21 +112,31 @@ export default function PaymentPrototype({
     const digits = v.replace(/\D/g, "").slice(0, 16);
     return digits.replace(/(.{4})/g, "$1 ").trim();
   }
+
   function formatExpiry(v: string) {
     const digits = v.replace(/\D/g, "").slice(0, 4);
-    if (digits.length <= 2) return digits;
+
+    if (digits.length <= 2) {
+      return digits;
+    }
+
     return `${digits.slice(0, 2)}/${digits.slice(2)}`;
   }
 
   function handleContinue() {
     setSubmitting(true);
-    // Simulated client-side only — no network call, no card data ever leaves this component.
+
+    // Simulated client-side only.
+    // No network request is made and card data never leaves this component.
     setTimeout(() => {
       setSubmitting(false);
       setTestSuccess(true);
       clear();
+
       setTimeout(() => {
-        router.push(`/account/your-puppy?checkout=success&puppy=${puppyId}&mode=test`);
+        router.push(
+          `/account/your-puppy?checkout=success&puppy=${puppyId}&mode=test`
+        );
       }, 1800);
     }, 900);
   }
@@ -68,13 +144,25 @@ export default function PaymentPrototype({
   if (testSuccess) {
     return (
       <div className="max-w-md mx-auto px-6 pt-20 pb-32 text-center">
-        <CheckCircle2 size={40} className="text-gold mx-auto mb-4" strokeWidth={1.5} />
-        <p className="font-display text-xl text-forest mb-2">Test Payment Successful</p>
-        <p className="text-sm text-ink/70 leading-relaxed mb-1">
-          This was a <strong>Test Mode / Prototype Payment</strong>. No real charge was made and
-          no card details were collected or stored.
+        <CheckCircle2
+          size={40}
+          className="text-gold mx-auto mb-4"
+          strokeWidth={1.5}
+        />
+
+        <p className="font-display text-xl text-forest mb-2">
+          Test Payment Successful
         </p>
-        <p className="text-xs text-sage mt-4">Taking you to your account…</p>
+
+        <p className="text-sm text-ink/70 leading-relaxed mb-1">
+          This was a{" "}
+          <strong>Test Mode / Prototype Payment</strong>. No real charge was
+          made and no card details were collected or stored.
+        </p>
+
+        <p className="text-xs text-sage mt-4">
+          Taking you to your account…
+        </p>
       </div>
     );
   }
@@ -82,10 +170,13 @@ export default function PaymentPrototype({
   return (
     <div className="max-w-md mx-auto px-6 pb-32">
       <div className="text-center pt-8 pb-4">
-        <p className="font-display text-lg text-forest">Haven Paws</p>
+        <p className="font-display text-lg text-forest">
+          Haven Paws
+        </p>
+
         <p className="text-xs text-sage mt-2 leading-relaxed">
-          This payment is for your reservation of {puppyName}. Review the details below before
-          continuing.
+          This payment is for your reservation of {puppyName}. Review the
+          details below before continuing.
         </p>
       </div>
 
@@ -93,12 +184,18 @@ export default function PaymentPrototype({
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full overflow-hidden bg-cream-alt shrink-0">
-              <OptimizedImage src={puppyImage} alt={puppyName} sizes="48px" />
+              <OptimizedImage
+                src={puppyImage}
+                alt={puppyName}
+                sizes="48px"
+              />
             </div>
+
             <div>
               <p className="font-display text-base text-forest leading-tight">
                 {transactionTitle}
               </p>
+
               {nonRefundable && (
                 <span className="inline-block text-[10px] uppercase tracking-wider text-red-600 mt-1">
                   Non-refundable
@@ -106,11 +203,15 @@ export default function PaymentPrototype({
               )}
             </div>
           </div>
+
           <button
             aria-label="Edit reservation details"
             className="w-8 h-8 rounded-full bg-white border border-sage/30 flex items-center justify-center active:scale-90 transition-transform shrink-0"
           >
-            <Pencil size={13} className="text-forest" />
+            <Pencil
+              size={13}
+              className="text-forest"
+            />
           </button>
         </div>
 
@@ -119,7 +220,10 @@ export default function PaymentPrototype({
         </div>
 
         <div className="mt-5 pt-4 border-t border-gold/20">
-          <label className="block text-xs text-ink/70 mb-2">Personal message (optional)</label>
+          <label className="block text-xs text-ink/70 mb-2">
+            Personal message (optional)
+          </label>
+
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -130,35 +234,74 @@ export default function PaymentPrototype({
         </div>
 
         <div className="flex items-start gap-2 mt-4 text-[11px] text-ink/60">
-          <ShieldCheck size={14} className="text-gold shrink-0 mt-0.5" />
+          <ShieldCheck
+            size={14}
+            className="text-gold shrink-0 mt-0.5"
+          />
+
           <p>
-            For your safety, always complete puppy payments through Haven Paws&apos; checkout —
-            never by wire transfer, gift card, or a direct request outside the platform.
+            For your safety, always complete puppy payments through Haven
+            Paws&apos; checkout — never by wire transfer, gift card, or a
+            direct request outside the platform.
           </p>
         </div>
       </div>
 
-      <p className="text-sm font-medium text-forest mb-3">Select payment method</p>
+      <p className="text-sm font-medium text-forest mb-3">
+        Select payment method
+      </p>
+
       <div className="grid grid-cols-2 gap-3 mb-5">
         <button
           onClick={() => setMethod("card")}
           className={`flex flex-col items-center gap-2 rounded-xl border-2 py-4 transition-colors ${
-            method === "card" ? "border-gold bg-gold/10" : "border-sage/20 bg-white"
+            method === "card"
+              ? "border-gold bg-gold/10"
+              : "border-sage/20 bg-white"
           }`}
         >
-          <CreditCard size={20} className={method === "card" ? "text-forest" : "text-sage"} strokeWidth={1.5} />
-          <span className={`text-sm ${method === "card" ? "text-forest font-medium" : "text-ink/70"}`}>
+          <CreditCard
+            size={20}
+            className={
+              method === "card" ? "text-forest" : "text-sage"
+            }
+            strokeWidth={1.5}
+          />
+
+          <span
+            className={`text-sm ${
+              method === "card"
+                ? "text-forest font-medium"
+                : "text-ink/70"
+            }`}
+          >
             Card
           </span>
         </button>
+
         <button
           onClick={() => setMethod("bank")}
           className={`flex flex-col items-center gap-2 rounded-xl border-2 py-4 transition-colors ${
-            method === "bank" ? "border-gold bg-gold/10" : "border-sage/20 bg-white"
+            method === "bank"
+              ? "border-gold bg-gold/10"
+              : "border-sage/20 bg-white"
           }`}
         >
-          <Landmark size={20} className={method === "bank" ? "text-forest" : "text-sage"} strokeWidth={1.5} />
-          <span className={`text-sm ${method === "bank" ? "text-forest font-medium" : "text-ink/70"}`}>
+          <Landmark
+            size={20}
+            className={
+              method === "bank" ? "text-forest" : "text-sage"
+            }
+            strokeWidth={1.5}
+          />
+
+          <span
+            className={`text-sm ${
+              method === "bank"
+                ? "text-forest font-medium"
+                : "text-ink/70"
+            }`}
+          >
             Bank account
           </span>
         </button>
@@ -167,62 +310,87 @@ export default function PaymentPrototype({
       {method === "card" && (
         <div className="bg-white border border-sage/20 rounded-xl p-4 mb-6 space-y-3">
           <div>
-            <label className="block text-xs text-ink/70 mb-1.5">Card number</label>
+            <label className="block text-xs text-ink/70 mb-1.5">
+              Card number
+            </label>
+
             <div className="relative">
               <input
                 value={cardNumber}
-                onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                onChange={(e) =>
+                  setCardNumber(formatCardNumber(e.target.value))
+                }
                 placeholder="1234 1234 1234 1234"
                 inputMode="numeric"
-                className="w-full border border-sage/30 rounded-xl pl-3.5 pr-20 py-3 text-sm focus:outline-none focus:border-gold"
+                autoComplete="off"
+                className="w-full border border-sage/30 rounded-xl pl-3.5 pr-[184px] py-3 text-sm focus:outline-none focus:border-gold"
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1">
-                <span className="text-[9px] font-medium text-sage border border-sage/30 rounded px-1.5 py-0.5">
-                  VISA
-                </span>
-                <span className="text-[9px] font-medium text-sage border border-sage/30 rounded px-1.5 py-0.5">
-                  MC
-                </span>
+
+              {/* Colorful card-brand logos */}
+              <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                <CardBrandLogos />
               </div>
             </div>
           </div>
 
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="block text-xs text-ink/70 mb-1.5">Expiration</label>
+              <label className="block text-xs text-ink/70 mb-1.5">
+                Expiration
+              </label>
+
               <input
                 value={expiry}
-                onChange={(e) => setExpiry(formatExpiry(e.target.value))}
+                onChange={(e) =>
+                  setExpiry(formatExpiry(e.target.value))
+                }
                 placeholder="MM/YY"
                 inputMode="numeric"
+                autoComplete="off"
                 className="w-full border border-sage/30 rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:border-gold"
               />
             </div>
+
             <div className="flex-1">
-              <label className="block text-xs text-ink/70 mb-1.5">Security code</label>
+              <label className="block text-xs text-ink/70 mb-1.5">
+                Security code
+              </label>
+
               <input
                 value={cvc}
-                onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                onChange={(e) =>
+                  setCvc(
+                    e.target.value.replace(/\D/g, "").slice(0, 4)
+                  )
+                }
                 placeholder="CVC"
                 inputMode="numeric"
+                autoComplete="off"
                 className="w-full border border-sage/30 rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:border-gold"
               />
             </div>
           </div>
 
           <div className="relative">
-            <label className="block text-xs text-ink/70 mb-1.5">Country</label>
+            <label className="block text-xs text-ink/70 mb-1.5">
+              Country
+            </label>
+
             <button
               type="button"
               onClick={() => setCountryOpen(!countryOpen)}
               className="w-full flex items-center justify-between border border-sage/30 rounded-xl px-3.5 py-3 text-sm text-left"
             >
               {country}
+
               <ChevronDown
                 size={16}
-                className={`text-sage transition-transform duration-200 ${countryOpen ? "rotate-180" : ""}`}
+                className={`text-sage transition-transform duration-200 ${
+                  countryOpen ? "rotate-180" : ""
+                }`}
               />
             </button>
+
             {countryOpen && (
               <div className="absolute left-0 right-0 mt-1 bg-white border border-sage/20 rounded-xl shadow-lg z-10 py-1">
                 {COUNTRIES.map((c) => (
@@ -246,28 +414,52 @@ export default function PaymentPrototype({
       {method === "bank" && (
         <div className="bg-white border border-sage/20 rounded-xl p-5 mb-6 text-center">
           <p className="text-sm text-ink/70">
-            Bank account payment details will appear here once this option is available.
+            Bank account payment details will appear here once this option
+            is available.
           </p>
         </div>
       )}
 
       <div className="bg-white border border-sage/20 rounded-xl p-4 mb-6">
-        <p className="text-sm font-medium text-forest mb-3">Summary</p>
+        <p className="text-sm font-medium text-forest mb-3">
+          Summary
+        </p>
+
         <div className="space-y-2 text-sm">
           {lineItems.map((item) => (
-            <div key={item.label} className="flex justify-between">
-              <span className="text-ink/70">{item.label}</span>
-              <span className="text-ink">${item.amount.toLocaleString()}</span>
+            <div
+              key={item.label}
+              className="flex justify-between"
+            >
+              <span className="text-ink/70">
+                {item.label}
+              </span>
+
+              <span className="text-ink">
+                ${item.amount.toLocaleString()}
+              </span>
             </div>
           ))}
+
           <div className="flex justify-between pt-2 border-t border-sage/15">
-            <span className="text-ink/70">Subtotal</span>
-            <span className="text-ink">${subtotal.toLocaleString()}</span>
+            <span className="text-ink/70">
+              Subtotal
+            </span>
+
+            <span className="text-ink">
+              ${subtotal.toLocaleString()}
+            </span>
           </div>
         </div>
+
         <div className="flex justify-between items-center pt-3 mt-3 border-t border-sage/20">
-          <span className="font-display text-base text-forest">Total due now</span>
-          <span className="font-display text-xl text-forest">${amount.toLocaleString()}</span>
+          <span className="font-display text-base text-forest">
+            Total due now
+          </span>
+
+          <span className="font-display text-xl text-forest">
+            ${amount.toLocaleString()}
+          </span>
         </div>
       </div>
 
@@ -280,13 +472,17 @@ export default function PaymentPrototype({
           >
             {submitting ? (
               <>
-                <Loader2 size={16} className="animate-spin" />
+                <Loader2
+                  size={16}
+                  className="animate-spin"
+                />
                 Processing...
               </>
             ) : (
               `Pay $${amount.toLocaleString()}`
             )}
           </button>
+
           <p className="text-[10px] text-sage text-center mt-2">
             Test Mode — no real payment will be charged.
           </p>
