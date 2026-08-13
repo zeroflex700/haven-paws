@@ -351,24 +351,28 @@ export default function TakeMeHomeModal({
                     onChange={(e) => update("city", e.target.value)}
                     className={`${inputClass} mb-3`}
                   />
-                  <div className="flex gap-3 mb-1">
-                    <input
-                      placeholder="State"
-                      value={form.state}
-                      onChange={(e) => update("state", e.target.value)}
-                      className={inputClass}
-                    />
-                    <div className="flex-1">
-                      <input
-                        placeholder="Zip Code"
-                        value={form.zip}
-                        onChange={(e) => update("zip", e.target.value)}
-                        onBlur={() => markTouched("zip")}
-                        className={zipError ? errorInputClass : inputClass}
-                      />
-                    </div>
-                  </div>
-                  {zipError && <p className="text-xs text-red-600 mb-3">{zipError}</p>}
+                  <div className="grid grid-cols-2 gap-3 mb-1">
+  <input
+    placeholder="State"
+    value={form.state}
+    onChange={(e) => update("state", e.target.value)}
+    className={inputClass}
+  />
+
+  <div className="min-w-0">
+    <input
+      placeholder="Zip Code"
+      value={form.zip}
+      onChange={(e) => update("zip", e.target.value)}
+      onBlur={() => markTouched("zip")}
+      className={`${zipError ? errorInputClass : inputClass} w-full`}
+    />
+
+    {zipError && (
+      <p className="text-xs text-red-600 mt-1">{zipError}</p>
+    )}
+  </div>
+</div>
                   <label className="flex items-center gap-2 text-sm text-ink/80 mb-6 mt-3">
                     <input
                       type="checkbox"
