@@ -64,8 +64,21 @@ function MastercardLogo() {
       role="img"
     >
       <rect width="48" height="30" rx="4" fill="white" />
-      <circle cx="20" cy="15" r="8" fill="#EB001B" />
-      <circle cx="28" cy="15" r="8" fill="#F79E1B" />
+
+      <circle
+        cx="20"
+        cy="15"
+        r="8"
+        fill="#EB001B"
+      />
+
+      <circle
+        cx="28"
+        cy="15"
+        r="8"
+        fill="#F79E1B"
+      />
+
       <path
         d="M24 8.8a8 8 0 0 1 0 12.4 8 8 0 0 1 0-12.4Z"
         fill="#FF5F00"
@@ -82,7 +95,13 @@ function AmexLogo() {
       aria-label="American Express"
       role="img"
     >
-      <rect width="48" height="30" rx="4" fill="#1677B9" />
+      <rect
+        width="48"
+        height="30"
+        rx="4"
+        fill="#1677B9"
+      />
+
       <text
         x="24"
         y="18.5"
@@ -173,22 +192,34 @@ export default function PaymentPrototype({
   const { clear } = useCheckoutRecovery(puppyId);
 
   const [method, setMethod] = useState<"card" | "bank">("card");
+
   const [countryOpen, setCountryOpen] = useState(false);
   const [country, setCountry] = useState("United States");
+
   const [message, setMessage] = useState("");
+
+  const [cardOwnerName, setCardOwnerName] = useState("");
   const [cardNumber, setCardNumber] = useState("");
   const [expiry, setExpiry] = useState("");
   const [cvc, setCvc] = useState("");
+
   const [submitting, setSubmitting] = useState(false);
   const [testSuccess, setTestSuccess] = useState(false);
 
   function formatCardNumber(v: string) {
-    const digits = v.replace(/\D/g, "").slice(0, 16);
-    return digits.replace(/(.{4})/g, "$1 ").trim();
+    const digits = v
+      .replace(/\D/g, "")
+      .slice(0, 16);
+
+    return digits
+      .replace(/(.{4})/g, "$1 ")
+      .trim();
   }
 
   function formatExpiry(v: string) {
-    const digits = v.replace(/\D/g, "").slice(0, 4);
+    const digits = v
+      .replace(/\D/g, "")
+      .slice(0, 4);
 
     if (digits.length <= 2) {
       return digits;
@@ -218,6 +249,7 @@ export default function PaymentPrototype({
   if (testSuccess) {
     return (
       <div className="max-w-md mx-auto px-6 pt-20 pb-32 text-center">
+
         <CheckCircle2
           size={40}
           className="text-gold mx-auto mb-4"
@@ -229,8 +261,10 @@ export default function PaymentPrototype({
         </p>
 
         <p className="text-sm text-ink/70 leading-relaxed mb-1">
-          This was a <strong>Test Mode / Prototype Payment</strong>. No real
-          charge was made and no card details were collected or stored.
+          This was a{" "}
+          <strong>Test Mode / Prototype Payment</strong>.
+          No real charge was made and no card details
+          were collected or stored.
         </p>
 
         <p className="text-xs text-sage mt-4">
@@ -245,31 +279,38 @@ export default function PaymentPrototype({
 
       {/* Header */}
       <div className="text-center pt-8 pb-4">
+
         <p className="font-display text-lg text-forest">
           Haven Paws
         </p>
 
         <p className="text-xs text-sage mt-2 leading-relaxed">
-          This payment is for your reservation of {puppyName}. Review the
-          details below before continuing.
+          This payment is for your reservation of{" "}
+          {puppyName}. Review the details below before
+          continuing.
         </p>
+
       </div>
 
       {/* Reservation summary */}
       <div className="bg-gold/10 border border-gold/30 rounded-2xl p-5 mb-6">
 
         <div className="flex items-start justify-between mb-4">
+
           <div className="flex items-center gap-3">
 
             <div className="w-12 h-12 rounded-full overflow-hidden bg-cream-alt shrink-0">
+
               <OptimizedImage
                 src={puppyImage}
                 alt={puppyName}
                 sizes="48px"
               />
+
             </div>
 
             <div>
+
               <p className="font-display text-base text-forest leading-tight">
                 {transactionTitle}
               </p>
@@ -279,7 +320,9 @@ export default function PaymentPrototype({
                   Non-refundable
                 </span>
               )}
+
             </div>
+
           </div>
 
           <button
@@ -291,6 +334,7 @@ export default function PaymentPrototype({
               className="text-forest"
             />
           </button>
+
         </div>
 
         <div className="inline-flex items-center bg-forest text-cream text-lg font-medium px-4 py-2 rounded-full">
@@ -305,11 +349,14 @@ export default function PaymentPrototype({
 
           <textarea
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={(e) =>
+              setMessage(e.target.value)
+            }
             placeholder="Share anything you'd like your breeder to know..."
             rows={3}
             className="w-full bg-white border border-sage/30 rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:border-gold resize-none"
           />
+
         </div>
 
         <div className="flex items-start gap-2 mt-4 text-[11px] text-ink/60">
@@ -320,11 +367,14 @@ export default function PaymentPrototype({
           />
 
           <p>
-            For your safety, always complete puppy payments through Haven
-            Paws&apos; checkout — never by wire transfer, gift card, or a
-            direct request outside the platform.
+            For your safety, always complete puppy payments
+            through Haven Paws&apos; checkout — never by wire
+            transfer, gift card, or a direct request outside
+            the platform.
           </p>
+
         </div>
+
       </div>
 
       {/* Payment method */}
@@ -342,6 +392,7 @@ export default function PaymentPrototype({
               : "border-sage/20 bg-white"
           }`}
         >
+
           <CreditCard
             size={20}
             className={
@@ -361,6 +412,7 @@ export default function PaymentPrototype({
           >
             Card
           </span>
+
         </button>
 
         <button
@@ -371,6 +423,7 @@ export default function PaymentPrototype({
               : "border-sage/20 bg-white"
           }`}
         >
+
           <Landmark
             size={20}
             className={
@@ -390,15 +443,37 @@ export default function PaymentPrototype({
           >
             Bank account
           </span>
+
         </button>
+
       </div>
 
       {/* Card payment */}
       {method === "card" && (
         <div className="bg-white border border-sage/20 rounded-xl p-4 mb-6 space-y-3">
 
+          {/* Card owner name */}
+          <div>
+
+            <label className="block text-xs text-ink/70 mb-1.5">
+              Card owner name
+            </label>
+
+            <input
+              value={cardOwnerName}
+              onChange={(e) =>
+                setCardOwnerName(e.target.value)
+              }
+              placeholder="Name as it appears on card"
+              autoComplete="cc-name"
+              className="w-full border border-sage/30 rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:border-gold"
+            />
+
+          </div>
+
           {/* Card number */}
           <div>
+
             <label className="block text-xs text-ink/70 mb-1.5">
               Card number
             </label>
@@ -421,12 +496,14 @@ export default function PaymentPrototype({
               <PaymentBrandLogos />
 
             </div>
+
           </div>
 
           {/* Expiration + CVC */}
           <div className="flex gap-3">
 
             <div className="flex-1">
+
               <label className="block text-xs text-ink/70 mb-1.5">
                 Expiration
               </label>
@@ -443,9 +520,11 @@ export default function PaymentPrototype({
                 autoComplete="cc-exp"
                 className="w-full border border-sage/30 rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:border-gold"
               />
+
             </div>
 
             <div className="flex-1">
+
               <label className="block text-xs text-ink/70 mb-1.5">
                 Security code
               </label>
@@ -464,7 +543,9 @@ export default function PaymentPrototype({
                 autoComplete="cc-csc"
                 className="w-full border border-sage/30 rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:border-gold"
               />
+
             </div>
+
           </div>
 
           {/* Country */}
@@ -481,6 +562,7 @@ export default function PaymentPrototype({
               }
               className="w-full flex items-center justify-between border border-sage/30 rounded-xl px-3.5 py-3 text-sm text-left"
             >
+
               {country}
 
               <ChevronDown
@@ -491,6 +573,7 @@ export default function PaymentPrototype({
                     : ""
                 }`}
               />
+
             </button>
 
             {countryOpen && (
@@ -512,17 +595,21 @@ export default function PaymentPrototype({
 
               </div>
             )}
+
           </div>
+
         </div>
       )}
 
       {/* Bank payment */}
       {method === "bank" && (
         <div className="bg-white border border-sage/20 rounded-xl p-5 mb-6 text-center">
+
           <p className="text-sm text-ink/70">
-            Bank account payment details will appear here once this option is
-            available.
+            Bank account payment details will appear here
+            once this option is available.
           </p>
+
         </div>
       )}
 
@@ -540,6 +627,7 @@ export default function PaymentPrototype({
               key={item.label}
               className="flex justify-between"
             >
+
               <span className="text-ink/70">
                 {item.label}
               </span>
@@ -547,6 +635,7 @@ export default function PaymentPrototype({
               <span className="text-ink">
                 ${item.amount.toLocaleString()}
               </span>
+
             </div>
           ))}
 
@@ -561,6 +650,7 @@ export default function PaymentPrototype({
             </span>
 
           </div>
+
         </div>
 
         <div className="flex justify-between items-center pt-3 mt-3 border-t border-sage/20">
@@ -574,6 +664,7 @@ export default function PaymentPrototype({
           </span>
 
         </div>
+
       </div>
 
       {/* Fixed payment button */}
@@ -586,17 +677,20 @@ export default function PaymentPrototype({
             disabled={submitting}
             className="w-full bg-forest text-cream py-3.5 rounded-full font-medium hover:bg-forest-light active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
           >
+
             {submitting ? (
               <>
                 <Loader2
                   size={16}
                   className="animate-spin"
                 />
+
                 Processing...
               </>
             ) : (
               `Pay $${amount.toLocaleString()}`
             )}
+
           </button>
 
           <p className="text-[10px] text-sage text-center mt-2">
@@ -604,7 +698,9 @@ export default function PaymentPrototype({
           </p>
 
         </div>
+
       </div>
+
     </div>
   );
 }
