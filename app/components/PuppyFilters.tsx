@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { SlidersHorizontal, ArrowUpDown, X, Check } from "lucide-react";
+import { SlidersHorizontal, ArrowUpDown, X, Check, Heart } from "lucide-react";
 import { BREEDS } from "../data/breeds";
 import { useMountedTransition } from "@/lib/hooks/useMountedTransition";
 import { useBodyScrollLock } from "@/lib/hooks/useBodyScrollLock";
 import { useDismissableOverlay } from "@/lib/hooks/useDismissableOverlay";
+import { useFavoriteBreeds } from "@/lib/hooks/useFavoriteBreeds";
 
 export type Filters = {
   search: string;
@@ -75,6 +76,7 @@ export default function PuppyFilters({
 }) {
   const [breedOpen, setBreedOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
+  const { isFavorite: isFavoriteBreed, toggle: toggleFavoriteBreed } = useFavoriteBreeds();
 
   const chipBase =
     "flex items-center gap-1.5 shrink-0 px-4 py-2 rounded-full text-sm border transition-colors";
@@ -84,6 +86,10 @@ export default function PuppyFilters({
   function toggleSex(value: string) {
     onChange({ ...filters, sex: filters.sex === value ? "all" : value });
   }
+
+  const sortedBreeds = [...BREEDS].sort(
+    (a, b) => Number(isFavoriteBreed(b)) - Number(isFavoriteBreed(a))
+  );
 
   return (
     <>
@@ -137,18 +143,29 @@ export default function PuppyFilters({
           All Breeds
           {filters.breed === "all" && <Check size={16} className="text-gold" />}
         </button>
-        {BREEDS.map((b) => (
-          <button
-            key={b}
-            onClick={() => {
-              onChange({ ...filters, breed: b });
-              setBreedOpen(false);
-            }}
-            className="w-full flex items-center justify-between text-left py-3.5 border-b border-sage/10 text-sm"
-          >
-            {b}
-            {filters.breed === b && <Check size={16} className="text-gold" />}
-          </button>
+        {sortedBreeds.map((b) => (
+          <div key={b} className="flex items-center border-b border-sage/10">
+            <button
+              onClick={() => {
+                onChange({ ...filters, breed: b });
+                setBreedOpen(false);
+              }}
+              className="flex-1 text-left py-3.5 text-sm flex items-center justify-between"
+            >
+              {b}
+              {filters.breed === b && <Check size={16} className="text-gold" />}
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleFavoriteBreed(b);
+              }}
+              aria-label={isFavoriteBreed(b) ? `Remove ${b} from favorite breeds` : `Favorite ${b}`}
+              className="p-2 shrink-0 active:scale-90 transition-transform"
+            >
+              <Heart size={16} className={isFavoriteBreed(b) ? "fill-gold text-gold" : "text-sage"} />
+            </button>
+          </div>
         ))}
       </FilterSheet>
 

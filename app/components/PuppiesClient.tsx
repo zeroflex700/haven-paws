@@ -8,6 +8,7 @@ import PuppyFilters, { Filters } from "./PuppyFilters";
 import FilterChips from "./FilterChips";
 import SearchSuggestionsDropdown from "./SearchSuggestionsDropdown";
 import SavedSearchesBar from "./SavedSearchesBar";
+import CompareBar from "./CompareBar";
 import { usePersistentFilters } from "@/lib/hooks/usePersistentFilters";
 import { useSearchHistory } from "@/lib/hooks/useSearchHistory";
 import type { PuppyRecord } from "@/lib/queries/puppies";
@@ -39,11 +40,6 @@ export default function PuppiesClient({
   const [suggestOpen, setSuggestOpen] = useState(false);
   const searchBoxRef = useRef<HTMLDivElement>(null);
 
-  // URL always wins over persisted/default state for breed & search whenever
-  // present in the query string (Popular breed chips, breed discovery rows,
-  // breed guides, lifestyle pages). Runs after usePersistentFilters' own
-  // hydration effect (guaranteed by hook declaration order), so a stale
-  // sessionStorage value can never silently override an explicit navigation.
   useEffect(() => {
     const urlBreed = searchParams.get("breed");
     const urlSearch = searchParams.get("search");
@@ -57,14 +53,6 @@ export default function PuppiesClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  // Any in-page filter change (bottom sheet selection, chip removal,
-  // clear-all, saved-search apply, committed search) also writes breed/search
-  // back into the URL, so the URL can never go stale relative to what's
-  // displayed. This guarantees a click on a *different* breed link is always
-  // a real, detectable URL change — even after a manual in-page override —
-  // and a click on the breed already being viewed is a correct no-op rather
-  // than a bug. sex/readyNow/sort intentionally stay session-only, since no
-  // link elsewhere in the app targets those.
   const setFilters = useCallback(
     (next: Filters) => {
       setFiltersRaw(next);
@@ -180,6 +168,8 @@ export default function PuppiesClient({
           ))}
         </div>
       )}
+
+      <CompareBar />
     </section>
   );
 }

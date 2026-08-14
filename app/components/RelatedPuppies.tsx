@@ -11,16 +11,20 @@ const statusColor: Record<string, string> = {
 export default function RelatedPuppies({
   puppies,
   breedName,
+  eyebrow = "You Might Also Love",
+  title,
 }: {
   puppies: RelatedPuppy[];
   breedName: string;
+  eyebrow?: string;
+  title?: string;
 }) {
   if (puppies.length === 0) return null;
 
   return (
     <section className="max-w-5xl mx-auto px-6 pb-16">
-      <p className="eyebrow mb-3">You Might Also Love</p>
-      <h2 className="h2 mb-6">Other {breedName} Puppies</h2>
+      <p className="eyebrow mb-3">{eyebrow}</p>
+      <h2 className="h2 mb-6">{title ?? `Other ${breedName} Puppies`}</h2>
       <div className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 snap-x">
         {puppies.map((p) => (
           <Link key={p.id} href={`/puppies/${p.id}`} className="block w-40 shrink-0 snap-start group">

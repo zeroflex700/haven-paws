@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Video } from "lucide-react";
 import OptimizedImage from "./OptimizedImage";
 import FavoriteButton from "./FavoriteButton";
+import CompareToggle from "./CompareToggle";
 
 type Status = "available" | "reserved" | "sold";
 
@@ -37,6 +38,9 @@ export default function PedigreeCard({
         />
         <div className="absolute top-2 right-2">
           <FavoriteButton puppyId={id} size={14} />
+        </div>
+        <div className="absolute bottom-2 left-2">
+          <CompareToggle puppyId={id} />
         </div>
         {status !== "available" && (
           <span className="absolute top-2 left-2 text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/90 text-ink">

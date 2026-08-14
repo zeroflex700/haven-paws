@@ -1,9 +1,40 @@
 import { supabase } from "@/lib/supabase/client";
 import type { PuppyRecord } from "./puppies";
 
-// Trending = real, computed from currently-published available puppies —
-// not fabricated. Groups by breed and returns the breeds with the most
-// current listings.
+type RawPuppyRow = {
+  id: string;
+  name: string;
+  sex: "male" | "female";
+  price: number;
+  birth_date: string | null;
+  ready_date: string | null;
+  status: "available" | "reserved" | "sold";
+  breeds: { name: string } | null;
+  puppy_media: { url: string; is_cover: boolean; media_type: string }[] | null;
+};
+
+function mapPuppyRow(p: RawPuppyRow): PuppyRecord {
+  const media = p.puppy_media ?? [];
+  const cover = media.find((m) => m.is_cover)?.url ?? media[0]?.url ?? null;
+  return {
+    id: p.id,
+    name: p.name,
+    breed: p.breeds?.name ?? "Unknown",
+    sex: p.sex,
+    ageWeeks: p.birth_date
+      ? Math.max(0, Math.floor((Date.now() - new Date(p.birth_date).getTime()) / (1000 * 60 * 60 * 24 * 7)))
+      : null,
+    readyLabel: p.ready_date ? "Ready to go home" : "Coming soon",
+    status: p.status,
+    price: Number(p.price),
+    coverImage: cover,
+    hasVideo: media.some((m) => m.media_type === "video"),
+  } as PuppyRecord;
+}
+
+const SELECT_FIELDS = `id, name, sex, price, birth_date, ready_date, status,
+  breeds!inner ( name ), puppy_media ( url, is_cover, media_type )`;
+
 export async function getTrendingBreeds(limit = 6): Promise<{ breed: string; count: number }[]> {
   const { data } = await supabase
     .from("puppies")
@@ -24,8 +55,6 @@ export async function getTrendingBreeds(limit = 6): Promise<{ breed: string; cou
     .slice(0, limit);
 }
 
-// Personalized recommendations from recently viewed breeds — pulls
-// available puppies of the same breeds the visitor has actually looked at.
 export async function getRecommendedPuppies(
   viewedBreedNames: string[],
   excludeIds: string[],
@@ -35,11 +64,7 @@ export async function getRecommendedPuppies(
 
   const { data } = await supabase
     .from("puppies")
-    .select(
-      `id, name, sex, price, birth_date, ready_date, status,
-       breeds!inner ( name ),
-       puppy_media ( url, is_cover, media_type )`
-    )
+    .select(SELECT_FIELDS)
     .eq("is_published", true)
     .eq("status", "available")
     .in("breeds.name", viewedBreedNames)
@@ -48,22 +73,48 @@ export async function getRecommendedPuppies(
   return (data ?? [])
     .filter((p) => !excludeIds.includes(p.id))
     .slice(0, limit)
-    .map((p) => {
-      const media = (p.puppy_media ?? []) as { url: string; is_cover: boolean; media_type: string }[];
-      const cover = media.find((m) => m.is_cover)?.url ?? media[0]?.url ?? null;
-      return {
-        id: p.id,
-        name: p.name,
-        breed: (p.breeds as unknown as { name: string }).name,
-        sex: p.sex,
-        ageWeeks: p.birth_date
-          ? Math.max(0, Math.floor((Date.now() - new Date(p.birth_date).getTime()) / (1000 * 60 * 60 * 24 * 7)))
-          : null,
-        readyLabel: p.ready_date ? "Ready to go home" : "Coming soon",
-        status: p.status,
-        price: Number(p.price),
-        coverImage: cover,
-        hasVideo: media.some((m) => m.media_type === "video"),
-      } as PuppyRecord;
-    });
+    .map((p) => mapPuppyRow(p as unknown as RawPuppyRow));
+}
+
+// Deterministic "puppies in your price range" — ±20% of a given puppy's price.
+// No ML/AI, just a real, explainable numeric filter over real data.
+export async function getPuppiesInPriceRange(
+  currentPrice: number,
+  excludeIds: string[],
+  limit = 8
+): Promise<PuppyRecord[]> {
+  const low = currentPrice * 0.8;
+  const high = currentPrice * 1.2;
+
+  const { data } = await supabase
+    .from("puppies")
+    .select(SELECT_FIELDS)
+    .eq("is_published", true)
+    .eq("status", "available")
+    .gte("price", low)
+    .lte("price", high)
+    .limit(limit + excludeIds.length);
+
+  return (data ?? [])
+    .filter((p) => !excludeIds.includes(p.id))
+    .slice(0, limit)
+    .map((p) => mapPuppyRow(p as unknown as RawPuppyRow));
+}
+
+// Related breeds via the existing breeds.breed_group column — no new field.
+export async function getRelatedBreedsByGroup(
+  breedGroup: string | null,
+  excludeBreedId: string,
+  limit = 6
+): Promise<{ id: string; name: string; image_url: string | null }[]> {
+  if (!breedGroup) return [];
+
+  const { data } = await supabase
+    .from("breeds")
+    .select("id, name, image_url")
+    .eq("breed_group", breedGroup)
+    .neq("id", excludeBreedId)
+    .limit(limit);
+
+  return data ?? [];
 }

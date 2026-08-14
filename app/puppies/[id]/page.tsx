@@ -12,6 +12,7 @@ import PuppySiblings from "../../components/PuppySiblings";
 import AboutBreeder from "../../components/AboutBreeder";
 import BreedFacts from "../../components/BreedFacts";
 import RelatedPuppies from "../../components/RelatedPuppies";
+import RelatedBreedsSection from "../../components/RelatedBreedsSection";
 import Testimonials from "../../components/Testimonials";
 import DeliveryInfo from "../../components/DeliveryInfo";
 import PuppyBookingWidget from "../../components/PuppyBookingWidget";
@@ -25,6 +26,7 @@ import { getReviews, getReviewStats } from "@/lib/queries/testimonials";
 import { getSiblings } from "@/lib/queries/siblings";
 import { getSettings } from "@/lib/queries/settings";
 import { getBreedInfo } from "@/lib/queries/breedInfo";
+import { getPuppiesInPriceRange, getRelatedBreedsByGroup } from "@/lib/queries/recommendations";
 
 const statusColor: Record<string, string> = {
   available: "bg-gold text-forest",
@@ -85,6 +87,12 @@ export default async function PuppyDetailPage({
     getSiblings(puppy.litterId, puppy.id),
     getSettings(),
     getBreedInfo(puppy.breedId),
+  ]);
+
+  const excludeIds = [puppy.id, ...related.map((r) => r.id)];
+  const [priceRangePuppies, relatedBreeds] = await Promise.all([
+    getPuppiesInPriceRange(puppy.price, excludeIds),
+    getRelatedBreedsByGroup(breedInfo?.breedGroup ?? null, puppy.breedId),
   ]);
 
   const coverImage = puppy.media.find((m) => m.isCover)?.url ?? puppy.media[0]?.url ?? null;
@@ -203,6 +211,13 @@ export default async function PuppyDetailPage({
       <PuppySiblings puppyName={puppy.name} siblings={siblings} />
       <DeliveryInfo />
       <RelatedPuppies puppies={related} breedName={puppy.breed} />
+      <RelatedPuppies
+        puppies={priceRangePuppies}
+        breedName={puppy.breed}
+        eyebrow="You May Also Like"
+        title="Puppies in Your Price Range"
+      />
+      <RelatedBreedsSection breeds={relatedBreeds} />
       <Testimonials reviews={reviews} />
       <BreedFacts breed={breedInfo} />
       <AboutBreeder settings={settings} />

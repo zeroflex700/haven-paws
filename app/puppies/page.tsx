@@ -4,6 +4,8 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import PuppiesClient from "../components/PuppiesClient";
 import TrendingSearches from "../components/TrendingSearches";
+import FavoriteBreedsRow from "../components/FavoriteBreedsRow";
+import RecentSearchesRow from "../components/RecentSearchesRow";
 import { getPuppies } from "@/lib/queries/puppies";
 
 export const metadata: Metadata = {
@@ -18,7 +20,9 @@ export default async function PuppiesPage() {
   return (
     <main>
       <Navbar />
+      <FavoriteBreedsRow />
       <TrendingSearches />
+      <RecentSearchesRow />
       <Suspense fallback={null}>
         <PuppiesClient initialPuppies={puppies} />
       </Suspense>
