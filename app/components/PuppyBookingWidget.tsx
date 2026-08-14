@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import TakeMeHomeModal from "./TakeMeHomeModal";
 import AbandonedCheckoutBanner from "./AbandonedCheckoutBanner";
@@ -48,12 +49,13 @@ export default function PuppyBookingWidget({
             {STATUS_MESSAGES[puppy.status] ?? "This puppy is no longer available."}
           </p>
         </div>
-        <a
+
+        <Link
           href="/puppies"
           className="block text-center border border-forest/30 text-forest px-4 py-2.5 rounded-full hover:border-forest transition-colors"
         >
           Browse Available Puppies
-        </a>
+        </Link>
       </div>
     );
   }
@@ -73,6 +75,7 @@ export default function PuppyBookingWidget({
         >
           Reserve a Visit
         </a>
+
         <button
           onClick={() => openModal()}
           className="flex-1 text-center bg-forest text-cream px-4 py-2.5 rounded-full hover:bg-forest-light transition-colors"
