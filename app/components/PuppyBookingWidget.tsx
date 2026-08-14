@@ -15,6 +15,12 @@ type Puppy = {
   price: number;
   depositAmount: number;
   coverImage: string | null;
+  status: "available" | "reserved" | "sold";
+};
+
+const STATUS_MESSAGES: Record<string, string> = {
+  reserved: "This puppy has been reserved by another family.",
+  sold: "This puppy has already found its forever home.",
 };
 
 export default function PuppyBookingWidget({
@@ -27,10 +33,29 @@ export default function PuppyBookingWidget({
   const [open, setOpen] = useState(false);
   const [resumeStep, setResumeStep] = useState<number | null>(null);
   const { draft } = useCheckoutRecovery(puppy.id);
+  const isAvailable = puppy.status === "available";
 
   function openModal(step?: number) {
     setResumeStep(step ?? null);
     setOpen(true);
+  }
+
+  if (!isAvailable) {
+    return (
+      <div className="mb-6">
+        <div className="border border-sage/30 bg-cream-alt rounded-lg px-4 py-3 mb-3">
+          <p className="text-sm text-ink/80">
+            {STATUS_MESSAGES[puppy.status] ?? "This puppy is no longer available."}
+          </p>
+        </div>
+        <a
+          href="/puppies"
+          className="block text-center border border-forest/30 text-forest px-4 py-2.5 rounded-full hover:border-forest transition-colors"
+        >
+          Browse Available Puppies
+        </a>
+      </div>
+    );
   }
 
   return (

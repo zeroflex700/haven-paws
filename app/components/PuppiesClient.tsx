@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState, useRef, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useMemo, useState, useRef, useEffect, useCallback } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { SearchX } from "lucide-react";
 import PedigreeCard from "./PedigreeCard";
 import PuppyFilters, { Filters } from "./PuppyFilters";
@@ -26,24 +26,29 @@ export default function PuppiesClient({
   initialPuppies: PuppyRecord[];
 }) {
   const searchParams = useSearchParams();
-  const [filters, setFilters] = usePersistentFilters<Filters>("havenpaws_puppy_filters", {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const [filters, setFiltersRaw] = usePersistentFilters<Filters>("havenpaws_puppy_filters", {
     ...DEFAULT_FILTERS,
     search: searchParams.get("search") ?? "",
     breed: searchParams.get("breed") ?? "all",
   });
+
   const { terms, addTerm, clearHistory } = useSearchHistory();
   const [suggestOpen, setSuggestOpen] = useState(false);
   const searchBoxRef = useRef<HTMLDivElement>(null);
 
-  // Ensures navigation with a breed/search query param (Popular breed chips,
-  // breed carousels, breed guides, lifestyle pages, etc.) always wins over a
-  // previously persisted session filter, instead of being silently
-  // overwritten by usePersistentFilters' sessionStorage hydration.
+  // URL always wins over persisted/default state for breed & search whenever
+  // present in the query string (Popular breed chips, breed discovery rows,
+  // breed guides, lifestyle pages). Runs after usePersistentFilters' own
+  // hydration effect (guaranteed by hook declaration order), so a stale
+  // sessionStorage value can never silently override an explicit navigation.
   useEffect(() => {
     const urlBreed = searchParams.get("breed");
     const urlSearch = searchParams.get("search");
     if (urlBreed || urlSearch) {
-      setFilters((f) => ({
+      setFiltersRaw((f) => ({
         ...f,
         breed: urlBreed ?? f.breed,
         search: urlSearch ?? f.search,
@@ -51,6 +56,34 @@ export default function PuppiesClient({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+
+  // Any in-page filter change (bottom sheet selection, chip removal,
+  // clear-all, saved-search apply, committed search) also writes breed/search
+  // back into the URL, so the URL can never go stale relative to what's
+  // displayed. This guarantees a click on a *different* breed link is always
+  // a real, detectable URL change — even after a manual in-page override —
+  // and a click on the breed already being viewed is a correct no-op rather
+  // than a bug. sex/readyNow/sort intentionally stay session-only, since no
+  // link elsewhere in the app targets those.
+  const setFilters = useCallback(
+    (next: Filters) => {
+      setFiltersRaw(next);
+
+      const currentBreed = searchParams.get("breed") ?? "all";
+      const currentSearch = searchParams.get("search") ?? "";
+      if (next.breed === currentBreed && next.search === currentSearch) return;
+
+      const params = new URLSearchParams(searchParams.toString());
+      if (next.breed && next.breed !== "all") params.set("breed", next.breed);
+      else params.delete("breed");
+      if (next.search.trim()) params.set("search", next.search);
+      else params.delete("search");
+
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [router, pathname, searchParams, setFiltersRaw]
+  );
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -102,7 +135,7 @@ export default function PuppiesClient({
       <div ref={searchBoxRef} className="relative mb-3">
         <input
           value={filters.search}
-          onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+          onChange={(e) => setFiltersRaw({ ...filters, search: e.target.value })}
           onFocus={() => setSuggestOpen(true)}
           onKeyDown={(e) => {
             if (e.key === "Enter") commitSearch(filters.search);

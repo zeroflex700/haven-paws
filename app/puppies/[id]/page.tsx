@@ -138,6 +138,7 @@ export default async function PuppyDetailPage({
               price: puppy.price,
               depositAmount: puppy.depositAmount,
               coverImage,
+              status: puppy.status,
             }}
             settings={settings}
           />
