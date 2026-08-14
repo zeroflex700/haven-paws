@@ -10,6 +10,8 @@ import CheckoutSummarySheet from "./CheckoutSummarySheet";
 import { useCheckoutRecovery } from "@/lib/hooks/useCheckoutRecovery";
 import { estimateDeliveryWindow } from "@/lib/deliveryEstimate";
 import { PAYMENT_TEST_MODE } from "@/lib/paymentConfig";
+import { useBodyScrollLock } from "@/lib/hooks/useBodyScrollLock";
+import { useDismissableOverlay } from "@/lib/hooks/useDismissableOverlay";
 import type { AppSettings } from "@/lib/queries/settings";
 
 type Puppy = {
@@ -59,6 +61,9 @@ export default function TakeMeHomeModal({
   const [done, setDone] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  const panelRef = useDismissableOverlay(true, onClose);
+  useBodyScrollLock(true);
 
   const [form, setForm] = useState({
     email: "",
@@ -213,7 +218,14 @@ export default function TakeMeHomeModal({
   const errorInputClass = "w-full border border-red-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-red-400";
 
   return (
-    <div className="fixed inset-0 z-[70] bg-cream overflow-y-auto">
+    <div
+      ref={panelRef}
+      tabIndex={-1}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Reserve your puppy"
+      className="fixed inset-0 z-[70] bg-cream overflow-y-auto outline-none"
+    >
       <div className="max-w-lg mx-auto min-h-screen pb-10">
         <div className="flex items-center justify-between px-5 py-4">
           <span className="font-display text-lg text-forest">Haven Paws</span>
@@ -301,6 +313,9 @@ export default function TakeMeHomeModal({
                   <input
                     type="email"
                     placeholder="Email"
+                    aria-label="Email"
+                    autoComplete="email"
+                    inputMode="email"
                     value={form.email}
                     onChange={(e) => update("email", e.target.value)}
                     onBlur={() => markTouched("email")}
@@ -310,12 +325,16 @@ export default function TakeMeHomeModal({
                   <div className="flex gap-3 mb-3 mt-2">
                     <input
                       placeholder="First name"
+                      aria-label="First name"
+                      autoComplete="given-name"
                       value={form.firstName}
                       onChange={(e) => update("firstName", e.target.value)}
                       className={inputClass}
                     />
                     <input
                       placeholder="Last name"
+                      aria-label="Last name"
+                      autoComplete="family-name"
                       value={form.lastName}
                       onChange={(e) => update("lastName", e.target.value)}
                       className={inputClass}
@@ -323,6 +342,9 @@ export default function TakeMeHomeModal({
                   </div>
                   <input
                     placeholder="Phone number"
+                    aria-label="Phone number"
+                    autoComplete="tel"
+                    inputMode="tel"
                     value={form.phone}
                     onChange={(e) => update("phone", e.target.value)}
                     onBlur={() => markTouched("phone")}
@@ -335,44 +357,55 @@ export default function TakeMeHomeModal({
                   </p>
                   <input
                     placeholder="Address"
+                    aria-label="Street address"
+                    autoComplete="address-line1"
                     value={form.address}
                     onChange={(e) => update("address", e.target.value)}
                     className={`${inputClass} mb-3`}
                   />
                   <input
                     placeholder="Apartment/Unit (optional)"
+                    aria-label="Apartment or unit"
+                    autoComplete="address-line2"
                     value={form.apt}
                     onChange={(e) => update("apt", e.target.value)}
                     className={`${inputClass} mb-3`}
                   />
                   <input
                     placeholder="City"
+                    aria-label="City"
+                    autoComplete="address-level2"
                     value={form.city}
                     onChange={(e) => update("city", e.target.value)}
                     className={`${inputClass} mb-3`}
                   />
                   <div className="grid grid-cols-2 gap-3 mb-1">
-  <input
-    placeholder="State"
-    value={form.state}
-    onChange={(e) => update("state", e.target.value)}
-    className={inputClass}
-  />
+                    <input
+                      placeholder="State"
+                      aria-label="State"
+                      autoComplete="address-level1"
+                      value={form.state}
+                      onChange={(e) => update("state", e.target.value)}
+                      className={inputClass}
+                    />
 
-  <div className="min-w-0">
-    <input
-      placeholder="Zip Code"
-      value={form.zip}
-      onChange={(e) => update("zip", e.target.value)}
-      onBlur={() => markTouched("zip")}
-      className={`${zipError ? errorInputClass : inputClass} w-full`}
-    />
+                    <div className="min-w-0">
+                      <input
+                        placeholder="Zip Code"
+                        aria-label="Zip code"
+                        autoComplete="postal-code"
+                        inputMode="numeric"
+                        value={form.zip}
+                        onChange={(e) => update("zip", e.target.value)}
+                        onBlur={() => markTouched("zip")}
+                        className={`${zipError ? errorInputClass : inputClass} w-full`}
+                      />
 
-    {zipError && (
-      <p className="text-xs text-red-600 mt-1">{zipError}</p>
-    )}
-  </div>
-</div>
+                      {zipError && (
+                        <p className="text-xs text-red-600 mt-1">{zipError}</p>
+                      )}
+                    </div>
+                  </div>
                   <label className="flex items-center gap-2 text-sm text-ink/80 mb-6 mt-3">
                     <input
                       type="checkbox"

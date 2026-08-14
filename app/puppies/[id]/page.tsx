@@ -13,13 +13,13 @@ import AboutBreeder from "../../components/AboutBreeder";
 import BreedFacts from "../../components/BreedFacts";
 import RelatedPuppies from "../../components/RelatedPuppies";
 import RelatedBreedsSection from "../../components/RelatedBreedsSection";
+import BreederAttributionCard from "../../components/BreederAttributionCard";
 import Testimonials from "../../components/Testimonials";
 import DeliveryInfo from "../../components/DeliveryInfo";
 import PuppyBookingWidget from "../../components/PuppyBookingWidget";
 import TrustBadgeRow from "../../components/TrustBadgeRow";
 import PaymentExplainer from "../../components/PaymentExplainer";
 import PurchaseTimeline from "../../components/PurchaseTimeline";
-import Link from "next/link";
 import { getPuppyDetail } from "@/lib/queries/puppyDetail";
 import { getRelatedPuppies } from "@/lib/queries/relatedPuppies";
 import { getReviews, getReviewStats } from "@/lib/queries/testimonials";
@@ -185,14 +185,11 @@ export default async function PuppyDetailPage({
             )}
           </div>
 
-          {puppy.breederSlug && (
-            <Link
-              href={`/breeders/${puppy.breederSlug}`}
-              className="inline-block text-sm text-forest border-b border-gold pb-0.5 mb-6"
-            >
-              Meet the Breeder →
-            </Link>
-          )}
+          <BreederAttributionCard
+            puppyName={puppy.name}
+            breederName={puppy.breederName}
+            breederSlug={puppy.breederSlug}
+          />
 
           <PuppyIncluded items={puppy.includedItems} />
 
