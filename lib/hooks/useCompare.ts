@@ -29,18 +29,26 @@ export function useCompare() {
     setIds(readLocal());
   }, []);
 
-  const toggle = useCallback((id: string) => {
+  // Returns "added" | "removed" | "limit-reached" so callers can show
+  // appropriate feedback without duplicating limit logic.
+  const toggle = useCallback((id: string): "added" | "removed" | "limit-reached" => {
+    let result: "added" | "removed" | "limit-reached" = "added";
     setIds((current) => {
-      let updated: string[];
       if (current.includes(id)) {
-        updated = current.filter((x) => x !== id);
-      } else {
-        if (current.length >= MAX_COMPARE) return current;
-        updated = [...current, id];
+        result = "removed";
+        const updated = current.filter((x) => x !== id);
+        writeLocal(updated);
+        return updated;
       }
+      if (current.length >= MAX_COMPARE) {
+        result = "limit-reached";
+        return current;
+      }
+      const updated = [...current, id];
       writeLocal(updated);
       return updated;
     });
+    return result;
   }, []);
 
   const clear = useCallback(() => {
@@ -50,5 +58,12 @@ export function useCompare() {
 
   const isComparing = useCallback((id: string) => ids.includes(id), [ids]);
 
-  return { compareIds: ids, isComparing, toggle, clear, maxReached: ids.length >= MAX_COMPARE };
+  return {
+    compareIds: ids,
+    isComparing,
+    toggle,
+    clear,
+    maxReached: ids.length >= MAX_COMPARE,
+    maxCompare: MAX_COMPARE,
+  };
 }
