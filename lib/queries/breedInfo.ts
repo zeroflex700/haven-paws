@@ -5,6 +5,7 @@ export type BreedInfo = {
   id: string;
   name: string;
   slug: string | null;
+  guideUrl: string | null;
   temperament: string | null;
   energyLevel: string | null;
   breedGroup: string | null;
@@ -12,19 +13,21 @@ export type BreedInfo = {
   imageUrl: string | null;
 };
 
-export async function getBreedInfo(breedId: string): Promise<BreedInfo | null> {
-  const { data } = await supabase
-    .from("breeds")
-    .select("id, name, slug, temperament, energy_level, breed_group, blurb, image_url")
-    .eq("id", breedId)
-    .single();
-
-  if (!data) return null;
-
+function mapBreedInfo(data: {
+  id: string;
+  name: string;
+  slug: string | null;
+  temperament: string | null;
+  energy_level: string | null;
+  breed_group: string | null;
+  blurb: string | null;
+  image_url: string | null;
+}): BreedInfo {
   return {
     id: data.id,
     name: data.name,
     slug: data.slug,
+    guideUrl: data.slug ? `/breed-guides/${data.slug}` : null,
     temperament: data.temperament,
     energyLevel: data.energy_level,
     breedGroup: data.breed_group,
@@ -33,24 +36,36 @@ export async function getBreedInfo(breedId: string): Promise<BreedInfo | null> {
   };
 }
 
-export async function getBreedInfoAdmin(breedId: string): Promise<BreedInfo | null> {
-  const supabase = await createClient();
-  const { data } = await supabase
+export async function getBreedInfo(
+  breedId: string
+): Promise<BreedInfo | null> {
+  const { data, error } = await supabase
     .from("breeds")
-    .select("id, name, slug, temperament, energy_level, breed_group, blurb, image_url")
+    .select(
+      "id, name, slug, temperament, energy_level, breed_group, blurb, image_url"
+    )
     .eq("id", breedId)
     .single();
 
-  if (!data) return null;
+  if (error || !data) return null;
 
-  return {
-    id: data.id,
-    name: data.name,
-    slug: data.slug,
-    temperament: data.temperament,
-    energyLevel: data.energy_level,
-    breedGroup: data.breed_group,
-    blurb: data.blurb,
-    imageUrl: data.image_url,
-  };
+  return mapBreedInfo(data);
+}
+
+export async function getBreedInfoAdmin(
+  breedId: string
+): Promise<BreedInfo | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("breeds")
+    .select(
+      "id, name, slug, temperament, energy_level, breed_group, blurb, image_url"
+    )
+    .eq("id", breedId)
+    .single();
+
+  if (error || !data) return null;
+
+  return mapBreedInfo(data);
 }

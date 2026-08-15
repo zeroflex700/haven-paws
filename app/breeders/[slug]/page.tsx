@@ -5,13 +5,14 @@ import PageContainer from "../../components/PageContainer";
 import { ProtectedImage } from "../../components/ProtectedMedia";
 import BreederQAList from "../../components/BreederQAList";
 import BreederPhotoStrip from "../../components/BreederPhotoStrip";
+import BreederHomeGallery from "../../components/BreederHomeGallery";
 import BreederContractSection from "../../components/BreederContractSection";
 import BreederIncludedList from "../../components/BreederIncludedList";
 import BreederIconTextSection from "../../components/BreederIconTextSection";
 import BreederQualificationsGrid from "../../components/BreederQualificationsGrid";
 import BreedGuideCard from "../../components/BreedGuideCard";
 import { cldOptimized } from "@/lib/cloudinary";
-import { ShieldCheck, BadgeCheck, Home } from "lucide-react";
+import { ShieldCheck, BadgeCheck } from "lucide-react";
 import {
   getBreederBySlug,
   getBreederHomePhotos,
@@ -52,8 +53,8 @@ export default async function BreederProfilePage({
     getBreederMoreAbout(breeder.id),
     getBreederQualifications(breeder.id),
     getBreederHealthTesting(breeder.id),
-    breeder.breedId
-      ? getBreedInfo(breeder.breedId)
+    breeder.breedName
+      ? getBreedInfoByName(breeder.breedName)
       : Promise.resolve(null),
   ]);
 
@@ -75,9 +76,7 @@ export default async function BreederProfilePage({
           </div>
 
           <div>
-            <h1 className="h2">
-              {breeder.name}
-            </h1>
+            <h1 className="h2">{breeder.name}</h1>
 
             {breeder.breedName && (
               <p className="small-text">
@@ -135,45 +134,11 @@ export default async function BreederProfilePage({
         {/* Automatically synchronized with this breeder's breed */}
         <BreedGuideCard breed={breedInfo} />
 
-        {homePhotos.length > 0 && (
-          <section className="mb-12">
-            <div className="flex items-center gap-2 mb-4">
-              <Home
-                size={16}
-                className="text-gold"
-                strokeWidth={1.5}
-              />
-
-              <h2 className="h2">
-                {breeder.homeGalleryTitle}
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              {homePhotos.slice(0, 4).map((p, i) => (
-                <div
-                  key={p.id}
-                  className={`aspect-square rounded-lg overflow-hidden relative ${
-                    i === 0
-                      ? "col-span-2 aspect-video"
-                      : ""
-                  }`}
-                >
-                  <ProtectedImage
-                    src={p.imageUrl}
-                    alt={breeder.homeGalleryTitle}
-                  />
-
-                  {i === 3 && homePhotos.length > 4 && (
-                    <div className="absolute inset-0 bg-forest/60 flex items-center justify-center text-cream text-sm font-medium">
-                      +{homePhotos.length - 4} more
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+        {/* Home Gallery */}
+        <BreederHomeGallery
+          title={breeder.homeGalleryTitle}
+          photos={homePhotos}
+        />
 
         <BreederQAList
           breederName={breeder.name}

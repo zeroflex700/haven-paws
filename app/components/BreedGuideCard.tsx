@@ -7,7 +7,7 @@ export default function BreedGuideCard({
 }: {
   breed: BreedInfo | null;
 }) {
-  if (!breed || !breed.slug) return null;
+  if (!breed || !breed.guideUrl) return null;
 
   return (
     <section className="border border-sage/20 rounded-lg overflow-hidden mb-6">
@@ -35,7 +35,7 @@ export default function BreedGuideCard({
         )}
 
         <Link
-          href={`/breed-guides/${breed.slug}`}
+          href={breed.guideUrl}
           className="inline-block text-sm text-forest border-b border-gold pb-0.5"
         >
           View the {breed.name} Breed Guide →
