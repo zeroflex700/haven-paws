@@ -9,8 +9,9 @@ import BreederContractSection from "../../components/BreederContractSection";
 import BreederIncludedList from "../../components/BreederIncludedList";
 import BreederIconTextSection from "../../components/BreederIconTextSection";
 import BreederQualificationsGrid from "../../components/BreederQualificationsGrid";
+import BreedGuideCard from "../../components/BreedGuideCard";
 import { cldOptimized } from "@/lib/cloudinary";
-import { ShieldCheck, BadgeCheck } from "lucide-react";
+import { ShieldCheck, BadgeCheck, Home } from "lucide-react";
 import {
   getBreederBySlug,
   getBreederHomePhotos,
@@ -21,7 +22,7 @@ import {
   getBreederQualifications,
   getBreederHealthTesting,
 } from "@/lib/queries/breeders";
-import { Home } from "lucide-react";
+import { getBreedInfo } from "@/lib/queries/breedInfo";
 
 export default async function BreederProfilePage({
   params,
@@ -29,10 +30,21 @@ export default async function BreederProfilePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+
   const breeder = await getBreederBySlug(slug);
+
   if (!breeder) notFound();
 
-  const [homePhotos, qa, photos, included, moreAbout, qualifications, healthTesting] = await Promise.all([
+  const [
+    homePhotos,
+    qa,
+    photos,
+    included,
+    moreAbout,
+    qualifications,
+    healthTesting,
+    breedInfo,
+  ] = await Promise.all([
     getBreederHomePhotos(breeder.id),
     getBreederQA(breeder.id),
     getBreederPhotos(breeder.id),
@@ -40,6 +52,9 @@ export default async function BreederProfilePage({
     getBreederMoreAbout(breeder.id),
     getBreederQualifications(breeder.id),
     getBreederHealthTesting(breeder.id),
+    breeder.breedId
+      ? getBreedInfo(breeder.breedId)
+      : Promise.resolve(null),
   ]);
 
   return (
@@ -58,50 +73,97 @@ export default async function BreederProfilePage({
               />
             )}
           </div>
+
           <div>
-            <h1 className="h2">{breeder.name}</h1>
-            {breeder.breedName && <p className="small-text">Breeder of {breeder.breedName}</p>}
+            <h1 className="h2">
+              {breeder.name}
+            </h1>
+
+            {breeder.breedName && (
+              <p className="small-text">
+                Breeder of {breeder.breedName}
+              </p>
+            )}
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-ink/70 mb-10">
           <span className="flex items-center gap-1.5">
-            <ShieldCheck size={13} className="text-gold" strokeWidth={1.5} />
+            <ShieldCheck
+              size={13}
+              className="text-gold"
+              strokeWidth={1.5}
+            />
             Reviewed and approved by Haven Paws
           </span>
+
           {qualifications.length > 0 && (
             <span className="flex items-center gap-1.5">
-              <BadgeCheck size={13} className="text-gold" strokeWidth={1.5} />
-              {qualifications.length} verified qualification{qualifications.length !== 1 ? "s" : ""}
+              <BadgeCheck
+                size={13}
+                className="text-gold"
+                strokeWidth={1.5}
+              />
+              {qualifications.length} verified qualification
+              {qualifications.length !== 1 ? "s" : ""}
             </span>
           )}
         </div>
 
-        <section className="mb-12">
-          <h2 className="h2 mb-4">Meet the breeder</h2>
+        {/* Meet the Breeder */}
+        <section className="mb-6">
+          <h2 className="h2 mb-4">
+            Meet the breeder
+          </h2>
+
           {breeder.meetBreederImageUrl && (
             <div className="aspect-video rounded-lg overflow-hidden mb-4">
-              <ProtectedImage src={breeder.meetBreederImageUrl} alt={breeder.name} />
+              <ProtectedImage
+                src={breeder.meetBreederImageUrl}
+                alt={breeder.name}
+              />
             </div>
           )}
+
           {breeder.meetBreederText && (
-            <p className="body-text whitespace-pre-line">{breeder.meetBreederText}</p>
+            <p className="body-text whitespace-pre-line">
+              {breeder.meetBreederText}
+            </p>
           )}
         </section>
+
+        {/* Automatically synchronized with this breeder's breed */}
+        <BreedGuideCard breed={breedInfo} />
 
         {homePhotos.length > 0 && (
           <section className="mb-12">
             <div className="flex items-center gap-2 mb-4">
-              <Home size={16} className="text-gold" strokeWidth={1.5} />
-              <h2 className="h2">{breeder.homeGalleryTitle}</h2>
+              <Home
+                size={16}
+                className="text-gold"
+                strokeWidth={1.5}
+              />
+
+              <h2 className="h2">
+                {breeder.homeGalleryTitle}
+              </h2>
             </div>
+
             <div className="grid grid-cols-2 gap-2">
               {homePhotos.slice(0, 4).map((p, i) => (
                 <div
                   key={p.id}
-                  className={`aspect-square rounded-lg overflow-hidden relative ${i === 0 ? "col-span-2 aspect-video" : ""}`}
+                  className={`aspect-square rounded-lg overflow-hidden relative ${
+                    i === 0
+                      ? "col-span-2 aspect-video"
+                      : ""
+                  }`}
                 >
-                  <ProtectedImage src={p.imageUrl} alt={breeder.homeGalleryTitle} />
+                  <ProtectedImage
+                    src={p.imageUrl}
+                    alt={breeder.homeGalleryTitle}
+                  />
+
                   {i === 3 && homePhotos.length > 4 && (
                     <div className="absolute inset-0 bg-forest/60 flex items-center justify-center text-cream text-sm font-medium">
                       +{homePhotos.length - 4} more
@@ -113,21 +175,47 @@ export default async function BreederProfilePage({
           </section>
         )}
 
-        <BreederQAList breederName={breeder.name} items={qa} />
-        <BreederPhotoStrip breederName={breeder.name} photos={photos} />
+        <BreederQAList
+          breederName={breeder.name}
+          items={qa}
+        />
+
+        <BreederPhotoStrip
+          breederName={breeder.name}
+          photos={photos}
+        />
 
         {breeder.gettingAPuppyText && (
           <section className="mb-12">
-            <h2 className="h2 mb-4">Getting a puppy from {breeder.name}</h2>
-            <p className="body-text whitespace-pre-line">{breeder.gettingAPuppyText}</p>
+            <h2 className="h2 mb-4">
+              Getting a puppy from {breeder.name}
+            </h2>
+
+            <p className="body-text whitespace-pre-line">
+              {breeder.gettingAPuppyText}
+            </p>
           </section>
         )}
 
-        <BreederContractSection breederName={breeder.name} />
+        <BreederContractSection
+          breederName={breeder.name}
+        />
+
         <BreederIncludedList items={included} />
-        <BreederIconTextSection title={`More about ${breeder.name}`} items={moreAbout} />
-        <BreederQualificationsGrid items={qualifications} />
-        <BreederIconTextSection title="Parent health testing" items={healthTesting} />
+
+        <BreederIconTextSection
+          title={`More about ${breeder.name}`}
+          items={moreAbout}
+        />
+
+        <BreederQualificationsGrid
+          items={qualifications}
+        />
+
+        <BreederIconTextSection
+          title="Parent health testing"
+          items={healthTesting}
+        />
       </PageContainer>
 
       <Footer />

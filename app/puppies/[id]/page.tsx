@@ -10,10 +10,10 @@ import PuppyIncluded from "../../components/PuppyIncluded";
 import PuppyParents from "../../components/PuppyParents";
 import PuppySiblings from "../../components/PuppySiblings";
 import AboutBreeder from "../../components/AboutBreeder";
-import BreedFacts from "../../components/BreedFacts";
 import RelatedPuppies from "../../components/RelatedPuppies";
 import RelatedBreedsSection from "../../components/RelatedBreedsSection";
 import BreederAttributionCard from "../../components/BreederAttributionCard";
+import BreedGuideCard from "../../components/BreedGuideCard";
 import Testimonials from "../../components/Testimonials";
 import DeliveryInfo from "../../components/DeliveryInfo";
 import PuppyBookingWidget from "../../components/PuppyBookingWidget";
@@ -56,7 +56,8 @@ export async function generateMetadata({
     : `Meet ${puppy.name}, a ${puppy.breed} puppy available through Haven Paws.`;
 
   const image =
-    puppy.media.find((m) => m.isCover)?.url ?? puppy.media[0]?.url;
+    puppy.media.find((m) => m.isCover)?.url ??
+    puppy.media[0]?.url;
 
   return {
     title,
@@ -102,15 +103,19 @@ export default async function PuppyDetailPage({
     getBreedInfo(puppy.breedId),
   ]);
 
-  const excludeIds = [puppy.id, ...related.map((r) => r.id)];
+  const excludeIds = [
+    puppy.id,
+    ...related.map((r) => r.id),
+  ];
 
-  const [priceRangePuppies, relatedBreeds] = await Promise.all([
-    getPuppiesInPriceRange(puppy.price, excludeIds),
-    getRelatedBreedsByGroup(
-      breedInfo?.breedGroup ?? null,
-      puppy.breedId
-    ),
-  ]);
+  const [priceRangePuppies, relatedBreeds] =
+    await Promise.all([
+      getPuppiesInPriceRange(puppy.price, excludeIds),
+      getRelatedBreedsByGroup(
+        breedInfo?.breedGroup ?? null,
+        puppy.breedId
+      ),
+    ]);
 
   const coverImage =
     puppy.media.find((m) => m.isCover)?.url ??
@@ -139,7 +144,10 @@ export default async function PuppyDetailPage({
       </section>
 
       <section className="max-w-5xl mx-auto px-6 py-6 grid md:grid-cols-2 gap-10">
-        <PuppyGallery media={puppy.media} name={puppy.name} />
+        <PuppyGallery
+          media={puppy.media}
+          name={puppy.name}
+        />
 
         <div>
           <span
@@ -152,7 +160,9 @@ export default async function PuppyDetailPage({
             {puppy.name}
           </h1>
 
-          <p className="eyebrow mb-1">{puppy.breed}</p>
+          <p className="eyebrow mb-1">
+            {puppy.breed}
+          </p>
 
           <p className="text-sm text-ink/60 capitalize mb-3">
             {puppy.sex}
@@ -210,7 +220,9 @@ export default async function PuppyDetailPage({
               <p className="text-sage text-xs uppercase tracking-wider">
                 Color
               </p>
-              <p className="text-ink">{puppy.color ?? "—"}</p>
+              <p className="text-ink">
+                {puppy.color ?? "—"}
+              </p>
             </div>
 
             <div>
@@ -247,17 +259,22 @@ export default async function PuppyDetailPage({
                 <p className="text-sage text-xs uppercase tracking-wider">
                   Microchip ID
                 </p>
-                <p className="text-ink">{puppy.microchipId}</p>
+                <p className="text-ink">
+                  {puppy.microchipId}
+                </p>
               </div>
             )}
           </div>
 
+          {/* Meet the Breeder */}
           <BreederAttributionCard
             puppyName={puppy.name}
             breederName={puppy.breederName}
             breederSlug={puppy.breederSlug}
-            breederPhotoUrl={puppy.breederPhotoUrl}
           />
+
+          {/* Automatically synchronized with this puppy's breed */}
+          <BreedGuideCard breed={breedInfo} />
 
           <PuppyIncluded items={puppy.includedItems} />
 
@@ -303,11 +320,11 @@ export default async function PuppyDetailPage({
         title="Puppies in Your Price Range"
       />
 
-      <RelatedBreedsSection breeds={relatedBreeds} />
+      <RelatedBreedsSection
+        breeds={relatedBreeds}
+      />
 
       <Testimonials reviews={reviews} />
-
-      <BreedFacts breed={breedInfo} />
 
       <AboutBreeder settings={settings} />
 
