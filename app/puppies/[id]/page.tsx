@@ -266,12 +266,13 @@ export default async function PuppyDetailPage({
             )}
           </div>
 
-          {/* Meet the Breeder */}
-          <BreederAttributionCard
-            puppyName={puppy.name}
-            breederName={puppy.breederName}
-            breederSlug={puppy.breederSlug}
-          />
+{/* Meet the Breeder */}
+<BreederAttributionCard
+  puppyName={puppy.name}
+  breederName={puppy.breederName}
+  breederSlug={puppy.breederSlug}
+  breederPhotoUrl={puppy.breederPhotoUrl}
+/>
 
           {/* Automatically synchronized with this puppy's breed */}
           <BreedGuideCard breed={breedInfo} />
