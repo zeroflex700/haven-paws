@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Home, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Home, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { ProtectedImage } from "./ProtectedMedia";
 import type { BreederHomePhoto } from "@/lib/queries/breeders";
 
@@ -19,21 +19,21 @@ export default function BreederHomeGallery({
   const selectedPhoto =
     selectedIndex !== null ? photos[selectedIndex] : null;
 
-  function previousPhoto() {
+  const showPrevious = () => {
     if (selectedIndex === null) return;
 
     setSelectedIndex(
       selectedIndex === 0 ? photos.length - 1 : selectedIndex - 1
     );
-  }
+  };
 
-  function nextPhoto() {
+  const showNext = () => {
     if (selectedIndex === null) return;
 
     setSelectedIndex(
       selectedIndex === photos.length - 1 ? 0 : selectedIndex + 1
     );
-  }
+  };
 
   return (
     <>
@@ -48,18 +48,18 @@ export default function BreederHomeGallery({
           <h2 className="h2">{title}</h2>
         </div>
 
+        {/* Landscape gallery */}
         <div className="grid grid-cols-2 gap-2">
           {photos.slice(0, 4).map((photo, index) => (
             <button
               key={photo.id}
               type="button"
               onClick={() => setSelectedIndex(index)}
-              className={`relative overflow-hidden rounded-lg text-left cursor-pointer ${
+              className={`relative overflow-hidden rounded-lg bg-cream-alt ${
                 index === 0
                   ? "col-span-2 aspect-video"
-                  : "aspect-square"
+                  : "aspect-video"
               }`}
-              aria-label={`View photo ${index + 1} of ${photos.length}`}
             >
               <ProtectedImage
                 src={photo.imageUrl}
@@ -68,7 +68,7 @@ export default function BreederHomeGallery({
 
               {index === 3 && photos.length > 4 && (
                 <div className="absolute inset-0 bg-forest/60 flex items-center justify-center text-cream text-sm font-medium">
-                  +{photos.length - 4} photos
+                  +{photos.length - 4} more
                 </div>
               )}
             </button>
@@ -76,59 +76,63 @@ export default function BreederHomeGallery({
         </div>
       </section>
 
-      {selectedPhoto && selectedIndex !== null && (
+      {/* Contained landscape photo viewer */}
+      {selectedPhoto && (
         <div
-          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-label={`${title} photo gallery`}
+          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 sm:p-6"
           onClick={() => setSelectedIndex(null)}
         >
-          <button
-            type="button"
-            onClick={() => setSelectedIndex(null)}
-            className="absolute top-5 right-5 z-10 text-white/90 hover:text-white p-2"
-            aria-label="Close gallery"
-          >
-            <X size={28} />
-          </button>
-
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              previousPhoto();
-            }}
-            className="absolute left-3 md:left-6 z-10 text-white/90 hover:text-white p-3"
-            aria-label="Previous photo"
-          >
-            <ChevronLeft size={36} />
-          </button>
-
           <div
-            className="relative w-full max-w-5xl h-[80vh]"
-            onClick={(event) => event.stopPropagation()}
+            className="relative w-full max-w-4xl aspect-video rounded-xl overflow-hidden bg-black shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
           >
+            {/* Image stays inside a landscape frame */}
             <ProtectedImage
               src={selectedPhoto.imageUrl}
-              alt={`${title} photo ${selectedIndex + 1}`}
+              alt={title}
+              className="bg-black"
             />
-          </div>
 
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              nextPhoto();
-            }}
-            className="absolute right-3 md:right-6 z-10 text-white/90 hover:text-white p-3"
-            aria-label="Next photo"
-          >
-            <ChevronRight size={36} />
-          </button>
+            {/* Close */}
+            <button
+              type="button"
+              onClick={() => setSelectedIndex(null)}
+              aria-label="Close gallery"
+              className="absolute top-3 right-3 z-10 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center"
+            >
+              <X size={22} strokeWidth={1.8} />
+            </button>
 
-          <div className="absolute bottom-5 left-0 right-0 text-center text-white/80 text-sm">
-            {selectedIndex + 1} / {photos.length}
+            {/* Previous */}
+            {photos.length > 1 && (
+              <button
+                type="button"
+                onClick={showPrevious}
+                aria-label="Previous photo"
+                className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center"
+              >
+                <ChevronLeft size={24} />
+              </button>
+            )}
+
+            {/* Next */}
+            {photos.length > 1 && (
+              <button
+                type="button"
+                onClick={showNext}
+                aria-label="Next photo"
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center"
+              >
+                <ChevronRight size={24} />
+              </button>
+            )}
+
+            {/* Counter */}
+            {photos.length > 1 && selectedIndex !== null && (
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/60 text-white text-xs px-3 py-1.5 rounded-full">
+                {selectedIndex + 1} / {photos.length}
+              </div>
+            )}
           </div>
         </div>
       )}
