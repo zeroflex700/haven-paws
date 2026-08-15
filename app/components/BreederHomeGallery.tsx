@@ -54,11 +54,11 @@ export default function BreederHomeGallery({
               key={photo.id}
               type="button"
               onClick={() => setSelectedIndex(index)}
-              className={`relative overflow-hidden rounded-lg text-left cursor-pointer ${
-                index === 0
-                  ? "col-span-2 aspect-video"
-                  : "aspect-square"
-              }`}
+  className={`relative overflow-hidden rounded-lg text-left cursor-pointer ${
+  index === 0
+    ? "col-span-2 aspect-video"
+    : "aspect-video"
+}`}
               aria-label={`View photo ${index + 1} of ${photos.length}`}
             >
               <ProtectedImage
@@ -105,15 +105,16 @@ export default function BreederHomeGallery({
             <ChevronLeft size={36} />
           </button>
 
-          <div
-            className="relative w-full max-w-5xl h-[80vh]"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <ProtectedImage
-              src={selectedPhoto.imageUrl}
-              alt={`${title} photo ${selectedIndex + 1}`}
-            />
-          </div>
+<div
+  className="relative w-full max-w-6xl aspect-video"
+  onClick={(event) => event.stopPropagation()}
+>
+  <ProtectedImage
+    src={selectedPhoto.imageUrl}
+    alt={`${title} photo ${selectedIndex + 1}`}
+    className="object-contain select-none"
+  />
+</div>
 
           <button
             type="button"

@@ -97,16 +97,16 @@ export default function BreederPhotoViewer({
 
       {/* Image */}
       <div
-        className="relative w-full max-w-5xl h-[80vh] select-none"
-        onClick={(event) => event.stopPropagation()}
-        onContextMenu={(event) => event.preventDefault()}
-      >
-        <ProtectedImage
-          src={photo.imageUrl}
-          alt={`Photo ${index + 1} of ${photos.length}`}
-          className="select-none"
-        />
-      </div>
+  className="relative w-full max-w-6xl aspect-video select-none"
+  onClick={(event) => event.stopPropagation()}
+  onContextMenu={(event) => event.preventDefault()}
+>
+  <ProtectedImage
+    src={photo.imageUrl}
+    alt={`Photo ${index + 1} of ${photos.length}`}
+    className="object-contain select-none"
+  />
+</div>
 
       {/* Next */}
       {photos.length > 1 && (

@@ -44,7 +44,7 @@ export default function BreederPhotoStrip({
               type="button"
               onClick={() => setViewerIndex(index)}
               onContextMenu={(event) => event.preventDefault()}
-              className="w-40 h-52 shrink-0 rounded-lg overflow-hidden relative cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold"
+              className="w-64 aspect-video shrink-0 rounded-lg overflow-hidden relative cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold"
               style={{
                 scrollSnapAlign: "start",
               }}
