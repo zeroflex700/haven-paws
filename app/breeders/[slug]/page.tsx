@@ -23,7 +23,7 @@ import {
   getBreederQualifications,
   getBreederHealthTesting,
 } from "@/lib/queries/breeders";
-import { getBreedInfo } from "@/lib/queries/breedInfo";
+import { getBreedInfoByName } from "@/lib/queries/breedInfo";
 
 export default async function BreederProfilePage({
   params,

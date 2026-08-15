@@ -13,7 +13,7 @@ export type BreedInfo = {
   imageUrl: string | null;
 };
 
-function mapBreedInfo(data: {
+type BreedInfoRow = {
   id: string;
   name: string;
   slug: string | null;
@@ -22,12 +22,16 @@ function mapBreedInfo(data: {
   breed_group: string | null;
   blurb: string | null;
   image_url: string | null;
-}): BreedInfo {
+};
+
+function mapBreedInfo(data: BreedInfoRow): BreedInfo {
   return {
     id: data.id,
     name: data.name,
     slug: data.slug,
-    guideUrl: data.slug ? `/breed-guides/${data.slug}` : null,
+    guideUrl: data.slug
+      ? `/breed-guides/${data.slug}`
+      : null,
     temperament: data.temperament,
     energyLevel: data.energy_level,
     breedGroup: data.breed_group,
@@ -46,6 +50,23 @@ export async function getBreedInfo(
     )
     .eq("id", breedId)
     .single();
+
+  if (error || !data) return null;
+
+  return mapBreedInfo(data);
+}
+
+export async function getBreedInfoByName(
+  breedName: string
+): Promise<BreedInfo | null> {
+  const { data, error } = await supabase
+    .from("breeds")
+    .select(
+      "id, name, slug, temperament, energy_level, breed_group, blurb, image_url"
+    )
+    .ilike("name", breedName)
+    .limit(1)
+    .maybeSingle();
 
   if (error || !data) return null;
 
