@@ -52,66 +52,45 @@ function isValidZip(v: string) {
   return /^\d{5}(-\d{4})?$/.test(v.trim());
 }
 
-/**
- * Google Maps script loader.
- *
- * We keep the promise outside the component so that if multiple
- * checkout components ever mount, Google Maps is only loaded once.
+/*
+ * Google Maps is loaded dynamically in the browser.
+ * We intentionally do not import a Google package here,
+ * so you do not need to install another npm package.
  */
-let googleMapsPromise: Promise<void> | null = null;
+type GoogleAutocompleteInstance = {
+  addListener: (
+    eventName: string,
+    handler: () => void
+  ) => { remove: () => void };
+  getPlace: () => {
+    formatted_address?: string;
+    address_components?: Array<{
+      long_name: string;
+      short_name: string;
+      types: string[];
+    }>;
+  };
+};
 
-function loadGoogleMaps(apiKey: string): Promise<void> {
-  if (typeof window === "undefined") {
-    return Promise.reject(new Error("Google Maps can only load in the browser."));
-  }
-
-  if (window.google?.maps?.places) {
-    return Promise.resolve();
-  }
-
-  if (googleMapsPromise) {
-    return googleMapsPromise;
-  }
-
-  googleMapsPromise = new Promise<void>((resolve, reject) => {
-    const existingScript = document.querySelector(
-      'script[data-google-maps="true"]'
-    ) as HTMLScriptElement | null;
-
-    if (existingScript) {
-      existingScript.addEventListener("load", () => resolve(), { once: true });
-      existingScript.addEventListener(
-        "error",
-        () => reject(new Error("Google Maps failed to load.")),
-        { once: true }
-      );
-      return;
-    }
-
-    const script = document.createElement("script");
-
-    script.src =
-      "https://maps.googleapis.com/maps/api/js" +
-      `?key=${encodeURIComponent(apiKey)}` +
-      "&loading=async" +
-      "&libraries=places" +
-      "&v=weekly";
-
-    script.async = true;
-    script.defer = true;
-    script.dataset.googleMaps = "true";
-
-    script.onload = () => resolve();
-
-    script.onerror = () => {
-      googleMapsPromise = null;
-      reject(new Error("Google Maps failed to load."));
+declare global {
+  interface Window {
+    google?: {
+      maps?: {
+        places?: {
+          Autocomplete: new (
+            input: HTMLInputElement,
+            options?: {
+              types?: string[];
+              componentRestrictions?: {
+                country: string | string[];
+              };
+              fields?: string[];
+            }
+          ) => GoogleAutocompleteInstance;
+        };
+      };
     };
-
-    document.head.appendChild(script);
-  });
-
-  return googleMapsPromise;
+  }
 }
 
 export default function TakeMeHomeModal({
@@ -126,6 +105,7 @@ export default function TakeMeHomeModal({
   onClose: () => void;
 }) {
   const router = useRouter();
+
   const { draft, save, clear } = useCheckoutRecovery(puppy.id);
 
   const [step, setStep] = useState(initialStep ?? 0);
@@ -135,14 +115,14 @@ export default function TakeMeHomeModal({
   const [showSummary, setShowSummary] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  /**
-   * Google address autocomplete refs.
+  /*
+   * Google address autocomplete state.
    */
   const addressInputRef = useRef<HTMLInputElement | null>(null);
-  const autocompleteRef =
-    useRef<google.maps.places.Autocomplete | null>(null);
-  const autocompleteListenerRef =
-    useRef<google.maps.MapsEventListener | null>(null);
+  const autocompleteRef = useRef<GoogleAutocompleteInstance | null>(null);
+  const autocompleteListenerRef = useRef<{ remove: () => void } | null>(
+    null
+  );
 
   const panelRef = useDismissableOverlay(true, onClose);
 
@@ -165,8 +145,8 @@ export default function TakeMeHomeModal({
     paymentType: "deposit" as "deposit" | "full",
   });
 
-  /**
-   * Restore saved checkout information.
+  /*
+   * Restore checkout draft.
    */
   useEffect(() => {
     if (draft) {
@@ -193,8 +173,8 @@ export default function TakeMeHomeModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /**
-   * Save checkout progress when changing steps.
+  /*
+   * Save checkout progress.
    */
   useEffect(() => {
     if (step === 0) return;
@@ -217,177 +197,208 @@ export default function TakeMeHomeModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
-  /**
-   * Google Places address autocomplete.
+  /*
+   * Load Google Maps Places library.
    *
-   * The API key is intentionally a NEXT_PUBLIC variable because the
-   * Maps JavaScript API runs in the customer's browser.
+   * Uses the existing:
+   * NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
    */
   useEffect(() => {
+    if (step !== 0) return;
+
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
     if (!apiKey) {
-      console.warn(
-        "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not configured. Address autocomplete is disabled."
+      console.error(
+        "Google Maps autocomplete: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is missing."
       );
-      return;
-    }
-
-    if (!addressInputRef.current) {
       return;
     }
 
     let cancelled = false;
 
-    loadGoogleMaps(apiKey)
-      .then(() => {
-        if (cancelled || !addressInputRef.current) {
-          return;
-        }
+    function initializeAutocomplete() {
+      if (cancelled) return;
 
-        /**
-         * Avoid creating the autocomplete widget twice.
-         */
-        if (autocompleteRef.current) {
-          return;
-        }
+      const input = addressInputRef.current;
 
-        const autocomplete = new google.maps.places.Autocomplete(
-          addressInputRef.current,
-          {
-            /**
-             * We only want actual street addresses, not businesses,
-             * restaurants, landmarks, etc.
-             */
-            types: ["address"],
+      if (!input) return;
 
-            /**
-             * Haven Paws currently collects US-style:
-             * City / State / ZIP addresses.
-             */
-            componentRestrictions: {
-              country: "us",
-            },
-
-            /**
-             * Only request the fields we actually need.
-             * This helps control Google Places costs.
-             */
-            fields: ["address_components", "formatted_address"],
-          }
+      if (!window.google?.maps?.places?.Autocomplete) {
+        console.error(
+          "Google Maps Places Autocomplete is unavailable. Make sure the Maps JavaScript API and Places API are enabled."
         );
+        return;
+      }
 
-        autocompleteRef.current = autocomplete;
+      /*
+       * Prevent creating multiple autocomplete instances.
+       */
+      if (autocompleteRef.current) return;
 
-        autocompleteListenerRef.current = autocomplete.addListener(
-          "place_changed",
-          () => {
-            const place = autocomplete.getPlace();
+      autocompleteRef.current = new window.google.maps.places.Autocomplete(
+        input,
+        {
+          /*
+           * We are looking specifically for addresses.
+           */
+          types: ["address"],
 
-            if (!place.address_components) {
-              return;
+          /*
+           * Your checkout currently uses ZIP codes and nationwide delivery
+           * in the United States, so restrict suggestions to the US.
+           */
+          componentRestrictions: {
+            country: "us",
+          },
+
+          /*
+           * Request only the fields needed to populate the form.
+           */
+          fields: ["formatted_address", "address_components"],
+        }
+      );
+
+      autocompleteListenerRef.current =
+        autocompleteRef.current.addListener("place_changed", () => {
+          const place = autocompleteRef.current?.getPlace();
+
+          if (!place) return;
+
+          const components = place.address_components ?? [];
+
+          let streetNumber = "";
+          let route = "";
+          let city = "";
+          let state = "";
+          let zip = "";
+
+          for (const component of components) {
+            const types = component.types;
+
+            if (types.includes("street_number")) {
+              streetNumber = component.long_name;
             }
 
-            let streetNumber = "";
-            let route = "";
-            let city = "";
-            let state = "";
-            let zip = "";
-            let apartment = "";
+            if (types.includes("route")) {
+              route = component.long_name;
+            }
 
-            for (const component of place.address_components) {
-              const componentType = component.types[0];
-
-              switch (componentType) {
-                case "street_number":
-                  streetNumber = component.long_name;
-                  break;
-
-                case "route":
-                  route = component.long_name;
-                  break;
-
-                case "subpremise":
-                  apartment = component.long_name;
-                  break;
-
-                case "locality":
-                  city = component.long_name;
-                  break;
-
-                /**
-                 * Some US addresses can use a sublocality instead
-                 * of locality, so use it as a fallback.
-                 */
-                case "sublocality_level_1":
-                  if (!city) {
-                    city = component.long_name;
-                  }
-                  break;
-
-                case "administrative_area_level_1":
-                  state = component.short_name;
-                  break;
-
-                case "postal_code":
-                  zip = component.long_name;
-                  break;
-
-                case "postal_code_suffix":
-                  if (zip) {
-                    zip = `${zip}-${component.long_name}`;
-                  }
-                  break;
-
-                default:
-                  break;
+            /*
+             * Google can return different locality types depending
+             * on the address, so check the common alternatives.
+             */
+            if (
+              types.includes("locality") ||
+              types.includes("postal_town") ||
+              types.includes("sublocality")
+            ) {
+              if (!city) {
+                city = component.long_name;
               }
             }
 
-            const streetAddress = [streetNumber, route]
-              .filter(Boolean)
-              .join(" ");
+            if (types.includes("administrative_area_level_1")) {
+              state = component.short_name;
+            }
 
-            /**
-             * Google normally gives us street number + route.
-             *
-             * If a particular result does not contain those pieces,
-             * use Google's formatted address as a fallback rather
-             * than trying to manually parse it.
-             */
-            const finalAddress =
-              streetAddress || place.formatted_address || "";
-
-            setForm((current) => ({
-              ...current,
-              address: finalAddress,
-              apt: apartment || current.apt,
-              city: city || current.city,
-              state: state || current.state,
-              zip: zip || current.zip,
-            }));
-
-            /**
-             * Mark the address-related fields as touched so the
-             * checkout immediately recognizes the completed address.
-             */
-            setTouched((current) => ({
-              ...current,
-              address: true,
-              city: true,
-              state: true,
-              zip: true,
-            }));
+            if (types.includes("postal_code")) {
+              zip = component.long_name;
+            }
           }
-        );
-      })
-      .catch((error) => {
-        /**
-         * Do not break checkout if Google happens to be unavailable.
-         * The address field remains a normal manually-entered field.
+
+          /*
+           * Prefer the clean street address assembled from the
+           * individual Google components.
+           */
+          const streetAddress =
+            [streetNumber, route].filter(Boolean).join(" ") ||
+            place.formatted_address ||
+            "";
+
+          setForm((current) => ({
+            ...current,
+            address: streetAddress,
+            city: city || current.city,
+            state: state || current.state,
+            zip: zip || current.zip,
+          }));
+
+          /*
+           * Mark the address fields as completed.
+           */
+          setTouched((current) => ({
+            ...current,
+            address: true,
+            city: true,
+            state: true,
+            zip: true,
+          }));
+        });
+    }
+
+    /*
+     * If Google Maps is already loaded by another component,
+     * initialize immediately.
+     */
+    if (window.google?.maps?.places?.Autocomplete) {
+      initializeAutocomplete();
+    } else {
+      /*
+       * Check whether the Google Maps script is already present.
+       */
+      const existingScript = document.querySelector(
+        'script[data-haven-paws-google-maps="true"]'
+      ) as HTMLScriptElement | null;
+
+      if (existingScript) {
+        existingScript.addEventListener("load", initializeAutocomplete);
+
+        /*
+         * The script may already have finished loading.
          */
-        console.warn("Google address autocomplete unavailable:", error);
-      });
+        const checkInterval = window.setInterval(() => {
+          if (window.google?.maps?.places?.Autocomplete) {
+            window.clearInterval(checkInterval);
+            initializeAutocomplete();
+          }
+        }, 100);
+
+        return () => {
+          cancelled = true;
+          window.clearInterval(checkInterval);
+          existingScript.removeEventListener(
+            "load",
+            initializeAutocomplete
+          );
+        };
+      }
+
+      /*
+       * Load Google Maps JavaScript API with Places.
+       */
+      const script = document.createElement("script");
+
+      script.src =
+        "https://maps.googleapis.com/maps/api/js" +
+        `?key=${encodeURIComponent(apiKey)}` +
+        "&loading=async" +
+        "&libraries=places";
+
+      script.async = true;
+      script.defer = true;
+      script.dataset.havenPawsGoogleMaps = "true";
+
+      script.onload = initializeAutocomplete;
+
+      script.onerror = () => {
+        console.error(
+          "Google Maps failed to load. Check your API key, billing, API restrictions, and enabled APIs."
+        );
+      };
+
+      document.head.appendChild(script);
+    }
 
     return () => {
       cancelled = true;
@@ -399,7 +410,7 @@ export default function TakeMeHomeModal({
 
       autocompleteRef.current = null;
     };
-  }, []);
+  }, [step]);
 
   const deliveryCost =
     form.deliveryMethod === "delivery" ? settings.deliveryFee : 0;
@@ -444,11 +455,17 @@ export default function TakeMeHomeModal({
     key: K,
     value: (typeof form)[K]
   ) {
-    setForm((f) => ({ ...f, [key]: value }));
+    setForm((f) => ({
+      ...f,
+      [key]: value,
+    }));
   }
 
   function markTouched(field: string) {
-    setTouched((t) => ({ ...t, [field]: true }));
+    setTouched((t) => ({
+      ...t,
+      [field]: true,
+    }));
   }
 
   const emailError =
@@ -473,16 +490,16 @@ export default function TakeMeHomeModal({
       : null;
 
   const canContinueDetails =
-    form.email &&
+    !!form.email &&
     isValidEmail(form.email) &&
-    form.firstName &&
-    form.lastName &&
-    form.phone &&
+    !!form.firstName &&
+    !!form.lastName &&
+    !!form.phone &&
     isValidPhone(form.phone) &&
-    form.address &&
-    form.city &&
-    form.state &&
-    form.zip &&
+    !!form.address &&
+    !!form.city &&
+    !!form.state &&
+    !!form.zip &&
     isValidZip(form.zip) &&
     form.over18;
 
@@ -493,7 +510,9 @@ export default function TakeMeHomeModal({
       lineItems: JSON.stringify(lineItems),
     });
 
-    router.push(`/payment-preview/${puppy.id}?${params.toString()}`);
+    router.push(
+      `/payment-preview/${puppy.id}?${params.toString()}`
+    );
   }
 
   async function handleSubmit() {
@@ -511,21 +530,27 @@ export default function TakeMeHomeModal({
         essentials.push("Extended Health Guarantee");
       }
 
-      const result = await submitTakeMeHome(puppy.id, puppy.name, {
-        email: form.email,
-        firstName: form.firstName,
-        lastName: form.lastName,
-        phone: form.phone,
-        address: form.address,
-        apt: form.apt,
-        city: form.city,
-        state: form.state,
-        zip: form.zip,
-        deliveryMethod: form.deliveryMethod,
-        essentials,
-        paymentType: hasDeposit ? form.paymentType : "full",
-        amount: dueNow,
-      });
+      const result = await submitTakeMeHome(
+        puppy.id,
+        puppy.name,
+        {
+          email: form.email,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          phone: form.phone,
+          address: form.address,
+          apt: form.apt,
+          city: form.city,
+          state: form.state,
+          zip: form.zip,
+          deliveryMethod: form.deliveryMethod,
+          essentials,
+          paymentType: hasDeposit
+            ? form.paymentType
+            : "full",
+          amount: dueNow,
+        }
+      );
 
       if (result.checkoutUrl) {
         window.location.href = result.checkoutUrl;
@@ -564,7 +589,10 @@ export default function TakeMeHomeModal({
             Haven Paws
           </span>
 
-          <button onClick={onClose} aria-label="Close">
+          <button
+            onClick={onClose}
+            aria-label="Close"
+          >
             <X size={22} className="text-ink" />
           </button>
         </div>
@@ -679,10 +707,14 @@ export default function TakeMeHomeModal({
                     autoComplete="email"
                     inputMode="email"
                     value={form.email}
-                    onChange={(e) => update("email", e.target.value)}
+                    onChange={(e) =>
+                      update("email", e.target.value)
+                    }
                     onBlur={() => markTouched("email")}
                     className={`${
-                      emailError ? errorInputClass : inputClass
+                      emailError
+                        ? errorInputClass
+                        : inputClass
                     } mb-1`}
                   />
 
@@ -699,7 +731,10 @@ export default function TakeMeHomeModal({
                       autoComplete="given-name"
                       value={form.firstName}
                       onChange={(e) =>
-                        update("firstName", e.target.value)
+                        update(
+                          "firstName",
+                          e.target.value
+                        )
                       }
                       className={inputClass}
                     />
@@ -710,7 +745,10 @@ export default function TakeMeHomeModal({
                       autoComplete="family-name"
                       value={form.lastName}
                       onChange={(e) =>
-                        update("lastName", e.target.value)
+                        update(
+                          "lastName",
+                          e.target.value
+                        )
                       }
                       className={inputClass}
                     />
@@ -722,10 +760,14 @@ export default function TakeMeHomeModal({
                     autoComplete="tel"
                     inputMode="tel"
                     value={form.phone}
-                    onChange={(e) => update("phone", e.target.value)}
+                    onChange={(e) =>
+                      update("phone", e.target.value)
+                    }
                     onBlur={() => markTouched("phone")}
                     className={`${
-                      phoneError ? errorInputClass : inputClass
+                      phoneError
+                        ? errorInputClass
+                        : inputClass
                     } mb-1`}
                   />
 
@@ -736,24 +778,36 @@ export default function TakeMeHomeModal({
                   )}
 
                   <p className="text-xs text-sage mb-3 mt-2">
-                    Full address is needed for {puppy.name}&apos;s health
-                    certificate and to determine delivery options.
+                    Full address is needed for {puppy.name}&apos;s
+                    health certificate and to determine delivery
+                    options.
                   </p>
 
-                  {/* ADDRESS AUTOCOMPLETE */}
-                  <div className="relative mb-3">
+                  {/*
+                   * ADDRESS AUTOCOMPLETE
+                   *
+                   * This is the important change.
+                   *
+                   * Google attaches autocomplete suggestions to
+                   * this input after the Places library loads.
+                   */}
+                  <div className="relative">
                     <input
                       ref={addressInputRef}
-                      type="text"
-                      placeholder="Start typing your street address"
+                      placeholder="Start typing your address..."
                       aria-label="Street address"
-                      autoComplete="address-line1"
+                      autoComplete="off"
                       value={form.address}
                       onChange={(e) =>
-                        update("address", e.target.value)
+                        update(
+                          "address",
+                          e.target.value
+                        )
                       }
-                      onBlur={() => markTouched("address")}
-                      className={inputClass}
+                      onBlur={() =>
+                        markTouched("address")
+                      }
+                      className={`${inputClass} mb-3`}
                     />
                   </div>
 
@@ -786,7 +840,10 @@ export default function TakeMeHomeModal({
                       autoComplete="address-level1"
                       value={form.state}
                       onChange={(e) =>
-                        update("state", e.target.value)
+                        update(
+                          "state",
+                          e.target.value
+                        )
                       }
                       className={inputClass}
                     />
@@ -799,11 +856,18 @@ export default function TakeMeHomeModal({
                         inputMode="numeric"
                         value={form.zip}
                         onChange={(e) =>
-                          update("zip", e.target.value)
+                          update(
+                            "zip",
+                            e.target.value
+                          )
                         }
-                        onBlur={() => markTouched("zip")}
+                        onBlur={() =>
+                          markTouched("zip")
+                        }
                         className={`${
-                          zipError ? errorInputClass : inputClass
+                          zipError
+                            ? errorInputClass
+                            : inputClass
                         } w-full`}
                       />
 
@@ -820,7 +884,10 @@ export default function TakeMeHomeModal({
                       type="checkbox"
                       checked={form.over18}
                       onChange={(e) =>
-                        update("over18", e.target.checked)
+                        update(
+                          "over18",
+                          e.target.checked
+                        )
                       }
                       className="w-4 h-4"
                     />
@@ -850,10 +917,14 @@ export default function TakeMeHomeModal({
 
                   <button
                     onClick={() =>
-                      update("deliveryMethod", "pickup")
+                      update(
+                        "deliveryMethod",
+                        "pickup"
+                      )
                     }
                     className={`w-full text-left border rounded-lg p-4 mb-3 ${
-                      form.deliveryMethod === "pickup"
+                      form.deliveryMethod ===
+                      "pickup"
                         ? "border-gold bg-cream-alt"
                         : "border-sage/30"
                     }`}
@@ -877,10 +948,14 @@ export default function TakeMeHomeModal({
 
                   <button
                     onClick={() =>
-                      update("deliveryMethod", "delivery")
+                      update(
+                        "deliveryMethod",
+                        "delivery"
+                      )
                     }
                     className={`w-full text-left border rounded-lg p-4 mb-6 ${
-                      form.deliveryMethod === "delivery"
+                      form.deliveryMethod ===
+                      "delivery"
                         ? "border-gold bg-cream-alt"
                         : "border-sage/30"
                     }`}
@@ -937,7 +1012,10 @@ export default function TakeMeHomeModal({
                       type="checkbox"
                       checked={form.starterKit}
                       onChange={(e) =>
-                        update("starterKit", e.target.checked)
+                        update(
+                          "starterKit",
+                          e.target.checked
+                        )
                       }
                       className="w-4 h-4 mt-0.5"
                     />
@@ -985,8 +1063,8 @@ export default function TakeMeHomeModal({
                     </p>
 
                     <p className="text-xs text-ink/70">
-                      Feeding, training, and health tips — sent to
-                      your email automatically.
+                      Feeding, training, and health tips — sent to your
+                      email automatically.
                     </p>
                   </div>
 
@@ -1053,10 +1131,14 @@ export default function TakeMeHomeModal({
                     <div className="mb-6 space-y-3">
                       <button
                         onClick={() =>
-                          update("paymentType", "deposit")
+                          update(
+                            "paymentType",
+                            "deposit"
+                          )
                         }
                         className={`w-full text-left border rounded-lg p-4 ${
-                          form.paymentType === "deposit"
+                          form.paymentType ===
+                          "deposit"
                             ? "border-gold bg-cream-alt"
                             : "border-sage/30"
                         }`}
@@ -1073,7 +1155,10 @@ export default function TakeMeHomeModal({
 
                       <button
                         onClick={() =>
-                          update("paymentType", "full")
+                          update(
+                            "paymentType",
+                            "full"
+                          )
                         }
                         className={`w-full text-left border rounded-lg p-4 ${
                           form.paymentType === "full"
