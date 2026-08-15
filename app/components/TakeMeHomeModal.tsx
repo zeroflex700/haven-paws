@@ -1,8 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { X, User, Truck, Heart, CreditCard, ChevronDown, AlertCircle } from "lucide-react";
+import {
+  X,
+  User,
+  Truck,
+  Heart,
+  CreditCard,
+  ChevronDown,
+  AlertCircle,
+} from "lucide-react";
 import Link from "next/link";
 import { cldOptimized } from "@/lib/cloudinary";
 import { submitTakeMeHome } from "../puppies/[id]/checkout-actions";
@@ -35,11 +43,75 @@ const STEPS = [
 function isValidEmail(v: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 }
+
 function isValidPhone(v: string) {
   return v.replace(/\D/g, "").length >= 10;
 }
+
 function isValidZip(v: string) {
   return /^\d{5}(-\d{4})?$/.test(v.trim());
+}
+
+/**
+ * Google Maps script loader.
+ *
+ * We keep the promise outside the component so that if multiple
+ * checkout components ever mount, Google Maps is only loaded once.
+ */
+let googleMapsPromise: Promise<void> | null = null;
+
+function loadGoogleMaps(apiKey: string): Promise<void> {
+  if (typeof window === "undefined") {
+    return Promise.reject(new Error("Google Maps can only load in the browser."));
+  }
+
+  if (window.google?.maps?.places) {
+    return Promise.resolve();
+  }
+
+  if (googleMapsPromise) {
+    return googleMapsPromise;
+  }
+
+  googleMapsPromise = new Promise<void>((resolve, reject) => {
+    const existingScript = document.querySelector(
+      'script[data-google-maps="true"]'
+    ) as HTMLScriptElement | null;
+
+    if (existingScript) {
+      existingScript.addEventListener("load", () => resolve(), { once: true });
+      existingScript.addEventListener(
+        "error",
+        () => reject(new Error("Google Maps failed to load.")),
+        { once: true }
+      );
+      return;
+    }
+
+    const script = document.createElement("script");
+
+    script.src =
+      "https://maps.googleapis.com/maps/api/js" +
+      `?key=${encodeURIComponent(apiKey)}` +
+      "&loading=async" +
+      "&libraries=places" +
+      "&v=weekly";
+
+    script.async = true;
+    script.defer = true;
+    script.dataset.googleMaps = "true";
+
+    script.onload = () => resolve();
+
+    script.onerror = () => {
+      googleMapsPromise = null;
+      reject(new Error("Google Maps failed to load."));
+    };
+
+    document.head.appendChild(script);
+  });
+
+  return googleMapsPromise;
 }
 
 export default function TakeMeHomeModal({
@@ -55,6 +127,7 @@ export default function TakeMeHomeModal({
 }) {
   const router = useRouter();
   const { draft, save, clear } = useCheckoutRecovery(puppy.id);
+
   const [step, setStep] = useState(initialStep ?? 0);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -62,7 +135,17 @@ export default function TakeMeHomeModal({
   const [showSummary, setShowSummary] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
+  /**
+   * Google address autocomplete refs.
+   */
+  const addressInputRef = useRef<HTMLInputElement | null>(null);
+  const autocompleteRef =
+    useRef<google.maps.places.Autocomplete | null>(null);
+  const autocompleteListenerRef =
+    useRef<google.maps.MapsEventListener | null>(null);
+
   const panelRef = useDismissableOverlay(true, onClose);
+
   useBodyScrollLock(true);
 
   const [form, setForm] = useState({
@@ -82,6 +165,9 @@ export default function TakeMeHomeModal({
     paymentType: "deposit" as "deposit" | "full",
   });
 
+  /**
+   * Restore saved checkout information.
+   */
   useEffect(() => {
     if (draft) {
       setForm((f) => ({
@@ -98,15 +184,21 @@ export default function TakeMeHomeModal({
         starterKit: draft.starterKit ?? f.starterKit,
         healthGuarantee: draft.healthGuarantee ?? f.healthGuarantee,
       }));
+
       if (typeof draft.step === "number" && initialStep === undefined) {
         setStep(draft.step);
       }
     }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /**
+   * Save checkout progress when changing steps.
+   */
   useEffect(() => {
     if (step === 0) return;
+
     save({
       step,
       email: form.email,
@@ -121,27 +213,237 @@ export default function TakeMeHomeModal({
       starterKit: form.starterKit,
       healthGuarantee: form.healthGuarantee,
     });
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
-  const deliveryCost = form.deliveryMethod === "delivery" ? settings.deliveryFee : 0;
+  /**
+   * Google Places address autocomplete.
+   *
+   * The API key is intentionally a NEXT_PUBLIC variable because the
+   * Maps JavaScript API runs in the customer's browser.
+   */
+  useEffect(() => {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+    if (!apiKey) {
+      console.warn(
+        "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not configured. Address autocomplete is disabled."
+      );
+      return;
+    }
+
+    if (!addressInputRef.current) {
+      return;
+    }
+
+    let cancelled = false;
+
+    loadGoogleMaps(apiKey)
+      .then(() => {
+        if (cancelled || !addressInputRef.current) {
+          return;
+        }
+
+        /**
+         * Avoid creating the autocomplete widget twice.
+         */
+        if (autocompleteRef.current) {
+          return;
+        }
+
+        const autocomplete = new google.maps.places.Autocomplete(
+          addressInputRef.current,
+          {
+            /**
+             * We only want actual street addresses, not businesses,
+             * restaurants, landmarks, etc.
+             */
+            types: ["address"],
+
+            /**
+             * Haven Paws currently collects US-style:
+             * City / State / ZIP addresses.
+             */
+            componentRestrictions: {
+              country: "us",
+            },
+
+            /**
+             * Only request the fields we actually need.
+             * This helps control Google Places costs.
+             */
+            fields: ["address_components", "formatted_address"],
+          }
+        );
+
+        autocompleteRef.current = autocomplete;
+
+        autocompleteListenerRef.current = autocomplete.addListener(
+          "place_changed",
+          () => {
+            const place = autocomplete.getPlace();
+
+            if (!place.address_components) {
+              return;
+            }
+
+            let streetNumber = "";
+            let route = "";
+            let city = "";
+            let state = "";
+            let zip = "";
+            let apartment = "";
+
+            for (const component of place.address_components) {
+              const componentType = component.types[0];
+
+              switch (componentType) {
+                case "street_number":
+                  streetNumber = component.long_name;
+                  break;
+
+                case "route":
+                  route = component.long_name;
+                  break;
+
+                case "subpremise":
+                  apartment = component.long_name;
+                  break;
+
+                case "locality":
+                  city = component.long_name;
+                  break;
+
+                /**
+                 * Some US addresses can use a sublocality instead
+                 * of locality, so use it as a fallback.
+                 */
+                case "sublocality_level_1":
+                  if (!city) {
+                    city = component.long_name;
+                  }
+                  break;
+
+                case "administrative_area_level_1":
+                  state = component.short_name;
+                  break;
+
+                case "postal_code":
+                  zip = component.long_name;
+                  break;
+
+                case "postal_code_suffix":
+                  if (zip) {
+                    zip = `${zip}-${component.long_name}`;
+                  }
+                  break;
+
+                default:
+                  break;
+              }
+            }
+
+            const streetAddress = [streetNumber, route]
+              .filter(Boolean)
+              .join(" ");
+
+            /**
+             * Google normally gives us street number + route.
+             *
+             * If a particular result does not contain those pieces,
+             * use Google's formatted address as a fallback rather
+             * than trying to manually parse it.
+             */
+            const finalAddress =
+              streetAddress || place.formatted_address || "";
+
+            setForm((current) => ({
+              ...current,
+              address: finalAddress,
+              apt: apartment || current.apt,
+              city: city || current.city,
+              state: state || current.state,
+              zip: zip || current.zip,
+            }));
+
+            /**
+             * Mark the address-related fields as touched so the
+             * checkout immediately recognizes the completed address.
+             */
+            setTouched((current) => ({
+              ...current,
+              address: true,
+              city: true,
+              state: true,
+              zip: true,
+            }));
+          }
+        );
+      })
+      .catch((error) => {
+        /**
+         * Do not break checkout if Google happens to be unavailable.
+         * The address field remains a normal manually-entered field.
+         */
+        console.warn("Google address autocomplete unavailable:", error);
+      });
+
+    return () => {
+      cancelled = true;
+
+      if (autocompleteListenerRef.current) {
+        autocompleteListenerRef.current.remove();
+        autocompleteListenerRef.current = null;
+      }
+
+      autocompleteRef.current = null;
+    };
+  }, []);
+
+  const deliveryCost =
+    form.deliveryMethod === "delivery" ? settings.deliveryFee : 0;
+
   const essentialsCost =
     (form.starterKit ? settings.starterKitPrice : 0) +
     (form.healthGuarantee ? settings.healthGuaranteePrice : 0);
+
   const subtotal = puppy.price + deliveryCost + essentialsCost;
+
   const hasDeposit = puppy.depositAmount > 0;
-  const dueNow = form.paymentType === "deposit" && hasDeposit ? puppy.depositAmount : subtotal;
+
+  const dueNow =
+    form.paymentType === "deposit" && hasDeposit
+      ? puppy.depositAmount
+      : subtotal;
 
   const lineItems = [
     { label: puppy.name, amount: puppy.price },
-    ...(deliveryCost > 0 ? [{ label: "Delivery", amount: deliveryCost }] : []),
-    ...(form.starterKit ? [{ label: "Starter Care Kit", amount: settings.starterKitPrice }] : []),
+    ...(deliveryCost > 0
+      ? [{ label: "Delivery", amount: deliveryCost }]
+      : []),
+    ...(form.starterKit
+      ? [
+          {
+            label: "Starter Care Kit",
+            amount: settings.starterKitPrice,
+          },
+        ]
+      : []),
     ...(form.healthGuarantee
-      ? [{ label: "Extended Health Guarantee", amount: settings.healthGuaranteePrice }]
+      ? [
+          {
+            label: "Extended Health Guarantee",
+            amount: settings.healthGuaranteePrice,
+          },
+        ]
       : []),
   ];
 
-  function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
+  function update<K extends keyof typeof form>(
+    key: K,
+    value: (typeof form)[K]
+  ) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
@@ -149,9 +451,26 @@ export default function TakeMeHomeModal({
     setTouched((t) => ({ ...t, [field]: true }));
   }
 
-  const emailError = touched.email && form.email && !isValidEmail(form.email) ? "Enter a valid email address" : null;
-  const phoneError = touched.phone && form.phone && !isValidPhone(form.phone) ? "Enter a valid phone number" : null;
-  const zipError = touched.zip && form.zip && !isValidZip(form.zip) ? "Enter a valid ZIP code" : null;
+  const emailError =
+    touched.email &&
+    form.email &&
+    !isValidEmail(form.email)
+      ? "Enter a valid email address"
+      : null;
+
+  const phoneError =
+    touched.phone &&
+    form.phone &&
+    !isValidPhone(form.phone)
+      ? "Enter a valid phone number"
+      : null;
+
+  const zipError =
+    touched.zip &&
+    form.zip &&
+    !isValidZip(form.zip)
+      ? "Enter a valid ZIP code"
+      : null;
 
   const canContinueDetails =
     form.email &&
@@ -173,16 +492,24 @@ export default function TakeMeHomeModal({
       subtotal: String(subtotal),
       lineItems: JSON.stringify(lineItems),
     });
+
     router.push(`/payment-preview/${puppy.id}?${params.toString()}`);
   }
 
   async function handleSubmit() {
     setSubmitting(true);
     setSubmitError(null);
+
     try {
       const essentials: string[] = [];
-      if (form.starterKit) essentials.push("Starter Care Kit");
-      if (form.healthGuarantee) essentials.push("Extended Health Guarantee");
+
+      if (form.starterKit) {
+        essentials.push("Starter Care Kit");
+      }
+
+      if (form.healthGuarantee) {
+        essentials.push("Extended Health Guarantee");
+      }
 
       const result = await submitTakeMeHome(puppy.id, puppy.name, {
         email: form.email,
@@ -208,14 +535,19 @@ export default function TakeMeHomeModal({
       clear();
       setDone(true);
     } catch {
-      setSubmitError("Something went wrong submitting your reservation. Please try again.");
+      setSubmitError(
+        "Something went wrong submitting your reservation. Please try again."
+      );
     }
+
     setSubmitting(false);
   }
 
   const inputClass =
     "w-full border border-sage/30 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-gold";
-  const errorInputClass = "w-full border border-red-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-red-400";
+
+  const errorInputClass =
+    "w-full border border-red-300 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-red-400";
 
   return (
     <div
@@ -228,7 +560,10 @@ export default function TakeMeHomeModal({
     >
       <div className="max-w-lg mx-auto min-h-screen pb-10">
         <div className="flex items-center justify-between px-5 py-4">
-          <span className="font-display text-lg text-forest">Haven Paws</span>
+          <span className="font-display text-lg text-forest">
+            Haven Paws
+          </span>
+
           <button onClick={onClose} aria-label="Close">
             <X size={22} className="text-ink" />
           </button>
@@ -245,6 +580,7 @@ export default function TakeMeHomeModal({
               />
             </div>
           )}
+
           <h1 className="font-display text-2xl text-forest text-center mb-2">
             Let&apos;s bring {puppy.name} home!
           </h1>
@@ -254,7 +590,9 @@ export default function TakeMeHomeModal({
             className="flex items-center justify-center gap-2 mx-auto text-sm text-ink/80 mb-6"
           >
             Show summary:{" "}
-            <span className="underline font-medium">${subtotal.toLocaleString()}</span>
+            <span className="underline font-medium">
+              ${subtotal.toLocaleString()}
+            </span>
             <ChevronDown size={16} />
           </button>
 
@@ -264,16 +602,27 @@ export default function TakeMeHomeModal({
                 const Icon = s.icon;
                 const active = i === step;
                 const complete = i < step;
+
                 return (
-                  <div key={s.key} className="flex flex-col items-center gap-1 flex-1">
+                  <div
+                    key={s.key}
+                    className="flex flex-col items-center gap-1 flex-1"
+                  >
                     <div
                       className={`w-9 h-9 rounded-full flex items-center justify-center ${
-                        active || complete ? "bg-forest text-cream" : "bg-cream-alt text-sage"
+                        active || complete
+                          ? "bg-forest text-cream"
+                          : "bg-cream-alt text-sage"
                       }`}
                     >
                       <Icon size={16} />
                     </div>
-                    <span className={`text-[10px] ${active ? "text-forest" : "text-sage"}`}>
+
+                    <span
+                      className={`text-[10px] ${
+                        active ? "text-forest" : "text-sage"
+                      }`}
+                    >
                       {s.label}
                     </span>
                   </div>
@@ -284,11 +633,16 @@ export default function TakeMeHomeModal({
 
           {done ? (
             <div className="text-center py-10">
-              <h2 className="font-display text-xl text-forest mb-3">Request received!</h2>
+              <h2 className="font-display text-xl text-forest mb-3">
+                Request received!
+              </h2>
+
               <p className="text-ink/80 leading-relaxed mb-6">
-                Thank you for choosing {puppy.name}. Our concierge team will reach out within
-                24 hours with a secure payment link — you&apos;ll be able to pay by card or PayPal.
+                Thank you for choosing {puppy.name}. Our concierge team will
+                reach out within 24 hours with a secure payment link —
+                you&apos;ll be able to pay by card or PayPal.
               </p>
+
               <div className="flex flex-col gap-3">
                 <Link
                   href="/account/your-puppy"
@@ -296,7 +650,11 @@ export default function TakeMeHomeModal({
                 >
                   Track Your Reservation
                 </Link>
-                <button onClick={onClose} className="text-sm text-sage underline">
+
+                <button
+                  onClick={onClose}
+                  className="text-sm text-sage underline"
+                >
                   Close
                 </button>
               </div>
@@ -305,11 +663,15 @@ export default function TakeMeHomeModal({
             <>
               {step === 0 && (
                 <div>
-                  <h2 className="font-display text-lg text-forest mb-1">Contact details</h2>
+                  <h2 className="font-display text-lg text-forest mb-1">
+                    Contact details
+                  </h2>
+
                   <p className="text-sm text-ink/70 mb-4">
-                    Tell us a bit about yourself so we can ensure {puppy.name} finds a safe,
-                    happy home.
+                    Tell us a bit about yourself so we can ensure{" "}
+                    {puppy.name} finds a safe, happy home.
                   </p>
+
                   <input
                     type="email"
                     placeholder="Email"
@@ -319,27 +681,41 @@ export default function TakeMeHomeModal({
                     value={form.email}
                     onChange={(e) => update("email", e.target.value)}
                     onBlur={() => markTouched("email")}
-                    className={`${emailError ? errorInputClass : inputClass} mb-1`}
+                    className={`${
+                      emailError ? errorInputClass : inputClass
+                    } mb-1`}
                   />
-                  {emailError && <p className="text-xs text-red-600 mb-2">{emailError}</p>}
+
+                  {emailError && (
+                    <p className="text-xs text-red-600 mb-2">
+                      {emailError}
+                    </p>
+                  )}
+
                   <div className="flex gap-3 mb-3 mt-2">
                     <input
                       placeholder="First name"
                       aria-label="First name"
                       autoComplete="given-name"
                       value={form.firstName}
-                      onChange={(e) => update("firstName", e.target.value)}
+                      onChange={(e) =>
+                        update("firstName", e.target.value)
+                      }
                       className={inputClass}
                     />
+
                     <input
                       placeholder="Last name"
                       aria-label="Last name"
                       autoComplete="family-name"
                       value={form.lastName}
-                      onChange={(e) => update("lastName", e.target.value)}
+                      onChange={(e) =>
+                        update("lastName", e.target.value)
+                      }
                       className={inputClass}
                     />
                   </div>
+
                   <input
                     placeholder="Phone number"
                     aria-label="Phone number"
@@ -348,44 +724,70 @@ export default function TakeMeHomeModal({
                     value={form.phone}
                     onChange={(e) => update("phone", e.target.value)}
                     onBlur={() => markTouched("phone")}
-                    className={`${phoneError ? errorInputClass : inputClass} mb-1`}
+                    className={`${
+                      phoneError ? errorInputClass : inputClass
+                    } mb-1`}
                   />
-                  {phoneError && <p className="text-xs text-red-600 mb-2">{phoneError}</p>}
+
+                  {phoneError && (
+                    <p className="text-xs text-red-600 mb-2">
+                      {phoneError}
+                    </p>
+                  )}
+
                   <p className="text-xs text-sage mb-3 mt-2">
-                    Full address is needed for {puppy.name}&apos;s health certificate and to
-                    determine delivery options.
+                    Full address is needed for {puppy.name}&apos;s health
+                    certificate and to determine delivery options.
                   </p>
-                  <input
-                    placeholder="Address"
-                    aria-label="Street address"
-                    autoComplete="address-line1"
-                    value={form.address}
-                    onChange={(e) => update("address", e.target.value)}
-                    className={`${inputClass} mb-3`}
-                  />
+
+                  {/* ADDRESS AUTOCOMPLETE */}
+                  <div className="relative mb-3">
+                    <input
+                      ref={addressInputRef}
+                      type="text"
+                      placeholder="Start typing your street address"
+                      aria-label="Street address"
+                      autoComplete="address-line1"
+                      value={form.address}
+                      onChange={(e) =>
+                        update("address", e.target.value)
+                      }
+                      onBlur={() => markTouched("address")}
+                      className={inputClass}
+                    />
+                  </div>
+
                   <input
                     placeholder="Apartment/Unit (optional)"
                     aria-label="Apartment or unit"
                     autoComplete="address-line2"
                     value={form.apt}
-                    onChange={(e) => update("apt", e.target.value)}
+                    onChange={(e) =>
+                      update("apt", e.target.value)
+                    }
                     className={`${inputClass} mb-3`}
                   />
+
                   <input
                     placeholder="City"
                     aria-label="City"
                     autoComplete="address-level2"
                     value={form.city}
-                    onChange={(e) => update("city", e.target.value)}
+                    onChange={(e) =>
+                      update("city", e.target.value)
+                    }
                     className={`${inputClass} mb-3`}
                   />
+
                   <div className="grid grid-cols-2 gap-3 mb-1">
                     <input
                       placeholder="State"
                       aria-label="State"
                       autoComplete="address-level1"
                       value={form.state}
-                      onChange={(e) => update("state", e.target.value)}
+                      onChange={(e) =>
+                        update("state", e.target.value)
+                      }
                       className={inputClass}
                     />
 
@@ -396,25 +798,36 @@ export default function TakeMeHomeModal({
                         autoComplete="postal-code"
                         inputMode="numeric"
                         value={form.zip}
-                        onChange={(e) => update("zip", e.target.value)}
+                        onChange={(e) =>
+                          update("zip", e.target.value)
+                        }
                         onBlur={() => markTouched("zip")}
-                        className={`${zipError ? errorInputClass : inputClass} w-full`}
+                        className={`${
+                          zipError ? errorInputClass : inputClass
+                        } w-full`}
                       />
 
                       {zipError && (
-                        <p className="text-xs text-red-600 mt-1">{zipError}</p>
+                        <p className="text-xs text-red-600 mt-1">
+                          {zipError}
+                        </p>
                       )}
                     </div>
                   </div>
+
                   <label className="flex items-center gap-2 text-sm text-ink/80 mb-6 mt-3">
                     <input
                       type="checkbox"
                       checked={form.over18}
-                      onChange={(e) => update("over18", e.target.checked)}
+                      onChange={(e) =>
+                        update("over18", e.target.checked)
+                      }
                       className="w-4 h-4"
                     />
+
                     I confirm I am at least 18 years old
                   </label>
+
                   <button
                     disabled={!canContinueDetails}
                     onClick={() => setStep(1)}
@@ -427,36 +840,66 @@ export default function TakeMeHomeModal({
 
               {step === 1 && (
                 <div>
-                  <h2 className="font-display text-lg text-forest mb-1">Delivery</h2>
+                  <h2 className="font-display text-lg text-forest mb-1">
+                    Delivery
+                  </h2>
+
                   <p className="text-sm text-ink/70 mb-4">
                     How would you like to bring {puppy.name} home?
                   </p>
 
                   <button
-                    onClick={() => update("deliveryMethod", "pickup")}
+                    onClick={() =>
+                      update("deliveryMethod", "pickup")
+                    }
                     className={`w-full text-left border rounded-lg p-4 mb-3 ${
-                      form.deliveryMethod === "pickup" ? "border-gold bg-cream-alt" : "border-sage/30"
+                      form.deliveryMethod === "pickup"
+                        ? "border-gold bg-cream-alt"
+                        : "border-sage/30"
                     }`}
                   >
-                    <p className="text-forest font-medium">Local Pickup</p>
-                    <p className="text-sm text-ink/70">Meet us in person — free</p>
+                    <p className="text-forest font-medium">
+                      Local Pickup
+                    </p>
+
+                    <p className="text-sm text-ink/70">
+                      Meet us in person — free
+                    </p>
+
                     <p className="text-xs text-sage mt-1">
-                      Estimated ready window: {estimateDeliveryWindow("pickup", new Date().toISOString())}
+                      Estimated ready window:{" "}
+                      {estimateDeliveryWindow(
+                        "pickup",
+                        new Date().toISOString()
+                      )}
                     </p>
                   </button>
 
                   <button
-                    onClick={() => update("deliveryMethod", "delivery")}
+                    onClick={() =>
+                      update("deliveryMethod", "delivery")
+                    }
                     className={`w-full text-left border rounded-lg p-4 mb-6 ${
-                      form.deliveryMethod === "delivery" ? "border-gold bg-cream-alt" : "border-sage/30"
+                      form.deliveryMethod === "delivery"
+                        ? "border-gold bg-cream-alt"
+                        : "border-sage/30"
                     }`}
                   >
-                    <p className="text-forest font-medium">Nationwide Delivery</p>
-                    <p className="text-sm text-ink/70">
-                      Door-to-door delivery — ${settings.deliveryFee.toLocaleString()}
+                    <p className="text-forest font-medium">
+                      Nationwide Delivery
                     </p>
+
+                    <p className="text-sm text-ink/70">
+                      Door-to-door delivery — $
+                      {settings.deliveryFee.toLocaleString()}
+                    </p>
+
                     <p className="text-xs text-sage mt-1">
-                      Estimated arrival window: {estimateDeliveryWindow("home", new Date().toISOString())}
+                      Estimated arrival window:{" "}
+                      {estimateDeliveryWindow(
+                        "home",
+                        new Date().toISOString()
+                      )}
                     </p>
                   </button>
 
@@ -467,6 +910,7 @@ export default function TakeMeHomeModal({
                     >
                       Back
                     </button>
+
                     <button
                       onClick={() => setStep(2)}
                       className="flex-1 bg-forest text-cream py-3 rounded-full hover:bg-forest-light"
@@ -479,22 +923,33 @@ export default function TakeMeHomeModal({
 
               {step === 2 && (
                 <div>
-                  <h2 className="font-display text-lg text-forest mb-1">Essentials</h2>
+                  <h2 className="font-display text-lg text-forest mb-1">
+                    Essentials
+                  </h2>
+
                   <p className="text-sm text-ink/70 mb-4">
-                    Optional add-ons to make homecoming easier — entirely up to you.
+                    Optional add-ons to make homecoming easier —
+                    entirely up to you.
                   </p>
 
                   <label className="flex items-start gap-3 border border-sage/30 rounded-lg p-4 mb-3">
                     <input
                       type="checkbox"
                       checked={form.starterKit}
-                      onChange={(e) => update("starterKit", e.target.checked)}
+                      onChange={(e) =>
+                        update("starterKit", e.target.checked)
+                      }
                       className="w-4 h-4 mt-0.5"
                     />
+
                     <div>
-                      <p className="text-forest font-medium">Starter Care Kit</p>
+                      <p className="text-forest font-medium">
+                        Starter Care Kit
+                      </p>
+
                       <p className="text-sm text-ink/70">
-                        Bed, leash, ID tag, and chew toy — ${settings.starterKitPrice.toLocaleString()}
+                        Bed, leash, ID tag, and chew toy — $
+                        {settings.starterKitPrice.toLocaleString()}
                       </p>
                     </div>
                   </label>
@@ -503,11 +958,20 @@ export default function TakeMeHomeModal({
                     <input
                       type="checkbox"
                       checked={form.healthGuarantee}
-                      onChange={(e) => update("healthGuarantee", e.target.checked)}
+                      onChange={(e) =>
+                        update(
+                          "healthGuarantee",
+                          e.target.checked
+                        )
+                      }
                       className="w-4 h-4 mt-0.5"
                     />
+
                     <div>
-                      <p className="text-forest font-medium">Extended Health Guarantee</p>
+                      <p className="text-forest font-medium">
+                        Extended Health Guarantee
+                      </p>
+
                       <p className="text-sm text-ink/70">
                         2-year coverage beyond our standard guarantee — $
                         {settings.healthGuaranteePrice.toLocaleString()}
@@ -519,8 +983,10 @@ export default function TakeMeHomeModal({
                     <p className="text-sm text-forest font-medium">
                       Included free: Digital Puppy Care Guide
                     </p>
+
                     <p className="text-xs text-ink/70">
-                      Feeding, training, and health tips — sent to your email automatically.
+                      Feeding, training, and health tips — sent to
+                      your email automatically.
                     </p>
                   </div>
 
@@ -531,6 +997,7 @@ export default function TakeMeHomeModal({
                     >
                       Back
                     </button>
+
                     <button
                       onClick={() => setStep(3)}
                       className="flex-1 bg-forest text-cream py-3 rounded-full hover:bg-forest-light"
@@ -544,7 +1011,10 @@ export default function TakeMeHomeModal({
               {step === 3 && (
                 <div>
                   <div className="flex items-center gap-2 mb-4">
-                    <h2 className="font-display text-lg text-forest">Payment</h2>
+                    <h2 className="font-display text-lg text-forest">
+                      Payment
+                    </h2>
+
                     {PAYMENT_TEST_MODE && (
                       <span className="text-[10px] uppercase tracking-wider bg-gold/15 text-forest px-2 py-0.5 rounded-full">
                         Test Mode
@@ -554,38 +1024,71 @@ export default function TakeMeHomeModal({
 
                   <div className="border border-sage/20 rounded-lg p-4 mb-6 text-sm space-y-1.5">
                     {lineItems.map((item) => (
-                      <div key={item.label} className="flex justify-between">
-                        <span className="text-ink/70">{item.label}</span>
-                        <span className="text-ink">${item.amount.toLocaleString()}</span>
+                      <div
+                        key={item.label}
+                        className="flex justify-between"
+                      >
+                        <span className="text-ink/70">
+                          {item.label}
+                        </span>
+
+                        <span className="text-ink">
+                          ${item.amount.toLocaleString()}
+                        </span>
                       </div>
                     ))}
+
                     <div className="flex justify-between pt-2 border-t border-sage/20 font-medium">
-                      <span className="text-forest">Total</span>
-                      <span className="text-forest">${subtotal.toLocaleString()}</span>
+                      <span className="text-forest">
+                        Total
+                      </span>
+
+                      <span className="text-forest">
+                        ${subtotal.toLocaleString()}
+                      </span>
                     </div>
                   </div>
 
                   {hasDeposit && (
                     <div className="mb-6 space-y-3">
                       <button
-                        onClick={() => update("paymentType", "deposit")}
+                        onClick={() =>
+                          update("paymentType", "deposit")
+                        }
                         className={`w-full text-left border rounded-lg p-4 ${
-                          form.paymentType === "deposit" ? "border-gold bg-cream-alt" : "border-sage/30"
+                          form.paymentType === "deposit"
+                            ? "border-gold bg-cream-alt"
+                            : "border-sage/30"
                         }`}
                       >
                         <p className="text-forest font-medium">
-                          Pay Deposit — ${puppy.depositAmount.toLocaleString()}
+                          Pay Deposit — $
+                          {puppy.depositAmount.toLocaleString()}
                         </p>
-                        <p className="text-sm text-ink/70">Reserve {puppy.name}, pay the rest later</p>
+
+                        <p className="text-sm text-ink/70">
+                          Reserve {puppy.name}, pay the rest later
+                        </p>
                       </button>
+
                       <button
-                        onClick={() => update("paymentType", "full")}
+                        onClick={() =>
+                          update("paymentType", "full")
+                        }
                         className={`w-full text-left border rounded-lg p-4 ${
-                          form.paymentType === "full" ? "border-gold bg-cream-alt" : "border-sage/30"
+                          form.paymentType === "full"
+                            ? "border-gold bg-cream-alt"
+                            : "border-sage/30"
                         }`}
                       >
-                        <p className="text-forest font-medium">Pay in Full — ${subtotal.toLocaleString()}</p>
-                        <p className="text-sm text-ink/70">Complete the full amount now</p>
+                        <p className="text-forest font-medium">
+                          Pay in Full — $
+                          {subtotal.toLocaleString()}
+                        </p>
+
+                        <p className="text-sm text-ink/70">
+                          Complete the full amount now
+                        </p>
                       </button>
                     </div>
                   )}
@@ -598,8 +1101,14 @@ export default function TakeMeHomeModal({
 
                   {submitError && (
                     <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-                      <AlertCircle size={15} className="text-red-600 shrink-0 mt-0.5" />
-                      <p className="text-xs text-red-700">{submitError}</p>
+                      <AlertCircle
+                        size={15}
+                        className="text-red-600 shrink-0 mt-0.5"
+                      />
+
+                      <p className="text-xs text-red-700">
+                        {submitError}
+                      </p>
                     </div>
                   )}
 
@@ -610,8 +1119,13 @@ export default function TakeMeHomeModal({
                     >
                       Back
                     </button>
+
                     <button
-                      onClick={PAYMENT_TEST_MODE ? goToPaymentPrototype : handleSubmit}
+                      onClick={
+                        PAYMENT_TEST_MODE
+                          ? goToPaymentPrototype
+                          : handleSubmit
+                      }
                       disabled={submitting}
                       className="flex-1 bg-forest text-cream py-3 rounded-full hover:bg-forest-light disabled:opacity-50"
                     >
