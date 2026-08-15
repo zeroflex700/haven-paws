@@ -72,27 +72,6 @@ type GoogleAutocompleteInstance = {
   };
 };
 
-declare global {
-  interface Window {
-    google?: {
-      maps?: {
-        places?: {
-          Autocomplete: new (
-            input: HTMLInputElement,
-            options?: {
-              types?: string[];
-              componentRestrictions?: {
-                country: string | string[];
-              };
-              fields?: string[];
-            }
-          ) => GoogleAutocompleteInstance;
-        };
-      };
-    };
-  }
-}
-
 export default function TakeMeHomeModal({
   puppy,
   settings,
