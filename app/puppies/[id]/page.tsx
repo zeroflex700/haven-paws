@@ -26,7 +26,10 @@ import { getReviews, getReviewStats } from "@/lib/queries/testimonials";
 import { getSiblings } from "@/lib/queries/siblings";
 import { getSettings } from "@/lib/queries/settings";
 import { getBreedInfo } from "@/lib/queries/breedInfo";
-import { getPuppiesInPriceRange, getRelatedBreedsByGroup } from "@/lib/queries/recommendations";
+import {
+  getPuppiesInPriceRange,
+  getRelatedBreedsByGroup,
+} from "@/lib/queries/recommendations";
 
 const statusColor: Record<string, string> = {
   available: "bg-gold text-forest",
@@ -47,10 +50,13 @@ export async function generateMetadata({
   }
 
   const title = `${puppy.name} — ${puppy.breed} Puppy for Adoption`;
+
   const description = puppy.description
     ? puppy.description.slice(0, 155)
     : `Meet ${puppy.name}, a ${puppy.breed} puppy available through Haven Paws.`;
-  const image = puppy.media.find((m) => m.isCover)?.url ?? puppy.media[0]?.url;
+
+  const image =
+    puppy.media.find((m) => m.isCover)?.url ?? puppy.media[0]?.url;
 
   return {
     title,
@@ -80,7 +86,14 @@ export default async function PuppyDetailPage({
 
   if (!puppy) notFound();
 
-  const [related, reviews, reviewStats, siblings, settings, breedInfo] = await Promise.all([
+  const [
+    related,
+    reviews,
+    reviewStats,
+    siblings,
+    settings,
+    breedInfo,
+  ] = await Promise.all([
     getRelatedPuppies(puppy.breedId, puppy.id),
     getReviews(4),
     getReviewStats(),
@@ -90,17 +103,30 @@ export default async function PuppyDetailPage({
   ]);
 
   const excludeIds = [puppy.id, ...related.map((r) => r.id)];
+
   const [priceRangePuppies, relatedBreeds] = await Promise.all([
     getPuppiesInPriceRange(puppy.price, excludeIds),
-    getRelatedBreedsByGroup(breedInfo?.breedGroup ?? null, puppy.breedId),
+    getRelatedBreedsByGroup(
+      breedInfo?.breedGroup ?? null,
+      puppy.breedId
+    ),
   ]);
 
-  const coverImage = puppy.media.find((m) => m.isCover)?.url ?? puppy.media[0]?.url ?? null;
+  const coverImage =
+    puppy.media.find((m) => m.isCover)?.url ??
+    puppy.media[0]?.url ??
+    null;
 
   return (
     <main className="pb-20 md:pb-0">
       <Navbar />
-      <RecordPuppyView id={puppy.id} name={puppy.name} breed={puppy.breed} image={coverImage} />
+
+      <RecordPuppyView
+        id={puppy.id}
+        name={puppy.name}
+        breed={puppy.breed}
+        image={coverImage}
+      />
 
       <section className="max-w-7xl mx-auto px-6 lg:px-10 pt-6">
         <Breadcrumbs
@@ -116,14 +142,23 @@ export default async function PuppyDetailPage({
         <PuppyGallery media={puppy.media} name={puppy.name} />
 
         <div>
-          <span className={`text-[10px] uppercase tracking-wider px-3 py-1 rounded-full ${statusColor[puppy.status]}`}>
+          <span
+            className={`text-[10px] uppercase tracking-wider px-3 py-1 rounded-full ${statusColor[puppy.status]}`}
+          >
             {puppy.status}
           </span>
-          <h1 className="font-display text-3xl text-forest mt-3 mb-1">{puppy.name}</h1>
+
+          <h1 className="font-display text-3xl text-forest mt-3 mb-1">
+            {puppy.name}
+          </h1>
+
           <p className="eyebrow mb-1">{puppy.breed}</p>
+
           <p className="text-sm text-ink/60 capitalize mb-3">
             {puppy.sex}
-            {puppy.ageWeeks !== null ? ` · ${puppy.ageWeeks} weeks old` : ""}
+            {puppy.ageWeeks !== null
+              ? ` · ${puppy.ageWeeks} weeks old`
+              : ""}
           </p>
 
           <TrustBadgeRow
@@ -134,7 +169,9 @@ export default async function PuppyDetailPage({
 
           <div className="gold-rule mb-4" />
 
-          <p className="text-2xl text-ink font-medium mb-4">${puppy.price.toLocaleString()}</p>
+          <p className="text-2xl text-ink font-medium mb-4">
+            ${puppy.price.toLocaleString()}
+          </p>
 
           <PuppyBookingWidget
             puppy={{
@@ -151,35 +188,65 @@ export default async function PuppyDetailPage({
             settings={settings}
           />
 
-          <PaymentExplainer price={puppy.price} depositAmount={puppy.depositAmount} />
+          <PaymentExplainer
+            price={puppy.price}
+            depositAmount={puppy.depositAmount}
+          />
 
           {puppy.description && (
             <div className="mb-6">
-              <h3 className="font-display text-lg text-forest mb-2">About {puppy.name}</h3>
-              <p className="text-ink/80 leading-relaxed">{puppy.description}</p>
+              <h3 className="font-display text-lg text-forest mb-2">
+                About {puppy.name}
+              </h3>
+
+              <p className="text-ink/80 leading-relaxed">
+                {puppy.description}
+              </p>
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4 text-sm mb-2">
             <div>
-              <p className="text-sage text-xs uppercase tracking-wider">Color</p>
+              <p className="text-sage text-xs uppercase tracking-wider">
+                Color
+              </p>
               <p className="text-ink">{puppy.color ?? "—"}</p>
             </div>
+
             <div>
-              <p className="text-sage text-xs uppercase tracking-wider">Est. Weight</p>
-              <p className="text-ink">{puppy.weightEstimate ? `${puppy.weightEstimate} lbs` : "—"}</p>
+              <p className="text-sage text-xs uppercase tracking-wider">
+                Est. Weight
+              </p>
+              <p className="text-ink">
+                {puppy.weightEstimate
+                  ? `${puppy.weightEstimate} lbs`
+                  : "—"}
+              </p>
             </div>
+
             <div>
-              <p className="text-sage text-xs uppercase tracking-wider">Vet Checked</p>
-              <p className="text-ink">{puppy.vetChecked ? "Yes" : "Pending"}</p>
+              <p className="text-sage text-xs uppercase tracking-wider">
+                Vet Checked
+              </p>
+              <p className="text-ink">
+                {puppy.vetChecked ? "Yes" : "Pending"}
+              </p>
             </div>
+
             <div>
-              <p className="text-sage text-xs uppercase tracking-wider">Vaccinated</p>
-              <p className="text-ink">{puppy.vaccinated ? "Yes" : "Pending"}</p>
+              <p className="text-sage text-xs uppercase tracking-wider">
+                Vaccinated
+              </p>
+              <p className="text-ink">
+                {puppy.vaccinated ? "Yes" : "Pending"}
+              </p>
             </div>
+
             {puppy.microchipId && (
               <div className="col-span-2">
-                <p className="text-sage text-xs uppercase tracking-wider">Microchip ID</p>
+                <p className="text-sage text-xs uppercase tracking-wider">
+                  Microchip ID
+                </p>
                 <p className="text-ink">{puppy.microchipId}</p>
               </div>
             )}
@@ -189,34 +256,59 @@ export default async function PuppyDetailPage({
             puppyName={puppy.name}
             breederName={puppy.breederName}
             breederSlug={puppy.breederSlug}
+            breederPhotoUrl={puppy.breederPhotoUrl}
           />
 
           <PuppyIncluded items={puppy.includedItems} />
 
           <div className="mt-6 border-t border-sage/15 pt-5">
-            <h3 className="font-display text-lg text-forest mb-4">What happens next</h3>
+            <h3 className="font-display text-lg text-forest mb-4">
+              What happens next
+            </h3>
+
             <PurchaseTimeline />
           </div>
 
           <div id="inquiry-form" className="mt-6">
-            <InquiryForm puppyId={puppy.id} puppyName={puppy.name} />
+            <InquiryForm
+              puppyId={puppy.id}
+              puppyName={puppy.name}
+            />
           </div>
         </div>
       </section>
 
-      <PuppyParents puppyName={puppy.name} mom={puppy.mom} dad={puppy.dad} />
-      <PuppySiblings puppyName={puppy.name} siblings={siblings} />
+      <PuppyParents
+        puppyName={puppy.name}
+        mom={puppy.mom}
+        dad={puppy.dad}
+      />
+
+      <PuppySiblings
+        puppyName={puppy.name}
+        siblings={siblings}
+      />
+
       <DeliveryInfo />
-      <RelatedPuppies puppies={related} breedName={puppy.breed} />
+
+      <RelatedPuppies
+        puppies={related}
+        breedName={puppy.breed}
+      />
+
       <RelatedPuppies
         puppies={priceRangePuppies}
         breedName={puppy.breed}
         eyebrow="You May Also Like"
         title="Puppies in Your Price Range"
       />
+
       <RelatedBreedsSection breeds={relatedBreeds} />
+
       <Testimonials reviews={reviews} />
+
       <BreedFacts breed={breedInfo} />
+
       <AboutBreeder settings={settings} />
 
       <Footer />
