@@ -4,20 +4,60 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
+async function validateBreederForBreed(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  breederId: string | null,
+  breedId: string
+) {
+  if (!breederId) return;
+
+  const { data: breeder, error } = await supabase
+    .from("breeders")
+    .select("id, breed_id")
+    .eq("id", breederId)
+    .single();
+
+  if (error || !breeder) {
+    throw new Error("Selected breeder was not found.");
+  }
+
+  if (breeder.breed_id !== breedId) {
+    throw new Error(
+      "The selected breeder does not belong to the selected breed."
+    );
+  }
+}
+
 export async function createPuppy(formData: FormData) {
   const supabase = await createClient();
 
+  const breedId = formData.get("breed_id") as string;
+  const breederId =
+    (formData.get("breeder_id") as string) || null;
+
+  if (!breedId) {
+    throw new Error("A breed is required.");
+  }
+
+  await validateBreederForBreed(
+    supabase,
+    breederId,
+    breedId
+  );
+
   const { error } = await supabase.from("puppies").insert({
     name: formData.get("name") as string,
-    breed_id: formData.get("breed_id") as string,
-    breeder_id: (formData.get("breeder_id") as string) || null,
+    breed_id: breedId,
+    breeder_id: breederId,
     sex: formData.get("sex") as string,
     price: Number(formData.get("price")),
     deposit_amount: Number(formData.get("deposit_amount") || 0),
     description: formData.get("description") as string,
     status: formData.get("status") as string,
     color: formData.get("color") as string,
-    weight_estimate: formData.get("weight_estimate") ? Number(formData.get("weight_estimate")) : null,
+    weight_estimate: formData.get("weight_estimate")
+      ? Number(formData.get("weight_estimate"))
+      : null,
     litter_id: (formData.get("litter_id") as string) || null,
     ready_date: (formData.get("ready_date") as string) || null,
     included_items: formData.getAll("included_items"),
@@ -30,27 +70,51 @@ export async function createPuppy(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/puppies");
+
   redirect("/admin/puppies");
 }
 
-export async function updatePuppy(id: string, formData: FormData) {
+export async function updatePuppy(
+  id: string,
+  formData: FormData
+) {
   const supabase = await createClient();
+
+  const breedId = formData.get("breed_id") as string;
+  const breederId =
+    (formData.get("breeder_id") as string) || null;
+
+  if (!breedId) {
+    throw new Error("A breed is required.");
+  }
+
+  await validateBreederForBreed(
+    supabase,
+    breederId,
+    breedId
+  );
 
   const { error } = await supabase
     .from("puppies")
     .update({
       name: formData.get("name") as string,
-      breed_id: formData.get("breed_id") as string,
-      breeder_id: (formData.get("breeder_id") as string) || null,
+      breed_id: breedId,
+      breeder_id: breederId,
       sex: formData.get("sex") as string,
       price: Number(formData.get("price")),
-      deposit_amount: Number(formData.get("deposit_amount") || 0),
+      deposit_amount: Number(
+        formData.get("deposit_amount") || 0
+      ),
       description: formData.get("description") as string,
       status: formData.get("status") as string,
       color: formData.get("color") as string,
-      weight_estimate: formData.get("weight_estimate") ? Number(formData.get("weight_estimate")) : null,
-      litter_id: (formData.get("litter_id") as string) || null,
-      ready_date: (formData.get("ready_date") as string) || null,
+      weight_estimate: formData.get("weight_estimate")
+        ? Number(formData.get("weight_estimate"))
+        : null,
+      litter_id:
+        (formData.get("litter_id") as string) || null,
+      ready_date:
+        (formData.get("ready_date") as string) || null,
       included_items: formData.getAll("included_items"),
       vet_checked: formData.get("vet_checked") === "on",
       vaccinated: formData.get("vaccinated") === "on",
@@ -64,5 +128,7 @@ export async function updatePuppy(id: string, formData: FormData) {
   revalidatePath("/admin");
   revalidatePath("/admin/puppies");
   revalidatePath(`/admin/puppies/${id}`);
+  revalidatePath(`/puppies/${id}`);
+
   redirect("/admin/puppies");
 }
