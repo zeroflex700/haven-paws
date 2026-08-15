@@ -53,24 +53,52 @@ function isValidZip(v: string) {
 }
 
 /*
- * Google Maps is loaded dynamically in the browser.
- * We intentionally do not import a Google package here,
- * so you do not need to install another npm package.
+ * Minimal Google Maps types needed by this component.
+ *
+ * This prevents TypeScript errors such as:
+ * "Property 'google' does not exist on type 'Window'."
  */
+type GoogleAddressComponent = {
+  long_name: string;
+  short_name: string;
+  types: string[];
+};
+
+type GooglePlaceResult = {
+  formatted_address?: string;
+  address_components?: GoogleAddressComponent[];
+};
+
 type GoogleAutocompleteInstance = {
   addListener: (
     eventName: string,
     handler: () => void
   ) => { remove: () => void };
-  getPlace: () => {
-    formatted_address?: string;
-    address_components?: Array<{
-      long_name: string;
-      short_name: string;
-      types: string[];
-    }>;
-  };
+  getPlace: () => GooglePlaceResult;
 };
+
+type GoogleAutocompleteConstructor = new (
+  input: HTMLInputElement,
+  options: {
+    types?: string[];
+    componentRestrictions?: {
+      country: string | string[];
+    };
+    fields?: string[];
+  }
+) => GoogleAutocompleteInstance;
+
+declare global {
+  interface Window {
+    google?: {
+      maps?: {
+        places?: {
+          Autocomplete?: GoogleAutocompleteConstructor;
+        };
+      };
+    };
+  }
+}
 
 export default function TakeMeHomeModal({
   puppy,
@@ -95,13 +123,15 @@ export default function TakeMeHomeModal({
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   /*
-   * Google address autocomplete state.
+   * Google address autocomplete.
    */
   const addressInputRef = useRef<HTMLInputElement | null>(null);
-  const autocompleteRef = useRef<GoogleAutocompleteInstance | null>(null);
-  const autocompleteListenerRef = useRef<{ remove: () => void } | null>(
-    null
-  );
+
+  const autocompleteRef =
+    useRef<GoogleAutocompleteInstance | null>(null);
+
+  const autocompleteListenerRef =
+    useRef<{ remove: () => void } | null>(null);
 
   const panelRef = useDismissableOverlay(true, onClose);
 
@@ -141,10 +171,14 @@ export default function TakeMeHomeModal({
         zip: draft.zip ?? f.zip,
         deliveryMethod: draft.deliveryMethod ?? f.deliveryMethod,
         starterKit: draft.starterKit ?? f.starterKit,
-        healthGuarantee: draft.healthGuarantee ?? f.healthGuarantee,
+        healthGuarantee:
+          draft.healthGuarantee ?? f.healthGuarantee,
       }));
 
-      if (typeof draft.step === "number" && initialStep === undefined) {
+      if (
+        typeof draft.step === "number" &&
+        initialStep === undefined
+      ) {
         setStep(draft.step);
       }
     }
@@ -177,15 +211,16 @@ export default function TakeMeHomeModal({
   }, [step]);
 
   /*
-   * Load Google Maps Places library.
+   * Load Google Maps Places Autocomplete.
    *
-   * Uses the existing:
+   * Requires:
    * NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
    */
   useEffect(() => {
     if (step !== 0) return;
 
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    const apiKey =
+      process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
     if (!apiKey) {
       console.error(
@@ -195,6 +230,7 @@ export default function TakeMeHomeModal({
     }
 
     let cancelled = false;
+    let checkInterval: number | null = null;
 
     function initializeAutocomplete() {
       if (cancelled) return;
@@ -203,184 +239,233 @@ export default function TakeMeHomeModal({
 
       if (!input) return;
 
-      if (!window.google?.maps?.places?.Autocomplete) {
-        console.error(
-          "Google Maps Places Autocomplete is unavailable. Make sure the Maps JavaScript API and Places API are enabled."
-        );
+      const Autocomplete =
+        window.google?.maps?.places?.Autocomplete;
+
+      if (!Autocomplete) {
         return;
       }
 
       /*
-       * Prevent creating multiple autocomplete instances.
+       * Prevent duplicate autocomplete instances.
        */
       if (autocompleteRef.current) return;
 
-      autocompleteRef.current = new window.google.maps.places.Autocomplete(
+      autocompleteRef.current = new Autocomplete(
         input,
         {
           /*
-           * We are looking specifically for addresses.
+           * Only show address results.
            */
           types: ["address"],
 
           /*
-           * Your checkout currently uses ZIP codes and nationwide delivery
-           * in the United States, so restrict suggestions to the US.
+           * Restrict suggestions to the United States.
            */
           componentRestrictions: {
             country: "us",
           },
 
           /*
-           * Request only the fields needed to populate the form.
+           * Only request the fields we actually use.
            */
-          fields: ["formatted_address", "address_components"],
+          fields: [
+            "formatted_address",
+            "address_components",
+          ],
         }
       );
 
       autocompleteListenerRef.current =
-        autocompleteRef.current.addListener("place_changed", () => {
-          const place = autocompleteRef.current?.getPlace();
+        autocompleteRef.current.addListener(
+          "place_changed",
+          () => {
+            const place =
+              autocompleteRef.current?.getPlace();
 
-          if (!place) return;
+            if (!place) return;
 
-          const components = place.address_components ?? [];
+            const components =
+              place.address_components ?? [];
 
-          let streetNumber = "";
-          let route = "";
-          let city = "";
-          let state = "";
-          let zip = "";
+            let streetNumber = "";
+            let route = "";
+            let city = "";
+            let state = "";
+            let zip = "";
 
-          for (const component of components) {
-            const types = component.types;
+            for (const component of components) {
+              const types = component.types;
 
-            if (types.includes("street_number")) {
-              streetNumber = component.long_name;
-            }
+              if (types.includes("street_number")) {
+                streetNumber = component.long_name;
+              }
 
-            if (types.includes("route")) {
-              route = component.long_name;
-            }
+              if (types.includes("route")) {
+                route = component.long_name;
+              }
 
-            /*
-             * Google can return different locality types depending
-             * on the address, so check the common alternatives.
-             */
-            if (
-              types.includes("locality") ||
-              types.includes("postal_town") ||
-              types.includes("sublocality")
-            ) {
-              if (!city) {
-                city = component.long_name;
+              /*
+               * Google may return different city-level
+               * component types depending on the address.
+               */
+              if (
+                types.includes("locality") ||
+                types.includes("postal_town") ||
+                types.includes("sublocality")
+              ) {
+                if (!city) {
+                  city = component.long_name;
+                }
+              }
+
+              if (
+                types.includes(
+                  "administrative_area_level_1"
+                )
+              ) {
+                state = component.short_name;
+              }
+
+              if (types.includes("postal_code")) {
+                zip = component.long_name;
               }
             }
 
-            if (types.includes("administrative_area_level_1")) {
-              state = component.short_name;
-            }
+            /*
+             * Build the clean street address.
+             *
+             * Example:
+             * 123 Main Street
+             */
+            const streetAddress =
+              [streetNumber, route]
+                .filter(Boolean)
+                .join(" ") ||
+              place.formatted_address ||
+              "";
 
-            if (types.includes("postal_code")) {
-              zip = component.long_name;
-            }
+            setForm((current) => ({
+              ...current,
+              address: streetAddress,
+              city: city || current.city,
+              state: state || current.state,
+              zip: zip || current.zip,
+            }));
+
+            /*
+             * Mark populated fields as completed.
+             */
+            setTouched((current) => ({
+              ...current,
+              address: true,
+              city: true,
+              state: true,
+              zip: true,
+            }));
           }
-
-          /*
-           * Prefer the clean street address assembled from the
-           * individual Google components.
-           */
-          const streetAddress =
-            [streetNumber, route].filter(Boolean).join(" ") ||
-            place.formatted_address ||
-            "";
-
-          setForm((current) => ({
-            ...current,
-            address: streetAddress,
-            city: city || current.city,
-            state: state || current.state,
-            zip: zip || current.zip,
-          }));
-
-          /*
-           * Mark the address fields as completed.
-           */
-          setTouched((current) => ({
-            ...current,
-            address: true,
-            city: true,
-            state: true,
-            zip: true,
-          }));
-        });
+        );
     }
 
     /*
-     * If Google Maps is already loaded by another component,
-     * initialize immediately.
+     * Google Maps is already available.
      */
-    if (window.google?.maps?.places?.Autocomplete) {
+    if (
+      window.google?.maps?.places?.Autocomplete
+    ) {
       initializeAutocomplete();
-    } else {
-      /*
-       * Check whether the Google Maps script is already present.
-       */
-      const existingScript = document.querySelector(
-        'script[data-haven-paws-google-maps="true"]'
-      ) as HTMLScriptElement | null;
 
-      if (existingScript) {
-        existingScript.addEventListener("load", initializeAutocomplete);
+      return () => {
+        cancelled = true;
 
-        /*
-         * The script may already have finished loading.
-         */
-        const checkInterval = window.setInterval(() => {
-          if (window.google?.maps?.places?.Autocomplete) {
-            window.clearInterval(checkInterval);
-            initializeAutocomplete();
-          }
-        }, 100);
+        if (autocompleteListenerRef.current) {
+          autocompleteListenerRef.current.remove();
+          autocompleteListenerRef.current = null;
+        }
 
-        return () => {
-          cancelled = true;
-          window.clearInterval(checkInterval);
-          existingScript.removeEventListener(
-            "load",
-            initializeAutocomplete
-          );
-        };
-      }
-
-      /*
-       * Load Google Maps JavaScript API with Places.
-       */
-      const script = document.createElement("script");
-
-      script.src =
-        "https://maps.googleapis.com/maps/api/js" +
-        `?key=${encodeURIComponent(apiKey)}` +
-        "&loading=async" +
-        "&libraries=places";
-
-      script.async = true;
-      script.defer = true;
-      script.dataset.havenPawsGoogleMaps = "true";
-
-      script.onload = initializeAutocomplete;
-
-      script.onerror = () => {
-        console.error(
-          "Google Maps failed to load. Check your API key, billing, API restrictions, and enabled APIs."
-        );
+        autocompleteRef.current = null;
       };
-
-      document.head.appendChild(script);
     }
+
+    /*
+     * Check whether our Google Maps script already exists.
+     */
+    const existingScript = document.querySelector(
+      'script[data-haven-paws-google-maps="true"]'
+    ) as HTMLScriptElement | null;
+
+    if (existingScript) {
+      existingScript.addEventListener(
+        "load",
+        initializeAutocomplete
+      );
+
+      checkInterval = window.setInterval(() => {
+        if (
+          window.google?.maps?.places?.Autocomplete
+        ) {
+          if (checkInterval !== null) {
+            window.clearInterval(checkInterval);
+            checkInterval = null;
+          }
+
+          initializeAutocomplete();
+        }
+      }, 100);
+
+      return () => {
+        cancelled = true;
+
+        existingScript.removeEventListener(
+          "load",
+          initializeAutocomplete
+        );
+
+        if (checkInterval !== null) {
+          window.clearInterval(checkInterval);
+        }
+
+        if (autocompleteListenerRef.current) {
+          autocompleteListenerRef.current.remove();
+          autocompleteListenerRef.current = null;
+        }
+
+        autocompleteRef.current = null;
+      };
+    }
+
+    /*
+     * Load Google Maps JavaScript API.
+     */
+    const script = document.createElement("script");
+
+    script.src =
+      "https://maps.googleapis.com/maps/api/js" +
+      `?key=${encodeURIComponent(apiKey)}` +
+      "&loading=async" +
+      "&libraries=places";
+
+    script.async = true;
+    script.defer = true;
+
+    script.dataset.havenPawsGoogleMaps = "true";
+
+    script.onload = initializeAutocomplete;
+
+    script.onerror = () => {
+      console.error(
+        "Google Maps failed to load. Check your API key, billing, API restrictions, and enabled APIs."
+      );
+    };
+
+    document.head.appendChild(script);
 
     return () => {
       cancelled = true;
+
+      if (checkInterval !== null) {
+        window.clearInterval(checkInterval);
+      }
 
       if (autocompleteListenerRef.current) {
         autocompleteListenerRef.current.remove();
@@ -392,13 +477,22 @@ export default function TakeMeHomeModal({
   }, [step]);
 
   const deliveryCost =
-    form.deliveryMethod === "delivery" ? settings.deliveryFee : 0;
+    form.deliveryMethod === "delivery"
+      ? settings.deliveryFee
+      : 0;
 
   const essentialsCost =
-    (form.starterKit ? settings.starterKitPrice : 0) +
-    (form.healthGuarantee ? settings.healthGuaranteePrice : 0);
+    (form.starterKit
+      ? settings.starterKitPrice
+      : 0) +
+    (form.healthGuarantee
+      ? settings.healthGuaranteePrice
+      : 0);
 
-  const subtotal = puppy.price + deliveryCost + essentialsCost;
+  const subtotal =
+    puppy.price +
+    deliveryCost +
+    essentialsCost;
 
   const hasDeposit = puppy.depositAmount > 0;
 
@@ -408,9 +502,17 @@ export default function TakeMeHomeModal({
       : subtotal;
 
   const lineItems = [
-    { label: puppy.name, amount: puppy.price },
+    {
+      label: puppy.name,
+      amount: puppy.price,
+    },
     ...(deliveryCost > 0
-      ? [{ label: "Delivery", amount: deliveryCost }]
+      ? [
+          {
+            label: "Delivery",
+            amount: deliveryCost,
+          },
+        ]
       : []),
     ...(form.starterKit
       ? [
@@ -532,7 +634,8 @@ export default function TakeMeHomeModal({
       );
 
       if (result.checkoutUrl) {
-        window.location.href = result.checkoutUrl;
+        window.location.href =
+          result.checkoutUrl;
         return;
       }
 
@@ -572,7 +675,10 @@ export default function TakeMeHomeModal({
             onClick={onClose}
             aria-label="Close"
           >
-            <X size={22} className="text-ink" />
+            <X
+              size={22}
+              className="text-ink"
+            />
           </button>
         </div>
 
@@ -581,7 +687,10 @@ export default function TakeMeHomeModal({
             <div className="w-24 h-24 mx-auto rounded-lg overflow-hidden mb-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={cldOptimized(puppy.coverImage, 200)}
+                src={cldOptimized(
+                  puppy.coverImage,
+                  200
+                )}
                 alt={puppy.name}
                 className="w-full h-full object-cover"
               />
@@ -593,7 +702,9 @@ export default function TakeMeHomeModal({
           </h1>
 
           <button
-            onClick={() => setShowSummary(true)}
+            onClick={() =>
+              setShowSummary(true)
+            }
             className="flex items-center justify-center gap-2 mx-auto text-sm text-ink/80 mb-6"
           >
             Show summary:{" "}
@@ -627,7 +738,9 @@ export default function TakeMeHomeModal({
 
                     <span
                       className={`text-[10px] ${
-                        active ? "text-forest" : "text-sage"
+                        active
+                          ? "text-forest"
+                          : "text-sage"
                       }`}
                     >
                       {s.label}
@@ -645,9 +758,11 @@ export default function TakeMeHomeModal({
               </h2>
 
               <p className="text-ink/80 leading-relaxed mb-6">
-                Thank you for choosing {puppy.name}. Our concierge team will
-                reach out within 24 hours with a secure payment link —
-                you&apos;ll be able to pay by card or PayPal.
+                Thank you for choosing{" "}
+                {puppy.name}. Our concierge team will
+                reach out within 24 hours with a
+                secure payment link — you&apos;ll be
+                able to pay by card or PayPal.
               </p>
 
               <div className="flex flex-col gap-3">
@@ -675,8 +790,9 @@ export default function TakeMeHomeModal({
                   </h2>
 
                   <p className="text-sm text-ink/70 mb-4">
-                    Tell us a bit about yourself so we can ensure{" "}
-                    {puppy.name} finds a safe, happy home.
+                    Tell us a bit about yourself so we
+                    can ensure {puppy.name} finds a
+                    safe, happy home.
                   </p>
 
                   <input
@@ -687,9 +803,14 @@ export default function TakeMeHomeModal({
                     inputMode="email"
                     value={form.email}
                     onChange={(e) =>
-                      update("email", e.target.value)
+                      update(
+                        "email",
+                        e.target.value
+                      )
                     }
-                    onBlur={() => markTouched("email")}
+                    onBlur={() =>
+                      markTouched("email")
+                    }
                     className={`${
                       emailError
                         ? errorInputClass
@@ -740,9 +861,14 @@ export default function TakeMeHomeModal({
                     inputMode="tel"
                     value={form.phone}
                     onChange={(e) =>
-                      update("phone", e.target.value)
+                      update(
+                        "phone",
+                        e.target.value
+                      )
                     }
-                    onBlur={() => markTouched("phone")}
+                    onBlur={() =>
+                      markTouched("phone")
+                    }
                     className={`${
                       phoneError
                         ? errorInputClass
@@ -757,18 +883,17 @@ export default function TakeMeHomeModal({
                   )}
 
                   <p className="text-xs text-sage mb-3 mt-2">
-                    Full address is needed for {puppy.name}&apos;s
-                    health certificate and to determine delivery
-                    options.
+                    Full address is needed for{" "}
+                    {puppy.name}&apos;s health
+                    certificate and to determine
+                    delivery options.
                   </p>
 
                   {/*
                    * ADDRESS AUTOCOMPLETE
                    *
-                   * This is the important change.
-                   *
-                   * Google attaches autocomplete suggestions to
-                   * this input after the Places library loads.
+                   * Google Places suggestions appear
+                   * automatically while the client types.
                    */}
                   <div className="relative">
                     <input
@@ -796,7 +921,10 @@ export default function TakeMeHomeModal({
                     autoComplete="address-line2"
                     value={form.apt}
                     onChange={(e) =>
-                      update("apt", e.target.value)
+                      update(
+                        "apt",
+                        e.target.value
+                      )
                     }
                     className={`${inputClass} mb-3`}
                   />
@@ -807,7 +935,10 @@ export default function TakeMeHomeModal({
                     autoComplete="address-level2"
                     value={form.city}
                     onChange={(e) =>
-                      update("city", e.target.value)
+                      update(
+                        "city",
+                        e.target.value
+                      )
                     }
                     className={`${inputClass} mb-3`}
                   />
@@ -876,7 +1007,9 @@ export default function TakeMeHomeModal({
 
                   <button
                     disabled={!canContinueDetails}
-                    onClick={() => setStep(1)}
+                    onClick={() =>
+                      setStep(1)
+                    }
                     className="w-full bg-forest text-cream py-3 rounded-full hover:bg-forest-light disabled:opacity-40"
                   >
                     Continue to delivery options
@@ -891,7 +1024,8 @@ export default function TakeMeHomeModal({
                   </h2>
 
                   <p className="text-sm text-ink/70 mb-4">
-                    How would you like to bring {puppy.name} home?
+                    How would you like to bring{" "}
+                    {puppy.name} home?
                   </p>
 
                   <button
@@ -959,14 +1093,18 @@ export default function TakeMeHomeModal({
 
                   <div className="flex gap-3">
                     <button
-                      onClick={() => setStep(0)}
+                      onClick={() =>
+                        setStep(0)
+                      }
                       className="flex-1 border border-sage/30 text-forest py-3 rounded-full"
                     >
                       Back
                     </button>
 
                     <button
-                      onClick={() => setStep(2)}
+                      onClick={() =>
+                        setStep(2)
+                      }
                       className="flex-1 bg-forest text-cream py-3 rounded-full hover:bg-forest-light"
                     >
                       Continue
@@ -982,8 +1120,8 @@ export default function TakeMeHomeModal({
                   </h2>
 
                   <p className="text-sm text-ink/70 mb-4">
-                    Optional add-ons to make homecoming easier —
-                    entirely up to you.
+                    Optional add-ons to make homecoming
+                    easier — entirely up to you.
                   </p>
 
                   <label className="flex items-start gap-3 border border-sage/30 rounded-lg p-4 mb-3">
@@ -1005,7 +1143,8 @@ export default function TakeMeHomeModal({
                       </p>
 
                       <p className="text-sm text-ink/70">
-                        Bed, leash, ID tag, and chew toy — $
+                        Bed, leash, ID tag, and
+                        chew toy — $
                         {settings.starterKitPrice.toLocaleString()}
                       </p>
                     </div>
@@ -1014,7 +1153,9 @@ export default function TakeMeHomeModal({
                   <label className="flex items-start gap-3 border border-sage/30 rounded-lg p-4 mb-3">
                     <input
                       type="checkbox"
-                      checked={form.healthGuarantee}
+                      checked={
+                        form.healthGuarantee
+                      }
                       onChange={(e) =>
                         update(
                           "healthGuarantee",
@@ -1030,7 +1171,8 @@ export default function TakeMeHomeModal({
                       </p>
 
                       <p className="text-sm text-ink/70">
-                        2-year coverage beyond our standard guarantee — $
+                        2-year coverage beyond our
+                        standard guarantee — $
                         {settings.healthGuaranteePrice.toLocaleString()}
                       </p>
                     </div>
@@ -1038,25 +1180,31 @@ export default function TakeMeHomeModal({
 
                   <div className="border border-gold/30 bg-cream-alt rounded-lg p-4 mb-6">
                     <p className="text-sm text-forest font-medium">
-                      Included free: Digital Puppy Care Guide
+                      Included free: Digital Puppy
+                      Care Guide
                     </p>
 
                     <p className="text-xs text-ink/70">
-                      Feeding, training, and health tips — sent to your
-                      email automatically.
+                      Feeding, training, and health
+                      tips — sent to your email
+                      automatically.
                     </p>
                   </div>
 
                   <div className="flex gap-3">
                     <button
-                      onClick={() => setStep(1)}
+                      onClick={() =>
+                        setStep(1)
+                      }
                       className="flex-1 border border-sage/30 text-forest py-3 rounded-full"
                     >
                       Back
                     </button>
 
                     <button
-                      onClick={() => setStep(3)}
+                      onClick={() =>
+                        setStep(3)
+                      }
                       className="flex-1 bg-forest text-cream py-3 rounded-full hover:bg-forest-light"
                     >
                       Continue
@@ -1080,20 +1228,23 @@ export default function TakeMeHomeModal({
                   </div>
 
                   <div className="border border-sage/20 rounded-lg p-4 mb-6 text-sm space-y-1.5">
-                    {lineItems.map((item) => (
-                      <div
-                        key={item.label}
-                        className="flex justify-between"
-                      >
-                        <span className="text-ink/70">
-                          {item.label}
-                        </span>
+                    {lineItems.map(
+                      (item) => (
+                        <div
+                          key={item.label}
+                          className="flex justify-between"
+                        >
+                          <span className="text-ink/70">
+                            {item.label}
+                          </span>
 
-                        <span className="text-ink">
-                          ${item.amount.toLocaleString()}
-                        </span>
-                      </div>
-                    ))}
+                          <span className="text-ink">
+                            $
+                            {item.amount.toLocaleString()}
+                          </span>
+                        </div>
+                      )
+                    )}
 
                     <div className="flex justify-between pt-2 border-t border-sage/20 font-medium">
                       <span className="text-forest">
@@ -1101,7 +1252,8 @@ export default function TakeMeHomeModal({
                       </span>
 
                       <span className="text-forest">
-                        ${subtotal.toLocaleString()}
+                        $
+                        {subtotal.toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -1128,7 +1280,8 @@ export default function TakeMeHomeModal({
                         </p>
 
                         <p className="text-sm text-ink/70">
-                          Reserve {puppy.name}, pay the rest later
+                          Reserve {puppy.name},
+                          pay the rest later
                         </p>
                       </button>
 
@@ -1140,7 +1293,8 @@ export default function TakeMeHomeModal({
                           )
                         }
                         className={`w-full text-left border rounded-lg p-4 ${
-                          form.paymentType === "full"
+                          form.paymentType ===
+                          "full"
                             ? "border-gold bg-cream-alt"
                             : "border-sage/30"
                         }`}
@@ -1151,7 +1305,8 @@ export default function TakeMeHomeModal({
                         </p>
 
                         <p className="text-sm text-ink/70">
-                          Complete the full amount now
+                          Complete the full amount
+                          now
                         </p>
                       </button>
                     </div>
@@ -1178,7 +1333,9 @@ export default function TakeMeHomeModal({
 
                   <div className="flex gap-3">
                     <button
-                      onClick={() => setStep(2)}
+                      onClick={() =>
+                        setStep(2)
+                      }
                       className="flex-1 border border-sage/30 text-forest py-3 rounded-full"
                     >
                       Back
@@ -1218,7 +1375,9 @@ export default function TakeMeHomeModal({
           lineItems={lineItems}
           subtotal={subtotal}
           supportPhone={settings.supportPhone}
-          onClose={() => setShowSummary(false)}
+          onClose={() =>
+            setShowSummary(false)
+          }
         />
       )}
     </div>
