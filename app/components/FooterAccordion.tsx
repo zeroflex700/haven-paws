@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
-import { buildNavSections } from "@/lib/navSections";
 
 export default function FooterAccordion() {
   const [open, setOpen] = useState<string | null>(null);

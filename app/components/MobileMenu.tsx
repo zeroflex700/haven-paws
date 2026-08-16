@@ -13,7 +13,6 @@ import {
 
 import { BREEDS } from "../data/breeds";
 import { supabase } from "@/lib/supabase/client";
-import { buildNavSections } from "@/lib/navSections";
 
 import { useBodyScrollLock } from "@/lib/hooks/useBodyScrollLock";
 import { useDismissableOverlay } from "@/lib/hooks/useDismissableOverlay";
