@@ -11,23 +11,17 @@ import { useScrollDirection } from "@/lib/hooks/useScrollDirection";
 import { useStickyNavigation } from "@/lib/hooks/useStickyNavigation";
 import { buildNavSections } from "@/lib/navSections";
 
-type Thumbnails = {
-  how_it_works: string | null;
-  learning_center: string | null;
-  our_standards: string | null;
-};
+type Thumbnails = { how_it_works: string | null; learning_center: string | null; our_standards: string | null };
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
-
   const [thumbnails, setThumbnails] = useState<Thumbnails>({
     how_it_works: null,
     learning_center: null,
     our_standards: null,
   });
-
   const scrollDirection = useScrollDirection();
   const scrolled = useStickyNavigation();
 
@@ -35,13 +29,9 @@ export default function Navbar() {
     supabase.auth.getSession().then(({ data }) => {
       setLoggedIn(!!data.session);
     });
-
-    const {
-      data: listener,
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setLoggedIn(!!session);
     });
-
     return () => listener.subscription.unsubscribe();
   }, []);
 
@@ -52,9 +42,7 @@ export default function Navbar() {
       .eq("slug", "account-menu")
       .single()
       .then(({ data }) => {
-        const images =
-          (data?.extra_images as Record<string, string>) ?? {};
-
+        const images = (data?.extra_images as Record<string, string>) ?? {};
         setThumbnails({
           how_it_works: images.how_it_works ?? null,
           learning_center: images.learning_center ?? null,
@@ -69,105 +57,50 @@ export default function Navbar() {
     <>
       <header
         className={`sticky top-0 z-50 backdrop-blur border-b transition-all duration-300 ${
-          scrolled
-            ? "bg-cream/95 border-sage/20 shadow-sm"
-            : "bg-cream/80 border-transparent"
-        } ${
-          scrollDirection === "down"
-            ? "-translate-y-full"
-            : "translate-y-0"
-        }`}
-        style={{
-          paddingTop: "env(safe-area-inset-top, 0px)",
-        }}
+          scrolled ? "bg-cream/95 border-sage/20 shadow-sm" : "bg-cream/80 border-transparent"
+        } ${scrollDirection === "down" ? "-translate-y-full" : "translate-y-0"}`}
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-10 py-3">
-          {/* Logo / Mobile Menu */}
-          <div className="flex items-center gap-3 shrink-0">
-            <button
-              onClick={() => setMenuOpen(true)}
-              className="md:hidden active:scale-90 transition-transform"
-              aria-label="Open menu"
-            >
-              <Menu
-                size={20}
-                className="text-forest"
-              />
+          <div className="flex items-center gap-3">
+            <button onClick={() => setMenuOpen(true)} className="md:hidden active:scale-90 transition-transform" aria-label="Open menu">
+              <Menu size={20} className="text-forest" />
             </button>
-
-            <Link
-              href="/"
-              className="flex items-center gap-2"
-              aria-label="Haven Paws home"
-            >
-              <PawPrint
-                size={19}
-                className="text-gold"
-                strokeWidth={1.5}
-              />
-
+            <Link href="/" className="flex items-center gap-2">
+              <PawPrint size={19} className="text-gold" strokeWidth={1.5} />
               <span className="font-display text-lg text-forest tracking-tight">
                 Haven Paws
               </span>
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav
-            className="hidden md:flex items-center justify-center gap-5 lg:gap-7 mx-6 flex-1"
-            aria-label="Main navigation"
-          >
+          <nav className="hidden md:flex items-center gap-6">
             {navSections.map((section) => (
-              <HeaderNavDropdown
-                key={section.title}
-                section={section}
-              />
+              <HeaderNavDropdown key={section.title} section={section} />
             ))}
           </nav>
 
-          {/* Account */}
-          <div className="shrink-0">
-            {loggedIn ? (
-              <button
-                onClick={() => setAccountOpen(true)}
-                aria-label="Open account"
-                className="w-9 h-9 rounded-full bg-cream-alt border border-sage/30 flex items-center justify-center hover:border-gold active:scale-95 transition-all"
-              >
-                <User
-                  size={16}
-                  className="text-forest"
-                  strokeWidth={1.5}
-                />
-              </button>
-            ) : (
-              <Link
-                href="/account/login"
-                aria-label="Log in or create an account"
-                className="w-9 h-9 rounded-full bg-cream-alt border border-sage/30 flex items-center justify-center hover:border-gold active:scale-95 transition-all"
-              >
-                <User
-                  size={16}
-                  className="text-forest"
-                  strokeWidth={1.5}
-                />
-              </Link>
-            )}
-          </div>
+          {loggedIn ? (
+            <button
+              onClick={() => setAccountOpen(true)}
+              aria-label="Account"
+              className="w-9 h-9 rounded-full bg-cream-alt border border-sage/30 flex items-center justify-center hover:border-gold active:scale-95 transition-all"
+            >
+              <User size={16} className="text-forest" strokeWidth={1.5} />
+            </button>
+          ) : (
+            <Link
+              href="/account/login"
+              aria-label="Account"
+              className="w-9 h-9 rounded-full bg-cream-alt border border-sage/30 flex items-center justify-center hover:border-gold active:scale-95 transition-all"
+            >
+              <User size={16} className="text-forest" strokeWidth={1.5} />
+            </Link>
+          )}
         </div>
       </header>
-
-      {/* Mobile Navigation */}
-      <MobileMenu
-        open={menuOpen}
-        onClose={() => setMenuOpen(false)}
-      />
-
-      {/* Account Panel */}
-      <AccountPanel
-        open={accountOpen}
-        onClose={() => setAccountOpen(false)}
-        thumbnails={thumbnails}
-      />
+      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <AccountPanel open={accountOpen} onClose={() => setAccountOpen(false)} thumbnails={thumbnails} />
     </>
   );
 }
