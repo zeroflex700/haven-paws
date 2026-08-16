@@ -5,10 +5,11 @@ import Link from "next/link";
 import { PawPrint, Menu, User } from "lucide-react";
 import MobileMenu from "./MobileMenu";
 import AccountPanel from "./AccountPanel";
-import AnimatedLink from "./AnimatedLink";
+import HeaderNavDropdown from "./HeaderNavDropdown";
 import { supabase } from "@/lib/supabase/client";
 import { useScrollDirection } from "@/lib/hooks/useScrollDirection";
 import { useStickyNavigation } from "@/lib/hooks/useStickyNavigation";
+import { buildNavSections } from "@/lib/navSections";
 
 type Thumbnails = { how_it_works: string | null; learning_center: string | null; our_standards: string | null };
 
@@ -50,6 +51,8 @@ export default function Navbar() {
       });
   }, []);
 
+  const navSections = buildNavSections(loggedIn);
+
   return (
     <>
       <header
@@ -70,10 +73,11 @@ export default function Navbar() {
               </span>
             </Link>
           </div>
-          <nav className="hidden md:flex items-center gap-7 text-sm">
-            <AnimatedLink href="/puppies">Available Puppies</AnimatedLink>
-            <AnimatedLink href="/how-it-works">How It Works</AnimatedLink>
-            <AnimatedLink href="/about">About</AnimatedLink>
+
+          <nav className="hidden md:flex items-center gap-6">
+            {navSections.map((section) => (
+              <HeaderNavDropdown key={section.title} section={section} />
+            ))}
           </nav>
 
           {loggedIn ? (
