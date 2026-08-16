@@ -6,6 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import {
   X,
   Search,
+  ChevronRight,
   ChevronDown,
   PawPrint,
 } from "lucide-react";
@@ -33,8 +34,12 @@ export default function MobileMenu({
 
   const [search, setSearch] = useState("");
   const [breedsOpen, setBreedsOpen] = useState(false);
-  const [openSection, setOpenSection] = useState<string | null>(null);
   const [suggestOpen, setSuggestOpen] = useState(false);
+
+  // Tracks which main navigation section is open
+  const [openSection, setOpenSection] = useState<string | null>(null);
+
+  // Authentication state
   const [loggedIn, setLoggedIn] = useState(false);
 
   const { terms, addTerm, clearHistory } = useSearchHistory();
@@ -42,16 +47,21 @@ export default function MobileMenu({
   const searchBoxRef = useRef<HTMLDivElement>(null);
 
   const { mounted, entered } = useMountedTransition(open);
-
   const panelRef = useDismissableOverlay(open, onClose);
 
   useBodyScrollLock(open);
 
   /*
-   * Keep authentication state in sync.
-   * This is important because buildNavSections()
-   * changes "Log In or Sign Up" into "My Account"
-   * when the user is logged in.
+   * Close the mobile menu whenever the route changes.
+   */
+  useEffect(() => {
+    onClose();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  /*
+   * Get authentication state.
    */
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -64,23 +74,11 @@ export default function MobileMenu({
       setLoggedIn(!!session);
     });
 
-    return () => {
-      listener.subscription.unsubscribe();
-    };
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   /*
-   * Close the mobile menu whenever navigation occurs.
-   */
-  useEffect(() => {
-    onClose();
-
-    // We intentionally only react to pathname changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
-
-  /*
-   * Close search suggestions when tapping outside
+   * Close search suggestions when clicking outside
    * the search box.
    */
   useEffect(() => {
@@ -100,27 +98,20 @@ export default function MobileMenu({
     };
   }, []);
 
-  if (!mounted) {
-    return null;
-  }
+  if (!mounted) return null;
 
   /*
-   * Use the exact same navigation data as:
-   * - FooterAccordion
-   * - Navbar desktop dropdowns
+   * Build the exact same navigation sections used
+   * by the desktop header and footer.
    */
-  const sections = buildNavSections(loggedIn);
+  const navSections = buildNavSections(loggedIn);
 
   function goSearch(term: string) {
-    const trimmed = term.trim();
-
-    if (trimmed) {
-      addTerm(trimmed);
+    if (term.trim()) {
+      addTerm(term.trim());
     }
 
-    router.push(
-      `/puppies?search=${encodeURIComponent(trimmed)}`
-    );
+    router.push(`/puppies?search=${encodeURIComponent(term)}`);
 
     onClose();
   }
@@ -151,50 +142,43 @@ export default function MobileMenu({
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
     >
-      {/* ─────────────────────────────────────────
+      {/* =========================================================
           MOBILE MENU HEADER
-      ───────────────────────────────────────── */}
+      ========================================================= */}
 
-      <div className="sticky top-0 z-10 bg-cream border-b border-sage/20">
-        <div className="flex items-center justify-between px-5 py-4">
-          <button
-            onClick={onClose}
-            aria-label="Close menu"
-            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-cream-alt active:scale-90 transition-all"
-          >
-            <X
-              size={23}
-              className="text-ink"
-              strokeWidth={1.6}
-            />
-          </button>
+      <div className="flex items-center justify-between px-5 py-4 border-b border-sage/20">
+        <button
+          onClick={onClose}
+          aria-label="Close menu"
+          className="active:scale-90 transition-transform"
+        >
+          <X size={24} className="text-ink" />
+        </button>
 
-          <Link
-            href="/"
-            onClick={onClose}
-            className="flex items-center gap-2"
-          >
-            <PawPrint
-              size={20}
-              className="text-gold"
-              strokeWidth={1.5}
-            />
+        <Link
+          href="/"
+          onClick={onClose}
+          className="flex items-center gap-2"
+        >
+          <PawPrint
+            size={20}
+            className="text-gold"
+            strokeWidth={1.5}
+          />
 
-            <span className="font-display text-lg text-forest">
-              Haven Paws
-            </span>
-          </Link>
+          <span className="font-display text-lg text-forest">
+            Haven Paws
+          </span>
+        </Link>
 
-          <div className="w-9" />
-        </div>
+        <div className="w-6" />
       </div>
 
-      {/* ─────────────────────────────────────────
-          CONTENT
-      ───────────────────────────────────────── */}
-
       <div className="px-5 py-6">
-        {/* SEARCH */}
+
+        {/* =======================================================
+            SEARCH
+        ======================================================= */}
 
         <div
           ref={searchBoxRef}
@@ -214,8 +198,7 @@ export default function MobileMenu({
               onChange={(e) => setSearch(e.target.value)}
               onFocus={() => setSuggestOpen(true)}
               placeholder="Search by breed or puppy name"
-              aria-label="Search by breed or puppy name"
-              className="w-full border border-sage/30 rounded-full pl-11 pr-4 py-3.5 text-sm bg-white/60 focus:outline-none focus:border-gold"
+              className="w-full border border-sage/30 rounded-full pl-11 pr-4 py-3 text-sm bg-white/50 focus:outline-none focus:border-gold"
             />
           </form>
 
@@ -232,27 +215,31 @@ export default function MobileMenu({
           )}
         </div>
 
-        {/* ─────────────────────────────────────────
-            FOOTER NAVIGATION — SAME DATA SOURCE
-        ───────────────────────────────────────── */}
+        {/* =======================================================
+            MAIN NAVIGATION
+        ======================================================= */}
 
-        <div className="space-y-0">
-          {sections.map((section) => {
-            const isOpen =
-              openSection === section.title;
+        <p className="eyebrow mb-3">
+          Explore Haven Paws
+        </p>
+
+        <div className="border-t border-sage/20">
+
+          {navSections.map((section) => {
+            const isOpen = openSection === section.title;
 
             return (
               <div
                 key={section.title}
                 className="border-b border-sage/20"
               >
+                {/* SECTION BUTTON */}
+
                 <button
                   type="button"
-                  onClick={() =>
-                    toggleSection(section.title)
-                  }
+                  onClick={() => toggleSection(section.title)}
                   aria-expanded={isOpen}
-                  className="w-full flex items-center justify-between py-5 text-left"
+                  className="w-full flex items-center justify-between py-4 text-left"
                 >
                   <span className="font-display text-xl text-forest">
                     {section.title}
@@ -266,6 +253,8 @@ export default function MobileMenu({
                   />
                 </button>
 
+                {/* SECTION LINKS */}
+
                 <div
                   className="grid transition-[grid-template-rows] duration-300 ease-out"
                   style={{
@@ -275,45 +264,50 @@ export default function MobileMenu({
                   }}
                 >
                   <div className="overflow-hidden">
-                    <div className="pb-5 space-y-1">
+                    <div className="pb-4 pl-2">
+
                       {section.links.map((link) => (
                         <Link
                           key={`${section.title}-${link.href}`}
                           href={link.href}
                           onClick={onClose}
-                          className="block py-2.5 pl-1 text-sm text-ink/75 hover:text-forest transition-colors"
+                          className="flex items-center justify-between py-3 text-base text-ink/80 hover:text-forest transition-colors"
                         >
-                          {link.label}
+                          <span>{link.label}</span>
+
+                          <ChevronRight
+                            size={17}
+                            className="text-sage"
+                          />
                         </Link>
                       ))}
+
                     </div>
                   </div>
                 </div>
               </div>
             );
           })}
+
         </div>
 
-        {/* ─────────────────────────────────────────
+        {/* =======================================================
             BREED BROWSER
-           
-            This is extra functionality that exists
-            in the old mobile menu but isn't part of
-            the footer navigation.
-        ───────────────────────────────────────── */}
+        ======================================================= */}
 
-        <div className="border-b border-sage/20">
+        <div className="mt-8">
+
+          <p className="eyebrow mb-3">
+            Browse by breed
+          </p>
+
           <button
             type="button"
-            onClick={() =>
-              setBreedsOpen(!breedsOpen)
-            }
+            onClick={() => setBreedsOpen(!breedsOpen)}
             aria-expanded={breedsOpen}
-            className="w-full flex items-center justify-between py-5 text-left"
+            className="w-full flex items-center justify-between font-display text-xl text-forest py-4 border-b border-sage/20"
           >
-            <span className="font-display text-xl text-forest">
-              Browse by Breed
-            </span>
+            <span>Breed directory</span>
 
             <ChevronDown
               size={20}
@@ -332,7 +326,9 @@ export default function MobileMenu({
             }}
           >
             <div className="overflow-hidden">
-              <div className="max-h-72 overflow-y-auto pb-5 space-y-1">
+
+              <div className="max-h-72 overflow-y-auto py-2 border-b border-sage/20">
+
                 {BREEDS.map((breed) => (
                   <Link
                     key={breed}
@@ -340,27 +336,50 @@ export default function MobileMenu({
                       breed
                     )}`}
                     onClick={onClose}
-                    className="block py-2.5 pl-1 text-sm text-ink/75 hover:text-forest transition-colors"
+                    className="flex items-center justify-between py-2.5 text-sm text-ink/80 hover:text-forest transition-colors"
                   >
-                    {breed}
+                    <span>{breed}</span>
+
+                    <ChevronRight
+                      size={15}
+                      className="text-sage"
+                    />
                   </Link>
                 ))}
+
               </div>
+
             </div>
           </div>
+
         </div>
 
-        {/* ─────────────────────────────────────────
-            DIRECT CONTACT
-        ───────────────────────────────────────── */}
+        {/* =======================================================
+            QUICK SEARCH LINK
+        ======================================================= */}
+
+        <Link
+          href="/puppies"
+          onClick={onClose}
+          className="mt-8 flex items-center justify-between font-display text-xl text-forest py-4 border-b border-sage/20"
+        >
+          <span>Browse all puppies</span>
+
+          <ChevronRight size={20} />
+        </Link>
+
+        {/* =======================================================
+            FOOTER-STYLE CONTACT SHORTCUT
+        ======================================================= */}
 
         <Link
           href="/contact"
           onClick={onClose}
-          className="block font-display text-xl text-forest py-5"
+          className="block text-ink/80 mt-8 py-2"
         >
           Contact Us
         </Link>
+
       </div>
     </div>
   );
