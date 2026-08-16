@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import HomeHero from "./components/HomeHero";
+import VerificationBadges from "./components/VerificationBadges";
 import BreedDiscoveryRow from "./components/BreedDiscoveryRow";
 import ContinueBrowsingBanner from "./components/ContinueBrowsingBanner";
 import RecentlyViewedStrip from "./components/RecentlyViewedStrip";
@@ -52,7 +53,15 @@ export default async function Home() {
       <RecentlyViewedStrip />
       <RecommendedPuppies />
       <TrustBanner />
-      <HowItWorksAccordion />
+
+<VerificationBadges
+  badge1={extraImages.verification_badge_1 ?? null}
+  badge2={extraImages.verification_badge_2 ?? null}
+  badge3={extraImages.verification_badge_3 ?? null}
+  badge4={extraImages.verification_badge_4 ?? null}
+/>
+
+<HowItWorksAccordion />
       <VideoStoryCarousel stories={videoStories} />
       <LocationCardsRow cards={locationCards} />
       <FamilyStoriesCarousel reviews={reviews} />
