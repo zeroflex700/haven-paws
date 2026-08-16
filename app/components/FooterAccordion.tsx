@@ -19,8 +19,6 @@ export default function FooterAccordion() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  const sections = buildNavSections(loggedIn);
-
   return (
     <div className="max-w-7xl mx-auto px-6 lg:px-10">
       {sections.map((section) => {
