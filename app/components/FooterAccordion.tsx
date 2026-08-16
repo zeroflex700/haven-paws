@@ -14,9 +14,13 @@ export default function FooterAccordion() {
     supabase.auth.getSession().then(({ data }) => {
       setLoggedIn(!!data.session);
     });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+
+    const {
+      data: listener,
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setLoggedIn(!!session);
     });
+
     return () => listener.subscription.unsubscribe();
   }, []);
 
@@ -26,22 +30,36 @@ export default function FooterAccordion() {
     <div className="max-w-7xl mx-auto px-6 lg:px-10">
       {sections.map((section) => {
         const isOpen = open === section.title;
+
         return (
-          <div key={section.title} className="border-b border-sage/20">
+          <div
+            key={section.title}
+            className="border-b border-sage/20"
+          >
             <button
-              onClick={() => setOpen(isOpen ? null : section.title)}
+              onClick={() =>
+                setOpen(isOpen ? null : section.title)
+              }
               aria-expanded={isOpen}
               className="w-full flex items-center justify-between py-3.5 text-left"
             >
-              <span className="font-display text-base text-forest">{section.title}</span>
+              <span className="font-display text-base text-forest">
+                {section.title}
+              </span>
+
               <ChevronDown
                 size={16}
-                className={`text-sage transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
+                className={`text-sage transition-transform duration-300 ${
+                  isOpen ? "rotate-180" : ""
+                }`}
               />
             </button>
+
             <div
               className="grid transition-[grid-template-rows] duration-300 ease-out"
-              style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
+              style={{
+                gridTemplateRows: isOpen ? "1fr" : "0fr",
+              }}
             >
               <div className="overflow-hidden">
                 <div className="pb-4 space-y-2.5">

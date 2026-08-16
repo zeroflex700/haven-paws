@@ -1,41 +1,68 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import type { NavSection } from "@/lib/navSections";
 
-export default function HeaderNavDropdown({ section }: { section: NavSection }) {
+export default function HeaderNavDropdown({
+  section,
+}: {
+  section: NavSection;
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        ref.current &&
+        !ref.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    document.addEventListener(
+      "mousedown",
+      handleClickOutside
+    );
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
+    };
   }, []);
 
   return (
-    <div className="relative" ref={ref}>
+    <div
+      ref={ref}
+      className="relative"
+    >
       <button
-        onClick={() => setOpen(!open)}
+        type="button"
+        onClick={() => setOpen((current) => !current)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="flex items-center gap-1 text-sm text-ink hover:text-forest transition-colors py-2"
+        className="flex items-center gap-1.5 whitespace-nowrap text-sm text-ink hover:text-forest transition-colors py-2"
       >
-        {section.title}
+        <span>{section.title}</span>
+
         <ChevronDown
-          size={14}
-          className={`text-sage transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          size={13}
+          strokeWidth={1.8}
+          className={`text-sage transition-transform duration-200 ${
+            open ? "rotate-180" : ""
+          }`}
         />
       </button>
 
       {open && (
         <div
           role="menu"
-          className="absolute top-full left-0 mt-2 w-56 bg-white border border-sage/20 rounded-lg shadow-lg py-2 z-50"
+          className="absolute left-0 top-full mt-2 w-60 bg-cream border border-sage/20 rounded-lg shadow-lg py-2 z-[60]"
         >
           {section.links.map((link) => (
             <Link
@@ -43,7 +70,7 @@ export default function HeaderNavDropdown({ section }: { section: NavSection }) 
               href={link.href}
               role="menuitem"
               onClick={() => setOpen(false)}
-              className="block px-4 py-2.5 text-sm text-ink hover:bg-cream-alt hover:text-forest transition-colors"
+              className="block px-4 py-2.5 text-sm text-ink/80 hover:bg-cream-alt hover:text-forest transition-colors"
             >
               {link.label}
             </Link>
