@@ -57,21 +57,31 @@ export default function MobileMenu({
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener(
+      "mousedown",
+      handleClickOutside
+    );
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
     };
   }, []);
 
-  if (!mounted) return null;
+  if (!mounted) {
+    return null;
+  }
 
   function goSearch(term: string) {
     if (term.trim()) {
       addTerm(term.trim());
     }
 
-    router.push(`/puppies?search=${encodeURIComponent(term)}`);
+    router.push(
+      `/puppies?search=${encodeURIComponent(term)}`
+    );
 
     onClose();
   }
@@ -104,10 +114,18 @@ export default function MobileMenu({
           type="button"
           className="active:scale-90 transition-transform"
         >
-          <X size={24} className="text-ink" />
+          <X
+            size={24}
+            className="text-ink"
+          />
         </button>
 
-        <div className="flex items-center gap-2">
+        <Link
+          href="/"
+          onClick={onClose}
+          className="flex items-center gap-2"
+          aria-label="Haven Paws home"
+        >
           <PawPrint
             size={20}
             className="text-gold"
@@ -117,12 +135,13 @@ export default function MobileMenu({
           <span className="font-display text-lg text-forest">
             Haven Paws
           </span>
-        </div>
+        </Link>
 
         <div className="w-6" />
       </div>
 
       <div className="px-5 py-6">
+
         {/* SEARCH */}
         <div
           ref={searchBoxRef}
@@ -139,8 +158,12 @@ export default function MobileMenu({
 
             <input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onFocus={() => setSuggestOpen(true)}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
+              onFocus={() =>
+                setSuggestOpen(true)
+              }
               placeholder="Search by breed or puppy name"
               className="w-full border border-sage/30 rounded-full pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-gold"
             />
@@ -184,7 +207,9 @@ export default function MobileMenu({
 
         {/* BREEDS */}
         <button
-          onClick={() => setBreedsOpen(!breedsOpen)}
+          onClick={() =>
+            setBreedsOpen(!breedsOpen)
+          }
           aria-expanded={breedsOpen}
           type="button"
           className="w-full flex items-center justify-between font-display text-xl text-forest py-3 border-b border-sage/20"
@@ -194,7 +219,9 @@ export default function MobileMenu({
           <ChevronDown
             size={20}
             className={`transition-transform duration-250 ${
-              breedsOpen ? "rotate-180" : ""
+              breedsOpen
+                ? "rotate-180"
+                : ""
             }`}
           />
         </button>
@@ -202,7 +229,9 @@ export default function MobileMenu({
         <div
           className="grid transition-[grid-template-rows] duration-300 ease-out"
           style={{
-            gridTemplateRows: breedsOpen ? "1fr" : "0fr",
+            gridTemplateRows: breedsOpen
+              ? "1fr"
+              : "0fr",
           }}
         >
           <div className="overflow-hidden">
@@ -210,7 +239,9 @@ export default function MobileMenu({
               {BREEDS.map((breed) => (
                 <Link
                   key={breed}
-                  href={`/puppies?breed=${encodeURIComponent(breed)}`}
+                  href={`/puppies?breed=${encodeURIComponent(
+                    breed
+                  )}`}
                   onClick={onClose}
                   className="block text-sm text-ink/80 py-2"
                 >

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { PawPrint, Menu, User } from "lucide-react";
 import MobileMenu from "./MobileMenu";
@@ -28,6 +29,8 @@ export default function Navbar() {
     our_standards: null,
   });
 
+  const pathname = usePathname();
+
   const scrollDirection = useScrollDirection();
   const scrolled = useStickyNavigation();
 
@@ -36,13 +39,17 @@ export default function Navbar() {
       setLoggedIn(!!data.session);
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
+    const {
+      data: listener,
+    } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setLoggedIn(!!session);
       }
     );
 
-    return () => listener.subscription.unsubscribe();
+    return () => {
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -65,6 +72,27 @@ export default function Navbar() {
 
   const navSections = buildNavSections(loggedIn);
 
+  /*
+   * Builds the login URL using the page the visitor
+   * is currently viewing.
+   *
+   * Example:
+   * /puppies/golden-retriever
+   *
+   * becomes:
+   * /account/login?redirectTo=%2Fpuppies%2Fgolden-retriever
+   */
+  function getLoginUrl() {
+    const currentPath =
+      pathname && pathname !== "/account/login"
+        ? pathname
+        : "/";
+
+    return `/account/login?redirectTo=${encodeURIComponent(
+      currentPath
+    )}`;
+  }
+
   return (
     <>
       <header
@@ -86,8 +114,7 @@ export default function Navbar() {
           {/* LEFT SIDE */}
           <div className="flex items-center gap-3">
 
-            {/* MOBILE MENU BUTTON
-                This is ONLY visible on mobile/tablet. */}
+            {/* MOBILE MENU */}
             <button
               onClick={() => setMenuOpen(true)}
               className="md:hidden active:scale-90 transition-transform"
@@ -118,7 +145,7 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* DESKTOP NAVIGATION ONLY */}
+          {/* DESKTOP NAVIGATION */}
           <nav
             className="hidden md:flex items-center gap-5 lg:gap-6 xl:gap-7"
             aria-label="Main navigation"
@@ -147,7 +174,7 @@ export default function Navbar() {
             </button>
           ) : (
             <Link
-              href="/account/login"
+              href={getLoginUrl()}
               aria-label="Account"
               className="w-9 h-9 rounded-full bg-cream-alt border border-sage/30 flex items-center justify-center hover:border-gold active:scale-95 transition-all"
             >
@@ -161,7 +188,7 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* EXISTING MOBILE MENU */}
+      {/* MOBILE MENU */}
       <MobileMenu
         open={menuOpen}
         onClose={() => setMenuOpen(false)}

@@ -13,6 +13,30 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 
+const RETURN_URL_KEY = "haven_paws_login_return_url";
+
+function getSafeRedirect(path: string | null | undefined) {
+  if (!path) {
+    return "/account";
+  }
+
+  // Only allow internal URLs.
+  if (!path.startsWith("/") || path.startsWith("//")) {
+    return "/account";
+  }
+
+  // Never allow the authentication pages themselves as the return page.
+  if (
+    path === "/account/login" ||
+    path.startsWith("/account/login?") ||
+    path === "/auth/callback"
+  ) {
+    return "/account";
+  }
+
+  return path;
+}
+
 export default function CustomerLoginPage() {
   const router = useRouter();
 
@@ -22,34 +46,42 @@ export default function CustomerLoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  // The page the customer should return to after logging in.
   const [redirectTo, setRedirectTo] = useState("/account");
 
   /*
-   * Read redirectTo only in the browser.
+   * Determine where the customer should go after login.
    *
-   * This avoids useSearchParams(), which was causing
-   * the Vercel/Next.js prerendering error.
+   * Priority:
+   *
+   * 1. redirectTo query parameter
+   * 2. previously saved page in sessionStorage
+   * 3. /account
    */
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const requestedRedirect = params.get("redirectTo");
 
-    if (requestedRedirect) {
-      setRedirectTo(getSafeRedirect(requestedRedirect));
+    const queryRedirect = params.get("redirectTo");
+
+    if (queryRedirect) {
+      const safeRedirect = getSafeRedirect(queryRedirect);
+
+      setRedirectTo(safeRedirect);
+
+      sessionStorage.setItem(
+        RETURN_URL_KEY,
+        safeRedirect
+      );
+
+      return;
+    }
+
+    const savedRedirect =
+      sessionStorage.getItem(RETURN_URL_KEY);
+
+    if (savedRedirect) {
+      setRedirectTo(getSafeRedirect(savedRedirect));
     }
   }, []);
-
-  function getSafeRedirect(path: string) {
-    // Only allow internal paths.
-    // Prevents redirects to external websites.
-    if (!path.startsWith("/") || path.startsWith("//")) {
-      return "/account";
-    }
-
-    return path;
-  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -57,10 +89,11 @@ export default function CustomerLoginPage() {
     setLoading(true);
     setError("");
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
     if (error) {
       setLoading(false);
@@ -68,50 +101,80 @@ export default function CustomerLoginPage() {
       return;
     }
 
-    const destination = getSafeRedirect(redirectTo);
+    const destination =
+      getSafeRedirect(redirectTo);
+
+    /*
+     * Remove the saved login destination now that
+     * authentication has succeeded.
+     */
+    sessionStorage.removeItem(RETURN_URL_KEY);
 
     setLoading(false);
 
-    router.push(destination);
+    router.replace(destination);
     router.refresh();
   }
 
-  async function handleOAuth(provider: "google" | "facebook") {
+  async function handleOAuth(
+    provider: "google" | "facebook"
+  ) {
     setError("");
 
-    const destination = getSafeRedirect(redirectTo);
+    const destination =
+      getSafeRedirect(redirectTo);
+
+    /*
+     * Save it again so the destination survives
+     * the external OAuth round-trip.
+     */
+    sessionStorage.setItem(
+      RETURN_URL_KEY,
+      destination
+    );
 
     const callbackUrl = new URL(
       "/auth/callback",
       window.location.origin
     );
 
-    callbackUrl.searchParams.set("next", destination);
+    callbackUrl.searchParams.set(
+      "next",
+      destination
+    );
 
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: callbackUrl.toString(),
-      },
-    });
+    const { error } =
+      await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: callbackUrl.toString(),
+        },
+      });
 
     if (error) {
-      setError("Unable to continue with this login method.");
+      setError(
+        "Unable to continue with this login method."
+      );
     }
   }
 
   return (
     <main className="min-h-screen bg-white text-ink">
+
       {/* HEADER */}
       <header className="border-b border-sage/20 bg-white">
         <div className="max-w-7xl mx-auto h-[76px] px-5 sm:px-6 lg:px-10 flex items-center justify-between">
+
           <div className="flex items-center">
             <button
               type="button"
               aria-label="Menu"
               className="p-2 -ml-2 text-forest hover:text-gold transition-colors md:hidden"
             >
-              <Menu size={24} strokeWidth={1.7} />
+              <Menu
+                size={24}
+                strokeWidth={1.7}
+              />
             </button>
           </div>
 
@@ -134,12 +197,16 @@ export default function CustomerLoginPage() {
 
           {/* RIGHT SIDE */}
           <div className="ml-auto flex items-center gap-3">
+
             <a
               href="tel:"
               aria-label="Call Haven Paws"
               className="hidden sm:flex w-9 h-9 items-center justify-center rounded-full text-forest hover:text-gold transition-colors"
             >
-              <Phone size={20} strokeWidth={1.7} />
+              <Phone
+                size={20}
+                strokeWidth={1.7}
+              />
             </a>
 
             <Link
@@ -147,8 +214,12 @@ export default function CustomerLoginPage() {
               aria-label="Account"
               className="w-9 h-9 rounded-full border border-sage/30 bg-cream-alt flex items-center justify-center text-forest hover:border-gold transition-colors"
             >
-              <User size={17} strokeWidth={1.6} />
+              <User
+                size={17}
+                strokeWidth={1.6}
+              />
             </Link>
+
           </div>
         </div>
       </header>
@@ -172,9 +243,12 @@ export default function CustomerLoginPage() {
 
           {/* SOCIAL LOGIN */}
           <div className="space-y-3">
+
             <button
               type="button"
-              onClick={() => handleOAuth("google")}
+              onClick={() =>
+                handleOAuth("google")
+              }
               className="relative w-full h-14 border border-ink/40 rounded-full flex items-center justify-center text-sm sm:text-base font-medium text-ink hover:border-forest transition-colors"
             >
               <span className="absolute left-1/2 -translate-x-[115px] sm:-translate-x-[140px] w-8 h-8 flex items-center justify-center">
@@ -188,7 +262,9 @@ export default function CustomerLoginPage() {
 
             <button
               type="button"
-              onClick={() => handleOAuth("facebook")}
+              onClick={() =>
+                handleOAuth("facebook")
+              }
               className="relative w-full h-14 border border-ink/40 rounded-full flex items-center justify-center text-sm sm:text-base font-medium text-ink hover:border-forest transition-colors"
             >
               <span className="absolute left-1/2 -translate-x-[115px] sm:-translate-x-[140px] w-8 h-8 rounded-full bg-[#1877F2] text-white flex items-center justify-center">
@@ -199,6 +275,7 @@ export default function CustomerLoginPage() {
 
               Continue with Facebook
             </button>
+
           </div>
 
           {/* DIVIDER */}
@@ -217,7 +294,10 @@ export default function CustomerLoginPage() {
 
             {/* EMAIL */}
             <div className="mb-4">
-              <label htmlFor="email" className="sr-only">
+              <label
+                htmlFor="email"
+                className="sr-only"
+              >
                 Email
               </label>
 
@@ -228,33 +308,47 @@ export default function CustomerLoginPage() {
                 autoComplete="email"
                 placeholder="Email*"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) =>
+                  setEmail(e.target.value)
+                }
                 className="w-full h-14 border border-ink/25 rounded-xl px-5 text-base text-ink placeholder:text-ink/50 bg-white focus:outline-none focus:border-forest focus:ring-1 focus:ring-forest/20 transition-colors"
               />
             </div>
 
             {/* PASSWORD */}
             <div className="mb-4">
-              <label htmlFor="password" className="sr-only">
+              <label
+                htmlFor="password"
+                className="sr-only"
+              >
                 Password
               </label>
 
               <div className="relative">
+
                 <input
                   id="password"
-                  type={showPassword ? "text" : "password"}
+                  type={
+                    showPassword
+                      ? "text"
+                      : "password"
+                  }
                   required
                   autoComplete="current-password"
                   placeholder="Password*"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) =>
+                    setPassword(e.target.value)
+                  }
                   className="w-full h-14 border border-ink/25 rounded-xl pl-5 pr-14 text-base text-ink placeholder:text-ink/50 bg-white focus:outline-none focus:border-forest focus:ring-1 focus:ring-forest/20 transition-colors"
                 />
 
                 <button
                   type="button"
                   onClick={() =>
-                    setShowPassword((current) => !current)
+                    setShowPassword(
+                      (current) => !current
+                    )
                   }
                   aria-label={
                     showPassword
@@ -264,27 +358,39 @@ export default function CustomerLoginPage() {
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-ink/70 hover:text-forest transition-colors"
                 >
                   {showPassword ? (
-                    <EyeOff size={22} strokeWidth={1.7} />
+                    <EyeOff
+                      size={22}
+                      strokeWidth={1.7}
+                    />
                   ) : (
-                    <Eye size={22} strokeWidth={1.7} />
+                    <Eye
+                      size={22}
+                      strokeWidth={1.7}
+                    />
                   )}
                 </button>
+
               </div>
             </div>
 
             {/* REMEMBER / FORGOT */}
             <div className="flex items-center justify-between gap-4 mb-7 text-sm">
+
               <label className="flex items-center gap-3 text-ink/80 cursor-pointer">
+
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) =>
-                    setRememberMe(e.target.checked)
+                    setRememberMe(
+                      e.target.checked
+                    )
                   }
                   className="sr-only peer"
                 />
 
                 <span className="w-5 h-5 rounded-md border border-ink/25 bg-white flex items-center justify-center peer-checked:bg-forest peer-checked:border-forest transition-colors">
+
                   {rememberMe && (
                     <svg
                       viewBox="0 0 20 20"
@@ -300,9 +406,11 @@ export default function CustomerLoginPage() {
                       />
                     </svg>
                   )}
+
                 </span>
 
                 Remember me
+
               </label>
 
               <Link
@@ -311,6 +419,7 @@ export default function CustomerLoginPage() {
               >
                 Forgot password?
               </Link>
+
             </div>
 
             {/* ERROR */}
@@ -329,13 +438,17 @@ export default function CustomerLoginPage() {
               disabled={loading}
               className="w-full h-14 rounded-full bg-ink text-white text-base font-medium hover:bg-forest transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Logging in..." : "Log in"}
+              {loading
+                ? "Logging in..."
+                : "Log in"}
             </button>
+
           </form>
 
           {/* CREATE ACCOUNT */}
           <p className="text-center text-sm sm:text-base text-ink/75 mt-7">
             Don&apos;t have an account?{" "}
+
             <Link
               href="/account/signup"
               className="text-forest font-medium underline underline-offset-2 hover:text-gold transition-colors"
@@ -343,6 +456,7 @@ export default function CustomerLoginPage() {
               Create an account
             </Link>
           </p>
+
         </div>
       </section>
     </main>
