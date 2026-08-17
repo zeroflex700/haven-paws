@@ -1,82 +1,125 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { PawPrint } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 
 export default function AuthCallbackPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const [error, setError] = useState("");
 
   useEffect(() => {
+    let cancelled = false;
+
     async function handleCallback() {
-      const code = searchParams.get("code");
-      const next = searchParams.get("next") || "/account";
+      /*
+       * Supabase restores the OAuth session automatically in the browser.
+       * Wait briefly for the auth state to become available.
+       */
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      // Only allow internal redirects.
-      const safeNext =
-        next.startsWith("/") && !next.startsWith("//")
-          ? next
-          : "/account";
+      if (cancelled) return;
 
-      if (!code) {
-        setError("Unable to complete sign in.");
+      /*
+       * Read the "next" destination directly from the browser URL.
+       *
+       * We deliberately don't use useSearchParams() here because
+       * Next.js requires additional Suspense handling for it during
+       * production prerendering.
+       */
+      const params = new URLSearchParams(window.location.search);
+      const requestedNext = params.get("next");
+
+      const destination = getSafeRedirect(requestedNext);
+
+      if (session) {
+        router.replace(destination);
+        router.refresh();
         return;
       }
 
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      /*
+       * If Supabase hasn't restored the session yet, wait for the
+       * auth event before redirecting.
+       */
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((event, currentSession) => {
+        if (cancelled) return;
 
-      if (error) {
-        console.error("OAuth callback error:", error);
-        setError("Unable to complete sign in. Please try again.");
-        return;
-      }
+        if (
+          currentSession &&
+          (event === "SIGNED_IN" || event === "INITIAL_SESSION")
+        ) {
+          subscription.unsubscribe();
+          router.replace(destination);
+          router.refresh();
+        }
+      });
 
-      router.replace(safeNext);
-      router.refresh();
+      /*
+       * Safety fallback.
+       */
+      const timeout = window.setTimeout(() => {
+        subscription.unsubscribe();
+
+        if (!cancelled) {
+          router.replace("/account/login");
+        }
+      }, 10000);
+
+      return () => {
+        window.clearTimeout(timeout);
+        subscription.unsubscribe();
+      };
     }
 
     handleCallback();
-  }, [router, searchParams]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   return (
     <main className="min-h-screen bg-white flex items-center justify-center px-6">
-      <div className="flex flex-col items-center text-center">
-        <div className="flex items-center gap-2 mb-4">
-          <PawPrint
-            size={22}
-            className="text-gold"
-            strokeWidth={1.5}
-          />
+      <div className="flex items-center gap-2 text-forest">
+        <PawPrint
+          size={22}
+          className="text-gold"
+          strokeWidth={1.5}
+        />
 
-          <span className="font-display text-xl text-forest">
-            Haven Paws
-          </span>
-        </div>
-
-        {error ? (
-          <>
-            <p className="text-sm text-red-600 mb-5">
-              {error}
-            </p>
-
-            <button
-              type="button"
-              onClick={() => router.replace("/account/login")}
-              className="rounded-full bg-forest text-cream px-6 py-3 text-sm font-medium hover:bg-forest-light transition-colors"
-            >
-              Return to login
-            </button>
-          </>
-        ) : (
-          <p className="text-sm text-ink/60">
-            Signing you in...
-          </p>
-        )}
+        <span className="font-display text-lg">
+          Haven Paws
+        </span>
       </div>
     </main>
   );
+}
+
+function getSafeRedirect(path: string | null) {
+  /*
+   * No destination supplied.
+   */
+  if (!path) {
+    return "/account";
+  }
+
+  /*
+   * Only permit internal paths.
+   *
+   * This prevents someone from manipulating:
+   *
+   * /auth/callback?next=https://malicious-site.com
+   *
+   * into an external redirect.
+   */
+  if (!path.startsWith("/") || path.startsWith("//")) {
+    return "/account";
+  }
+
+  return path;
 }
