@@ -663,7 +663,7 @@ export default function PuppiesClient({
                 </p>
 
                 <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-sage">
-                  We couldn't find puppies
+                  We couldn&apos;t find puppies
                   matching your current
                   search. Try broadening your
                   preferences or removing a
