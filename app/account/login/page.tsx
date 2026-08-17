@@ -1,8 +1,8 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   PawPrint,
   Menu,
@@ -13,11 +13,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 
-function LoginPageContent() {
+export default function CustomerLoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const redirectTo = searchParams.get("redirectTo") || "/account";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,6 +22,24 @@ function LoginPageContent() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // The page the customer should return to after logging in.
+  const [redirectTo, setRedirectTo] = useState("/account");
+
+  /*
+   * Read redirectTo only in the browser.
+   *
+   * This avoids useSearchParams(), which was causing
+   * the Vercel/Next.js prerendering error.
+   */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const requestedRedirect = params.get("redirectTo");
+
+    if (requestedRedirect) {
+      setRedirectTo(getSafeRedirect(requestedRedirect));
+    }
+  }, []);
 
   function getSafeRedirect(path: string) {
     // Only allow internal paths.
@@ -47,14 +62,15 @@ function LoginPageContent() {
       password,
     });
 
-    setLoading(false);
-
     if (error) {
+      setLoading(false);
       setError("Incorrect email or password.");
       return;
     }
 
     const destination = getSafeRedirect(redirectTo);
+
+    setLoading(false);
 
     router.push(destination);
     router.refresh();
@@ -330,33 +346,5 @@ function LoginPageContent() {
         </div>
       </section>
     </main>
-  );
-}
-
-/*
- * IMPORTANT:
- * The component that calls useSearchParams()
- * is now INSIDE this Suspense boundary.
- */
-export default function CustomerLoginPage() {
-  return (
-    <Suspense
-      fallback={
-        <main className="min-h-screen bg-white flex items-center justify-center">
-          <div className="flex items-center gap-2 text-forest">
-            <PawPrint
-              size={22}
-              className="text-gold"
-              strokeWidth={1.5}
-            />
-            <span className="font-display text-lg">
-              Haven Paws
-            </span>
-          </div>
-        </main>
-      }
-    >
-      <LoginPageContent />
-    </Suspense>
   );
 }
