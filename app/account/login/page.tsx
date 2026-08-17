@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 
-export default function CustomerLoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -27,11 +27,8 @@ export default function CustomerLoginPage() {
   const [loading, setLoading] = useState(false);
 
   function getSafeRedirect(path: string) {
-    /*
-     * Only allow internal redirects.
-     * This prevents someone from putting an external URL into
-     * redirectTo and using your login page as an open redirect.
-     */
+    // Only allow internal paths.
+    // Prevents redirects to external websites.
     if (!path.startsWith("/") || path.startsWith("//")) {
       return "/account";
     }
@@ -68,12 +65,6 @@ export default function CustomerLoginPage() {
 
     const destination = getSafeRedirect(redirectTo);
 
-    /*
-     * Send the destination through the OAuth callback.
-     *
-     * The callback should then send the user to this destination
-     * after Google/Facebook authentication succeeds.
-     */
     const callbackUrl = new URL(
       "/auth/callback",
       window.location.origin
@@ -108,6 +99,7 @@ export default function CustomerLoginPage() {
             </button>
           </div>
 
+          {/* LOGO */}
           <Link
             href="/"
             aria-label="Haven Paws home"
@@ -124,6 +116,7 @@ export default function CustomerLoginPage() {
             </span>
           </Link>
 
+          {/* RIGHT SIDE */}
           <div className="ml-auto flex items-center gap-3">
             <a
               href="tel:"
@@ -144,9 +137,11 @@ export default function CustomerLoginPage() {
         </div>
       </header>
 
-      {/* LOGIN */}
+      {/* LOGIN CONTENT */}
       <section className="px-5 sm:px-6 py-10 sm:py-14">
         <div className="w-full max-w-[590px] mx-auto">
+
+          {/* TITLE */}
           <div className="flex items-center justify-center gap-2 mb-8">
             <PawPrint
               size={24}
@@ -159,7 +154,7 @@ export default function CustomerLoginPage() {
             </h1>
           </div>
 
-          {/* GOOGLE */}
+          {/* SOCIAL LOGIN */}
           <div className="space-y-3">
             <button
               type="button"
@@ -175,7 +170,6 @@ export default function CustomerLoginPage() {
               Continue with Google
             </button>
 
-            {/* FACEBOOK */}
             <button
               type="button"
               onClick={() => handleOAuth("facebook")}
@@ -202,7 +196,9 @@ export default function CustomerLoginPage() {
             <div className="flex-1 h-px bg-sage/25" />
           </div>
 
+          {/* FORM */}
           <form onSubmit={handleLogin}>
+
             {/* EMAIL */}
             <div className="mb-4">
               <label htmlFor="email" className="sr-only">
@@ -311,7 +307,7 @@ export default function CustomerLoginPage() {
               </p>
             )}
 
-            {/* LOGIN */}
+            {/* LOGIN BUTTON */}
             <button
               type="submit"
               disabled={loading}
@@ -321,7 +317,7 @@ export default function CustomerLoginPage() {
             </button>
           </form>
 
-          {/* SIGN UP */}
+          {/* CREATE ACCOUNT */}
           <p className="text-center text-sm sm:text-base text-ink/75 mt-7">
             Don&apos;t have an account?{" "}
             <Link
@@ -334,5 +330,33 @@ export default function CustomerLoginPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+/*
+ * IMPORTANT:
+ * The component that calls useSearchParams()
+ * is now INSIDE this Suspense boundary.
+ */
+export default function CustomerLoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-white flex items-center justify-center">
+          <div className="flex items-center gap-2 text-forest">
+            <PawPrint
+              size={22}
+              className="text-gold"
+              strokeWidth={1.5}
+            />
+            <span className="font-display text-lg">
+              Haven Paws
+            </span>
+          </div>
+        </main>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   );
 }
