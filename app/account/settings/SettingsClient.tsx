@@ -18,7 +18,6 @@ import {
   User,
   X,
   Camera,
-  Settings2,
 } from "lucide-react";
 
 import { supabase } from "@/lib/supabase/client";
@@ -73,7 +72,7 @@ const notificationItems = [
   {
     key: "favoritesUpdates" as const,
     label: "Favorites Updates",
-    description: "Get notified when puppies you've saved have important status changes.",
+    description: "Get notified when puppies you&apos;ve saved have important status changes.",
     icon: Heart,
   },
   {
@@ -229,7 +228,7 @@ export default function SettingsClient() {
     } catch {
       showToast(
         "error",
-        "We couldn't update your profile photo. Please try again."
+        "We couldn&apos;t update your profile photo. Please try again."
       );
     } finally {
       setUploadingAvatar(false);
@@ -252,7 +251,7 @@ export default function SettingsClient() {
     } catch {
       showToast(
         "error",
-        "We couldn't save your account details."
+        "We couldn&apos;t save your account details."
       );
     } finally {
       setSavingProfile(false);
@@ -270,7 +269,7 @@ export default function SettingsClient() {
     } catch {
       showToast(
         "error",
-        "We couldn't save your notification preferences."
+        "We couldn&apos;t save your notification preferences."
       );
     } finally {
       setSavingPrefs(false);
@@ -287,7 +286,7 @@ export default function SettingsClient() {
       router.push("/");
       router.refresh();
     } catch {
-      showToast("error", "We couldn't sign you out. Please try again.");
+      showToast("error", "We couldn&apos;t sign you out. Please try again.");
       setSigningOut(false);
     }
   }
@@ -964,7 +963,7 @@ function NotificationsSection({
               </h2>
 
               <p className="text-sm text-sage mt-0.5">
-                Tell us what you're looking for.
+                Tell us what you&apos;re looking for.
               </p>
             </div>
           </div>
@@ -1285,7 +1284,7 @@ function SecuritySection({
 
           <SecurityRow
             title="Private profile"
-            description="Your personal account information isn't displayed publicly."
+            description="Your personal account information isn&apos;t displayed publicly."
             status="Protected"
           />
         </div>
