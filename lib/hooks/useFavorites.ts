@@ -1,55 +1,200 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useCloudSync } from "./useCloudSync";
 
-type FavoriteEntry = { id: string; addedAt: number };
+type FavoriteEntry = {
+  id: string;
+  addedAt: number;
+};
 
 const KEY = "havenpaws_favorites";
 
 function readLocal(): FavoriteEntry[] {
-  if (typeof window === "undefined") return [];
+  if (typeof window === "undefined") {
+    return [];
+  }
+
   try {
     const raw = localStorage.getItem(KEY);
-    return raw ? JSON.parse(raw) : [];
+
+    if (!raw) {
+      return [];
+    }
+
+    const parsed = JSON.parse(raw);
+
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed.filter(
+      (item): item is FavoriteEntry =>
+        typeof item?.id === "string" &&
+        typeof item?.addedAt === "number"
+    );
   } catch {
     return [];
   }
 }
 
 function writeLocal(items: FavoriteEntry[]) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
   try {
-    localStorage.setItem(KEY, JSON.stringify(items));
+    localStorage.setItem(
+      KEY,
+      JSON.stringify(items)
+    );
   } catch {
-    // ignore
+    // Ignore localStorage errors.
   }
 }
 
 export function useFavorites() {
-  const [ids, setIds] = useState<Set<string>>(new Set());
-  const cloud = useCloudSync<FavoriteEntry[]>("favorites", { read: readLocal, write: writeLocal });
+  const [ids, setIds] = useState<Set<string>>(
+    new Set()
+  );
 
+  const cloud = useCloudSync<FavoriteEntry[]>(
+    "favorites",
+    {
+      read: readLocal,
+      write: writeLocal,
+    }
+  );
+
+  const {
+    load,
+    save,
+    isLoggedIn,
+    authReady,
+  } = cloud;
+
+  /*
+   * Load favorites exactly when the authentication state
+   * becomes known.
+   *
+   * We deliberately don't load anything before authReady.
+   * This prevents:
+   *
+   * local favorites
+   *       ↓
+   * cloud favorites
+   *
+   * from causing the Favorites page to visibly jump.
+   */
   useEffect(() => {
-    cloud.load().then((data) => {
-      if (data) setIds(new Set(data.map((f) => f.id)));
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cloud.isLoggedIn]);
+    let cancelled = false;
 
+    if (!authReady) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    async function loadFavorites() {
+      const data = await load();
+
+      if (cancelled) return;
+
+      if (Array.isArray(data)) {
+        setIds(
+          new Set(
+            data
+              .filter(
+                (favorite) =>
+                  favorite &&
+                  typeof favorite.id === "string"
+              )
+              .map(
+                (favorite) => favorite.id
+              )
+          )
+        );
+      } else {
+        setIds(new Set());
+      }
+    }
+
+    loadFavorites();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authReady, isLoggedIn, load]);
+
+  /*
+   * Toggle a favorite.
+   */
   const toggle = useCallback(
     (puppyId: string) => {
       const current = readLocal();
-      const exists = current.some((f) => f.id === puppyId);
+
+      const exists = current.some(
+        (favorite) =>
+          favorite.id === puppyId
+      );
+
       const updated = exists
-        ? current.filter((f) => f.id !== puppyId)
-        : [...current, { id: puppyId, addedAt: Date.now() }];
-      cloud.save(updated);
-      setIds(new Set(updated.map((f) => f.id)));
+        ? current.filter(
+            (favorite) =>
+              favorite.id !== puppyId
+          )
+        : [
+            ...current,
+            {
+              id: puppyId,
+              addedAt: Date.now(),
+            },
+          ];
+
+      /*
+       * Update the UI immediately.
+       */
+      setIds(
+        new Set(
+          updated.map(
+            (favorite) => favorite.id
+          )
+        )
+      );
+
+      /*
+       * Save locally and to cloud.
+       */
+      save(updated);
     },
-    [cloud]
+    [save]
   );
 
-  const isFavorite = useCallback((puppyId: string) => ids.has(puppyId), [ids]);
+  const isFavorite = useCallback(
+    (puppyId: string) =>
+      ids.has(puppyId),
+    [ids]
+  );
 
-  return { favoriteIds: Array.from(ids), isFavorite, toggle };
+  /*
+   * Keep the returned array stable when the actual
+   * favorite IDs haven't changed.
+   */
+  const favoriteIds = useMemo(
+    () => Array.from(ids),
+    [ids]
+  );
+
+  return {
+    favoriteIds,
+    isFavorite,
+    toggle,
+    loading: !authReady,
+    isLoggedIn,
+  };
 }
