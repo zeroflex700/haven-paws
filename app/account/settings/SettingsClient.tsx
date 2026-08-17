@@ -1585,7 +1585,7 @@ function SecuritySection({
 
           <SecurityRow
             title="Private profile"
-            description="Your personal account information isn't displayed publicly."
+            description="Your personal account information isn&apos;t displayed publicly."
             status="Protected"
           />
 
