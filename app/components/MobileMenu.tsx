@@ -157,12 +157,6 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* MOBILE MENU — EXISTING MOBILE EXPERIENCE, UNCHANGED */}
-      <MobileMenu
-        open={menuOpen}
-        onClose={() => setMenuOpen(false)}
-      />
-
       {/* ACCOUNT PANEL */}
       <AccountPanel
         open={accountOpen}
