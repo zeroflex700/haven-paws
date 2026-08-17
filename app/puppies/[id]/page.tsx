@@ -1,4 +1,3 @@
-:::writing{variant="document" id="58321" title="Redesigned Puppy Detail Page"}
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
@@ -774,4 +773,3 @@ function MiniFact({
     </div>
   );
 }
-:::
