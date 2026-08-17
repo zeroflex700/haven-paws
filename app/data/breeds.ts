@@ -1,4 +1,8 @@
 export const BREEDS = [
+  // ============================================================
+  // EXISTING WEBSITE BREEDS
+  // ============================================================
+
   "Akita",
   "American Corgi",
   "American Shepadoodle",
@@ -78,4 +82,106 @@ export const BREEDS = [
   "Whoodle",
   "Yorkiepoo",
   "Yorkshire Terrier",
+
+  // ============================================================
+  // LEVEL 5 — VERY POPULAR BREEDS
+  // ============================================================
+
+  "Beagle",
+  "German Shorthaired Pointer",
+  "Border Collie",
+  "Cane Corso",
+  "Bernese Mountain Dog",
+  "Basset Hound",
+  "Weimaraner",
+  "Vizsla",
+  "Samoyed",
+  "Newfoundland",
+  "Whippet",
+  "Shetland Sheepdog",
+  "Alaskan Malamute",
+  "American Staffordshire Terrier",
+  "Staffordshire Bull Terrier",
+  "Bullmastiff",
+  "Great Pyrenees",
+
+  // ============================================================
+  // LEVEL 4 — VERY POPULAR BREEDS
+  // ============================================================
+
+  "American Bulldog",
+  "American Bully",
+  "Alaskan Husky",
+  "Alaskan Klee Kai",
+  "Australian Cattle Dog",
+  "Australian Kelpie",
+  "Basenji",
+  "Belgian Malinois",
+  "Bloodhound",
+  "Boerboel",
+  "Brittany",
+  "Brussels Griffon",
+  "Cairn Terrier",
+  "Cardigan Welsh Corgi",
+  "Chesapeake Bay Retriever",
+  "Chinese Shar-Pei",
+  "Collie",
+  "Dalmatian",
+  "English Cocker Spaniel",
+  "English Springer Spaniel",
+  "English Setter",
+  "Flat-Coated Retriever",
+  "German Wirehaired Pointer",
+  "Giant Schnauzer",
+  "Gordon Setter",
+  "Greyhound",
+  "Italian Greyhound",
+  "Japanese Spitz",
+  "Leonberger",
+  "Lhasa Apso",
+  "Miniature American Shepherd",
+  "Miniature Australian Shepherd",
+  "Miniature Poodle",
+  "Miniature Bull Terrier",
+  "Norwegian Elkhound",
+  "Nova Scotia Duck Tolling Retriever",
+  "Parson Russell Terrier",
+  "Portuguese Water Dog",
+  "Rat Terrier",
+  "Redbone Coonhound",
+  "Saluki",
+  "Scottish Terrier",
+  "Standard Schnauzer",
+  "Tibetan Mastiff",
+  "Tibetan Terrier",
+  "Treeing Walker Coonhound",
+  "Welsh Springer Spaniel",
+  "Welsh Terrier",
+  "Wire Fox Terrier",
+  "Wirehaired Pointing Griffon",
+  "Xoloitzcuintli",
+
+  // ============================================================
+  // LEVEL 5 — POPULAR DOODLE / DESIGNER CROSSES
+  // ============================================================
+
+  "Bernedoodle",
+
+  // ============================================================
+  // LEVEL 4 — POPULAR DOODLE / DESIGNER CROSSES
+  // ============================================================
+
+  "Australian Labradoodle",
+  "Schnoodle",
+  "Shihpoo",
+  "Yorkipoo",
+  "Cavapoochon",
+  "Corgipoo",
+  "Newfypoo",
+  "Double Doodle",
+  "Gerberian Shepsky",
+  "Golden Mountain Doodle",
+  "Pyredoodle",
+  "Shorkie",
+  "Springerdoodle",
 ] as const;
