@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   PawPrint,
   Menu,
@@ -15,6 +15,9 @@ import { supabase } from "@/lib/supabase/client";
 
 export default function CustomerLoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const redirectTo = searchParams.get("redirectTo") || "/account";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,6 +25,19 @@ export default function CustomerLoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  function getSafeRedirect(path: string) {
+    /*
+     * Only allow internal redirects.
+     * This prevents someone from putting an external URL into
+     * redirectTo and using your login page as an open redirect.
+     */
+    if (!path.startsWith("/") || path.startsWith("//")) {
+      return "/account";
+    }
+
+    return path;
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -41,19 +57,40 @@ export default function CustomerLoginPage() {
       return;
     }
 
-    router.push("/account");
+    const destination = getSafeRedirect(redirectTo);
+
+    router.push(destination);
     router.refresh();
   }
 
   async function handleOAuth(provider: "google" | "facebook") {
     setError("");
 
-    await supabase.auth.signInWithOAuth({
+    const destination = getSafeRedirect(redirectTo);
+
+    /*
+     * Send the destination through the OAuth callback.
+     *
+     * The callback should then send the user to this destination
+     * after Google/Facebook authentication succeeds.
+     */
+    const callbackUrl = new URL(
+      "/auth/callback",
+      window.location.origin
+    );
+
+    callbackUrl.searchParams.set("next", destination);
+
+    const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/account`,
+        redirectTo: callbackUrl.toString(),
       },
     });
+
+    if (error) {
+      setError("Unable to continue with this login method.");
+    }
   }
 
   return (
@@ -61,7 +98,6 @@ export default function CustomerLoginPage() {
       {/* HEADER */}
       <header className="border-b border-sage/20 bg-white">
         <div className="max-w-7xl mx-auto h-[76px] px-5 sm:px-6 lg:px-10 flex items-center justify-between">
-          {/* LEFT */}
           <div className="flex items-center">
             <button
               type="button"
@@ -72,7 +108,6 @@ export default function CustomerLoginPage() {
             </button>
           </div>
 
-          {/* LOGO */}
           <Link
             href="/"
             aria-label="Haven Paws home"
@@ -89,7 +124,6 @@ export default function CustomerLoginPage() {
             </span>
           </Link>
 
-          {/* RIGHT */}
           <div className="ml-auto flex items-center gap-3">
             <a
               href="tel:"
@@ -110,10 +144,9 @@ export default function CustomerLoginPage() {
         </div>
       </header>
 
-      {/* LOGIN CONTENT */}
+      {/* LOGIN */}
       <section className="px-5 sm:px-6 py-10 sm:py-14">
         <div className="w-full max-w-[590px] mx-auto">
-          {/* TITLE */}
           <div className="flex items-center justify-center gap-2 mb-8">
             <PawPrint
               size={24}
@@ -126,7 +159,7 @@ export default function CustomerLoginPage() {
             </h1>
           </div>
 
-          {/* SOCIAL LOGIN */}
+          {/* GOOGLE */}
           <div className="space-y-3">
             <button
               type="button"
@@ -142,6 +175,7 @@ export default function CustomerLoginPage() {
               Continue with Google
             </button>
 
+            {/* FACEBOOK */}
             <button
               type="button"
               onClick={() => handleOAuth("facebook")}
@@ -168,7 +202,6 @@ export default function CustomerLoginPage() {
             <div className="flex-1 h-px bg-sage/25" />
           </div>
 
-          {/* FORM */}
           <form onSubmit={handleLogin}>
             {/* EMAIL */}
             <div className="mb-4">
@@ -208,7 +241,9 @@ export default function CustomerLoginPage() {
 
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() =>
+                    setShowPassword((current) => !current)
+                  }
                   aria-label={
                     showPassword
                       ? "Hide password"
@@ -231,7 +266,9 @@ export default function CustomerLoginPage() {
                 <input
                   type="checkbox"
                   checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
+                  onChange={(e) =>
+                    setRememberMe(e.target.checked)
+                  }
                   className="sr-only peer"
                 />
 
@@ -274,7 +311,7 @@ export default function CustomerLoginPage() {
               </p>
             )}
 
-            {/* LOGIN BUTTON */}
+            {/* LOGIN */}
             <button
               type="submit"
               disabled={loading}
@@ -284,7 +321,7 @@ export default function CustomerLoginPage() {
             </button>
           </form>
 
-          {/* CREATE ACCOUNT */}
+          {/* SIGN UP */}
           <p className="text-center text-sm sm:text-base text-ink/75 mt-7">
             Don&apos;t have an account?{" "}
             <Link
