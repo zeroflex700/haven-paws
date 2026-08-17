@@ -8,31 +8,66 @@ export type NavSection = {
   links: NavLink[];
 };
 
-export function buildNavSections(loggedIn: boolean): NavSection[] {
+export function buildNavSections(
+  loggedIn: boolean
+): NavSection[] {
   return [
     {
       title: "Explore",
       links: [
-        { label: "Browse All Puppies", href: "/puppies" },
-        { label: "Explore Available Breeds", href: "/breeds" },
-        { label: "Explore by Lifestyle", href: "/lifestyle" },
+        {
+          label: "Browse All Puppies",
+          href: "/puppies",
+        },
+        {
+          label: "Explore Available Breeds",
+          href: "/breeds",
+        },
+        {
+          label: "Explore by Lifestyle",
+          href: "/lifestyle",
+        },
       ],
     },
+
     {
       title: "For Puppy Parents",
       links: [
         {
-          label: loggedIn ? "My Account" : "Log In or Sign Up",
-          href: loggedIn ? "/account" : "/account/login",
+          label: loggedIn
+            ? "My Account"
+            : "Log In or Sign Up",
+          href: loggedIn
+            ? "/account"
+            : "/account/login",
         },
-        { label: "Breed Guides", href: "/breed-guides" },
-        { label: "Puppy Training Program", href: "/puppy-training" },
-        { label: "AKC Registration", href: "/akc-registration" },
-        { label: "AKC Benefits", href: "/akc-benefits" },
-        { label: "Fetch Insurance", href: "/fetch-insurance" },
-        { label: "Haven Paws Reviews", href: "/reviews" },
+        {
+          label: "Breed Guides",
+          href: "/breed-guides",
+        },
+        {
+          label: "Puppy Training Program",
+          href: "/puppy-training",
+        },
+        {
+          label: "AKC Registration",
+          href: "/akc-registration",
+        },
+        {
+          label: "AKC Benefits",
+          href: "/akc-benefits",
+        },
+        {
+          label: "Fetch Insurance",
+          href: "/fetch-insurance",
+        },
+        {
+          label: "Haven Paws Reviews",
+          href: "/reviews",
+        },
       ],
     },
+
     {
       title: "For Breeders",
       links: [
@@ -46,23 +81,52 @@ export function buildNavSections(loggedIn: boolean): NavSection[] {
         },
       ],
     },
+
     {
       title: "Support",
       links: [
-        { label: "Contact Us", href: "/contact" },
-        { label: "Help Center", href: "/help-center" },
-        { label: "FAQs", href: "/faqs" },
-        { label: "Terms & Conditions", href: "/terms" },
+        {
+          label: "Contact Us",
+          href: "/contact",
+        },
+        {
+          label: "Help Center",
+          href: "/help-center",
+        },
+        {
+          label: "FAQs",
+          href: "/faqs",
+        },
+        {
+          label: "Terms & Conditions",
+          href: "/terms",
+        },
       ],
     },
+
     {
       title: "About Haven Paws",
       links: [
-        { label: "How It Works", href: "/how-it-works" },
-        { label: "About Us", href: "/about" },
-        { label: "Our Promise", href: "/our-promise" },
-        { label: "Our Delivery Programs", href: "/delivery" },
-        { label: "Reviews", href: "/reviews" },
+        {
+          label: "How It Works",
+          href: "/how-it-works",
+        },
+        {
+          label: "About Us",
+          href: "/about",
+        },
+        {
+          label: "Our Promise",
+          href: "/our-promise",
+        },
+        {
+          label: "Our Delivery Programs",
+          href: "/delivery",
+        },
+        {
+          label: "Reviews",
+          href: "/reviews",
+        },
       ],
     },
   ];

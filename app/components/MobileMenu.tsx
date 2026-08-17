@@ -1,168 +1,256 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { PawPrint, Menu, User } from "lucide-react";
-import MobileMenu from "./MobileMenu";
-import AccountPanel from "./AccountPanel";
-import HeaderNavDropdown from "./HeaderNavDropdown";
-import { supabase } from "@/lib/supabase/client";
-import { useScrollDirection } from "@/lib/hooks/useScrollDirection";
-import { useStickyNavigation } from "@/lib/hooks/useStickyNavigation";
-import { buildNavSections } from "@/lib/navSections";
+import { useRouter, usePathname } from "next/navigation";
+import {
+  X,
+  Search,
+  ChevronRight,
+  ChevronDown,
+  PawPrint,
+} from "lucide-react";
 
-type Thumbnails = {
-  how_it_works: string | null;
-  learning_center: string | null;
-  our_standards: string | null;
-};
+import { BREEDS } from "../data/breeds";
+import { useBodyScrollLock } from "@/lib/hooks/useBodyScrollLock";
+import { useDismissableOverlay } from "@/lib/hooks/useDismissableOverlay";
+import { useMountedTransition } from "@/lib/hooks/useMountedTransition";
+import { useSearchHistory } from "@/lib/hooks/useSearchHistory";
+import SearchSuggestionsDropdown from "./SearchSuggestionsDropdown";
 
-export default function Navbar() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
-  const [loggedIn, setLoggedIn] = useState(false);
+export default function MobileMenu({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
 
-  const [thumbnails, setThumbnails] = useState<Thumbnails>({
-    how_it_works: null,
-    learning_center: null,
-    our_standards: null,
-  });
+  const [search, setSearch] = useState("");
+  const [breedsOpen, setBreedsOpen] = useState(false);
+  const [suggestOpen, setSuggestOpen] = useState(false);
 
-  const scrollDirection = useScrollDirection();
-  const scrolled = useStickyNavigation();
+  const { terms, addTerm, clearHistory } = useSearchHistory();
+
+  const searchBoxRef = useRef<HTMLDivElement>(null);
+
+  const { mounted, entered } = useMountedTransition(open);
+  const panelRef = useDismissableOverlay(open, onClose);
+
+  useBodyScrollLock(open);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setLoggedIn(!!data.session);
-    });
+    onClose();
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setLoggedIn(!!session);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        searchBoxRef.current &&
+        !searchBoxRef.current.contains(e.target as Node)
+      ) {
+        setSuggestOpen(false);
       }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  if (!mounted) return null;
+
+  function goSearch(term: string) {
+    if (term.trim()) {
+      addTerm(term.trim());
+    }
+
+    router.push(
+      `/puppies?search=${encodeURIComponent(term)}`
     );
 
-    return () => listener.subscription.unsubscribe();
-  }, []);
+    onClose();
+  }
 
-  useEffect(() => {
-    supabase
-      .from("page_content")
-      .select("extra_images")
-      .eq("slug", "account-menu")
-      .single()
-      .then(({ data }) => {
-        const images =
-          (data?.extra_images as Record<string, string>) ?? {};
-
-        setThumbnails({
-          how_it_works: images.how_it_works ?? null,
-          learning_center: images.learning_center ?? null,
-          our_standards: images.our_standards ?? null,
-        });
-      });
-  }, []);
-
-  const navSections = buildNavSections(loggedIn);
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    goSearch(search);
+  }
 
   return (
-    <>
-      <header
-        className={`sticky top-0 z-50 backdrop-blur border-b transition-all duration-300 ${
-          scrolled
-            ? "bg-cream/95 border-sage/20 shadow-sm"
-            : "bg-cream/80 border-transparent"
-        } ${
-          scrollDirection === "down"
-            ? "-translate-y-full"
-            : "translate-y-0"
-        }`}
-        style={{
-          paddingTop: "env(safe-area-inset-top, 0px)",
-        }}
-      >
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-10 py-3">
+    <div
+      ref={panelRef}
+      tabIndex={-1}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Site menu"
+      className={`fixed inset-0 z-[60] bg-cream overflow-y-auto outline-none transition-opacity duration-250 ease-out ${
+        entered ? "opacity-100" : "opacity-0"
+      }`}
+      style={{
+        paddingTop: "env(safe-area-inset-top, 0px)",
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
+      }}
+    >
+      {/* MOBILE HEADER */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-sage/20">
+        <button
+          onClick={onClose}
+          aria-label="Close menu"
+          type="button"
+          className="active:scale-90 transition-transform"
+        >
+          <X
+            size={24}
+            className="text-ink"
+          />
+        </button>
 
-          {/* LEFT: Mobile menu + logo */}
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <PawPrint
+            size={20}
+            className="text-gold"
+            strokeWidth={1.5}
+          />
 
-            {/* MOBILE ONLY */}
-            <button
-              onClick={() => setMenuOpen(true)}
-              className="lg:hidden active:scale-90 transition-transform"
-              aria-label="Open menu"
-            >
-              <Menu
-                size={22}
-                className="text-forest"
-              />
-            </button>
+          <span className="font-display text-lg text-forest">
+            Haven Paws
+          </span>
+        </div>
 
-            {/* LOGO */}
-            <Link
-              href="/"
-              className="flex items-center gap-2"
-            >
-              <PawPrint
-                size={19}
-                className="text-gold"
-                strokeWidth={1.5}
-              />
+        <div className="w-6" />
+      </div>
 
-              <span className="font-display text-lg text-forest tracking-tight">
-                Haven Paws
-              </span>
-            </Link>
-          </div>
+      <div className="px-5 py-6">
 
-          {/* DESKTOP ONLY */}
-          <nav
-            className="hidden lg:flex items-center gap-5 xl:gap-7"
-            aria-label="Main navigation"
+        {/* SEARCH */}
+        <div
+          ref={searchBoxRef}
+          className="relative mb-8"
+        >
+          <form
+            onSubmit={handleSearch}
+            className="relative"
           >
-            {navSections.map((section) => (
-              <HeaderNavDropdown
-                key={section.title}
-                section={section}
-              />
-            ))}
-          </nav>
+            <Search
+              size={18}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-sage"
+            />
 
-          {/* ACCOUNT */}
-          {loggedIn ? (
-            <button
-              onClick={() => setAccountOpen(true)}
-              aria-label="Account"
-              className="w-9 h-9 rounded-full bg-cream-alt border border-sage/30 flex items-center justify-center hover:border-gold active:scale-95 transition-all"
-            >
-              <User
-                size={16}
-                className="text-forest"
-                strokeWidth={1.5}
-              />
-            </button>
-          ) : (
-            <Link
-              href="/account/login"
-              aria-label="Account"
-              className="w-9 h-9 rounded-full bg-cream-alt border border-sage/30 flex items-center justify-center hover:border-gold active:scale-95 transition-all"
-            >
-              <User
-                size={16}
-                className="text-forest"
-                strokeWidth={1.5}
-              />
-            </Link>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onFocus={() => setSuggestOpen(true)}
+              placeholder="Search by breed or puppy name"
+              className="w-full border border-sage/30 rounded-full pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-gold"
+            />
+          </form>
+
+          {suggestOpen && (
+            <SearchSuggestionsDropdown
+              query={search}
+              history={terms}
+              onSelect={(term) => {
+                setSuggestOpen(false);
+                goSearch(term);
+              }}
+              onClearHistory={clearHistory}
+            />
           )}
         </div>
-      </header>
 
-      {/* ACCOUNT PANEL */}
-      <AccountPanel
-        open={accountOpen}
-        onClose={() => setAccountOpen(false)}
-        thumbnails={thumbnails}
-      />
-    </>
+        {/* BROWSE */}
+        <p className="eyebrow mb-3">
+          Browse available puppies by
+        </p>
+
+        <Link
+          href="/puppies"
+          onClick={onClose}
+          className="block font-display text-xl text-forest py-3 border-b border-sage/20"
+        >
+          Browse all puppies
+        </Link>
+
+        {/* BREEDS */}
+        <button
+          onClick={() => setBreedsOpen(!breedsOpen)}
+          aria-expanded={breedsOpen}
+          type="button"
+          className="w-full flex items-center justify-between font-display text-xl text-forest py-3 border-b border-sage/20"
+        >
+          Breed
+
+          <ChevronDown
+            size={20}
+            className={`transition-transform duration-250 ${
+              breedsOpen ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+
+        <div
+          className="grid transition-[grid-template-rows] duration-300 ease-out"
+          style={{
+            gridTemplateRows: breedsOpen ? "1fr" : "0fr",
+          }}
+        >
+          <div className="overflow-hidden">
+            <div className="max-h-64 overflow-y-auto py-2 border-b border-sage/20">
+              {BREEDS.map((breed) => (
+                <Link
+                  key={breed}
+                  href={`/puppies?breed=${encodeURIComponent(
+                    breed
+                  )}`}
+                  onClick={onClose}
+                  className="block text-sm text-ink/80 py-2"
+                >
+                  {breed}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* HOW IT WORKS */}
+        <p className="eyebrow mt-8 mb-3">
+          How it works
+        </p>
+
+        <Link
+          href="/about"
+          onClick={onClose}
+          className="flex items-center justify-between font-display text-xl text-forest py-3 border-b border-sage/20"
+        >
+          About Us
+          <ChevronRight size={20} />
+        </Link>
+
+        <Link
+          href="/delivery"
+          onClick={onClose}
+          className="flex items-center justify-between font-display text-xl text-forest py-3 border-b border-sage/20"
+        >
+          Delivery &amp; Care
+          <ChevronRight size={20} />
+        </Link>
+
+        {/* CONTACT */}
+        <Link
+          href="/contact"
+          onClick={onClose}
+          className="block text-ink/80 mt-8 py-2"
+        >
+          Contact Us
+        </Link>
+      </div>
+    </div>
   );
 }
