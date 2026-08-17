@@ -71,9 +71,7 @@ export default function MobileMenu({
       addTerm(term.trim());
     }
 
-    router.push(
-      `/puppies?search=${encodeURIComponent(term)}`
-    );
+    router.push(`/puppies?search=${encodeURIComponent(term)}`);
 
     onClose();
   }
@@ -106,10 +104,7 @@ export default function MobileMenu({
           type="button"
           className="active:scale-90 transition-transform"
         >
-          <X
-            size={24}
-            className="text-ink"
-          />
+          <X size={24} className="text-ink" />
         </button>
 
         <div className="flex items-center gap-2">
@@ -128,7 +123,6 @@ export default function MobileMenu({
       </div>
 
       <div className="px-5 py-6">
-
         {/* SEARCH */}
         <div
           ref={searchBoxRef}
@@ -170,6 +164,16 @@ export default function MobileMenu({
           Browse available puppies by
         </p>
 
+        {/* HOME */}
+        <Link
+          href="/"
+          onClick={onClose}
+          className="block font-display text-xl text-forest py-3 border-b border-sage/20"
+        >
+          Home
+        </Link>
+
+        {/* BROWSE ALL PUPPIES */}
         <Link
           href="/puppies"
           onClick={onClose}
@@ -206,9 +210,7 @@ export default function MobileMenu({
               {BREEDS.map((breed) => (
                 <Link
                   key={breed}
-                  href={`/puppies?breed=${encodeURIComponent(
-                    breed
-                  )}`}
+                  href={`/puppies?breed=${encodeURIComponent(breed)}`}
                   onClick={onClose}
                   className="block text-sm text-ink/80 py-2"
                 >
