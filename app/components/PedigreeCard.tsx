@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Video } from "lucide-react";
 import OptimizedImage from "./OptimizedImage";
 import FavoriteButton from "./FavoriteButton";
-import CompareToggle from "./CompareToggle";
 
 type Status = "available" | "reserved" | "sold";
 
@@ -28,38 +27,63 @@ export default function PedigreeCard({
   hasVideo?: boolean;
 }) {
   return (
-    <Link href={`/puppies/${id}`} className="block group">
-      <div className="aspect-square rounded-lg overflow-hidden bg-cream-alt relative transition-transform duration-200 group-active:scale-[0.98] group-hover:shadow-md">
+    <Link
+      href={`/puppies/${id}`}
+      className="block min-w-0 group"
+    >
+      <div className="relative aspect-square overflow-hidden rounded-lg bg-cream-alt">
         <OptimizedImage
           src={image}
           alt={name}
           sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 18vw"
-          className="transition-transform duration-500 group-hover:scale-105"
+          className="transition-transform duration-300 group-hover:scale-105"
         />
-        <div className="absolute top-2 right-2">
-          <FavoriteButton puppyId={id} size={14} />
+
+        {/* Favorite */}
+        <div className="absolute right-2 top-2 z-10">
+          <FavoriteButton
+            puppyId={id}
+            size={14}
+          />
         </div>
-        <div className="absolute bottom-2 left-2">
-          <CompareToggle puppyId={id} />
-        </div>
+
+        {/* Status */}
         {status !== "available" && (
-          <span className="absolute top-2 left-2 text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/90 text-ink">
+          <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[9px] uppercase tracking-wider text-ink">
             {status}
           </span>
         )}
+
+        {/* Video indicator */}
         {hasVideo && (
-          <span className="absolute bottom-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center">
-            <Video size={12} className="text-white" />
+          <span className="absolute bottom-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60">
+            <Video
+              size={12}
+              className="text-white"
+              aria-hidden="true"
+            />
           </span>
         )}
       </div>
-      <p className="text-[11px] text-sage mt-1.5">{breed}</p>
-      <p className="text-sm text-forest font-medium border-b border-gold/60 inline-block">{name}</p>
-      <p className="text-xs text-ink/70 capitalize mt-0.5">
-        {sex}
-        {ageWeeks !== null ? ` · ${ageWeeks} weeks` : ""}
+
+      <p className="mt-1.5 text-[11px] text-sage">
+        {breed}
       </p>
-      <p className="text-[11px] text-ink/60">{readyLabel}</p>
+
+      <p className="inline-block border-b border-gold/60 text-sm font-medium text-forest">
+        {name}
+      </p>
+
+      <p className="mt-0.5 text-xs capitalize text-ink/70">
+        {sex}
+        {ageWeeks !== null
+          ? ` · ${ageWeeks} weeks`
+          : ""}
+      </p>
+
+      <p className="text-[11px] text-ink/60">
+        {readyLabel}
+      </p>
     </Link>
   );
 }

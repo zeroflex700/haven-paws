@@ -13,59 +13,156 @@ export type PuppyRecord = {
   hasVideo: boolean;
 };
 
-function calcAgeWeeks(birthDate: string | null): number | null {
-  if (!birthDate) return null;
-  const diffMs = Date.now() - new Date(birthDate).getTime();
-  return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24 * 7)));
+type PuppyQueryRow = {
+  id: string;
+  name: string;
+  sex: "male" | "female";
+  price: number;
+  status: "available" | "reserved" | "sold";
+  birth_date: string | null;
+  ready_date: string | null;
+  breeds:
+    | {
+        name: string;
+      }
+    | null;
+  puppy_media:
+    | {
+        url: string;
+        is_cover: boolean;
+        media_type: "image" | "video";
+      }[]
+    | null;
+};
+
+function calcAgeWeeks(
+  birthDate: string | null
+): number | null {
+  if (!birthDate) {
+    return null;
+  }
+
+  const birth = new Date(birthDate).getTime();
+
+  if (Number.isNaN(birth)) {
+    return null;
+  }
+
+  const diffMs = Date.now() - birth;
+  const weekMs =
+    1000 * 60 * 60 * 24 * 7;
+
+  return Math.max(
+    0,
+    Math.floor(diffMs / weekMs)
+  );
 }
 
-function calcReadyLabel(readyDate: string | null): string {
-  if (!readyDate) return "Ready to go home";
+function calcReadyLabel(
+  readyDate: string | null
+): string {
+  if (!readyDate) {
+    return "Ready to go home";
+  }
+
   const ready = new Date(readyDate);
-  if (ready.getTime() <= Date.now()) return "Ready to go home";
-  return `Ready by ${ready.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+
+  if (Number.isNaN(ready.getTime())) {
+    return "Ready to go home";
+  }
+
+  if (ready.getTime() <= Date.now()) {
+    return "Ready to go home";
+  }
+
+  return `Ready by ${ready.toLocaleDateString(
+    "en-US",
+    {
+      month: "short",
+      day: "numeric",
+    }
+  )}`;
 }
 
-export async function getPuppies(): Promise<PuppyRecord[]> {
+export async function getPuppies(): Promise<
+  PuppyRecord[]
+> {
   const { data, error } = await supabase
     .from("puppies")
     .select(
-      `id, name, sex, price, status, birth_date, ready_date,
-       breeds ( name ),
-       puppy_media ( url, is_cover, media_type )`
+      `
+        id,
+        name,
+        sex,
+        price,
+        status,
+        birth_date,
+        ready_date,
+        breeds (
+          name
+        ),
+        puppy_media (
+          url,
+          is_cover,
+          media_type
+        )
+      `
     )
-    .eq("is_published", true);
+    .eq("is_published", true)
+    .order("created_at", {
+      ascending: false,
+    });
 
   if (error) {
-    console.error(error);
+    console.error(
+      "Failed to load puppies:",
+      error
+    );
+
     return [];
   }
 
-  const rows = (data ?? []) as unknown as {
-    id: string;
-    name: string;
-    sex: "male" | "female";
-    price: number;
-    status: "available" | "reserved" | "sold";
-    birth_date: string | null;
-    ready_date: string | null;
-    breeds: { name: string } | null;
-    puppy_media: { url: string; is_cover: boolean; media_type: "image" | "video" }[] | null;
-  }[];
+  const rows =
+    (data ?? []) as unknown as PuppyQueryRow[];
 
-  return rows.map((p) => ({
-    id: p.id,
-    name: p.name,
-    breed: p.breeds?.name ?? "Unknown",
-    sex: p.sex,
-    price: Number(p.price),
-    status: p.status,
-    coverImage:
-      p.puppy_media?.find((m) => m.is_cover)?.url ??
-      p.puppy_media?.[0]?.url ??
-      null,
-    ageWeeks: calcAgeWeeks(p.birth_date),
-    readyLabel: calcReadyLabel(p.ready_date),
-    hasVideo: p.puppy_media?.some((m) => m.media_type === "video") ?? false,
-  }));
+  return rows.map((puppy) => {
+    const media =
+      puppy.puppy_media ?? [];
+
+    const cover =
+      media.find(
+        (item) => item.is_cover
+      ) ??
+      media.find(
+        (item) =>
+          item.media_type === "image"
+      ) ??
+      null;
+
+    const hasVideo = media.some(
+      (item) =>
+        item.media_type === "video"
+    );
+
+    return {
+      id: puppy.id,
+      name: puppy.name,
+      breed:
+        puppy.breeds?.name ??
+        "Unknown",
+      sex: puppy.sex,
+      price: Number(puppy.price),
+      status: puppy.status,
+      coverImage:
+        cover?.url ?? null,
+      ageWeeks: calcAgeWeeks(
+        puppy.birth_date
+      ),
+      readyLabel:
+        calcReadyLabel(
+          puppy.ready_date
+        ),
+      hasVideo,
+    };
+  });
 }

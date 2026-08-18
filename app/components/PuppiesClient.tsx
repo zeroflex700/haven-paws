@@ -29,7 +29,6 @@ import PuppyFilters, { Filters } from "./PuppyFilters";
 import FilterChips from "./FilterChips";
 import SearchSuggestionsDropdown from "./SearchSuggestionsDropdown";
 import SavedSearchesBar from "./SavedSearchesBar";
-import CompareBar from "./CompareBar";
 
 import { usePersistentFilters } from "@/lib/hooks/usePersistentFilters";
 import { useSearchHistory } from "@/lib/hooks/useSearchHistory";
@@ -802,7 +801,6 @@ export default function PuppiesClient({
         </div>
       )}
 
-      <CompareBar />
     </>
   );
 }
