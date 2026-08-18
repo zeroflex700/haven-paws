@@ -1,38 +1,26 @@
 @import "tailwindcss";
 
 @theme {
-  /* =========================================================
-     HAVEN PAWS — CORE COLOR SYSTEM
-     ========================================================= */
-
-  /* Primary surfaces */
+  /* Core neutrals */
   --color-cream: #FFFFFF;
   --color-cream-alt: #F8F9FA;
+  --color-white: #FFFFFF;
 
-  /* Brand blues */
-  --color-forest: #173F3A;
-  --color-forest-light: #285C55;
-
-  /* Supporting neutral */
-  --color-sage: #6B7280;
-
-  /* Primary accent */
-  --color-gold: #E5B84B;
-
-  /* Text */
+  /* Brand palette */
+  --color-forest: #30465D;
+  --color-forest-light: #4E647B;
+  --color-sage: #7A8794;
+  --color-gold: #E8B84A;
   --color-ink: #222222;
 
-  /* Additional section colors */
-  --color-navy: #213B53;
-  --color-navy-deep: #172E42;
-  --color-blue-soft: #EEF5F8;
-  --color-blue-pale: #F5F9FB;
-  --color-gold-soft: #FFF8E7;
-  --color-green-soft: #EEF7F3;
-  --color-lavender-soft: #F4F2F8;
-  --color-peach-soft: #FFF4ED;
+  /* Supporting section colors */
+  --color-sky: #EAF3F8;
+  --color-sky-deep: #D8EAF2;
+  --color-butter: #FFF6D9;
+  --color-blush: #F9EEEE;
+  --color-mint: #EAF5EF;
+  --color-lavender: #F1EFF8;
 
-  /* Typography */
   --font-display: var(--font-fraunces), serif;
   --font-body: var(--font-inter), sans-serif;
 }
@@ -48,20 +36,18 @@ html {
 
 body {
   margin: 0;
-  background-color: var(--color-cream);
+  background: var(--color-cream);
   color: var(--color-ink);
   font-size: 15px;
   font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* Keep the main application surface white */
-main {
-  background-color: var(--color-cream);
+::selection {
+  background: rgba(232, 184, 74, 0.25);
+  color: var(--color-forest);
 }
-
-/* =========================================================
-   MEDIA
-   ========================================================= */
 
 img,
 video {
@@ -107,8 +93,13 @@ video {
 }
 
 /* =========================================================
-   HORIZONTAL SCROLL
+   SCROLL / HORIZONTAL CAROUSELS
    ========================================================= */
+
+html,
+body {
+  overflow-x: hidden;
+}
 
 .no-scrollbar {
   -ms-overflow-style: none;
@@ -125,25 +116,26 @@ video {
 
 .interactive-card {
   transition:
-    transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 220ms ease,
     border-color 220ms ease;
 }
 
 .interactive-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 35px rgba(23, 63, 58, 0.09);
+  transform: translateY(-4px);
+  box-shadow:
+    0 18px 45px rgba(48, 70, 93, 0.09),
+    0 3px 12px rgba(48, 70, 93, 0.05);
 }
 
 .interactive-card:active {
-  transform: scale(0.985);
-  box-shadow: none;
+  transform: translateY(-1px) scale(0.985);
 }
 
 .tap-feedback {
   transition:
-    transform 150ms ease-out,
-    opacity 150ms ease-out;
+    transform 150ms ease,
+    opacity 150ms ease;
 }
 
 .tap-feedback:active {
@@ -152,11 +144,11 @@ video {
 }
 
 /* =========================================================
-   BRAND TYPOGRAPHY
+   TYPOGRAPHY
    ========================================================= */
 
 .eyebrow {
-  @apply text-[11px] uppercase tracking-[0.2em] text-sage font-body font-medium;
+  @apply text-[10px] uppercase tracking-[0.24em] text-sage font-body font-semibold;
 }
 
 .gold-rule {
@@ -164,169 +156,117 @@ video {
 }
 
 .h1 {
-  @apply font-display text-2xl sm:text-3xl lg:text-4xl text-forest leading-tight;
+  @apply font-display text-3xl sm:text-4xl lg:text-5xl text-forest leading-[1.08] tracking-[-0.025em];
 }
 
 .h2 {
-  @apply font-display text-xl sm:text-2xl text-forest leading-snug;
+  @apply font-display text-2xl sm:text-3xl text-forest leading-[1.12] tracking-[-0.02em];
 }
 
 .h3 {
-  @apply font-display text-lg text-forest leading-snug;
+  @apply font-display text-lg sm:text-xl text-forest leading-snug;
 }
 
 .body-text {
-  @apply text-sm sm:text-[15px] text-ink/80 leading-relaxed;
+  @apply text-sm sm:text-[15px] text-ink/75 leading-relaxed;
 }
 
 .small-text {
-  @apply text-xs sm:text-sm text-sage;
+  @apply text-xs sm:text-sm text-sage leading-relaxed;
 }
 
 /* =========================================================
-   COLOR-BLOCKING UTILITIES
-   Use these for major homepage/page sections.
+   BRAND SURFACES
    ========================================================= */
 
 .section-white {
-  background-color: var(--color-cream);
+  background: var(--color-cream);
 }
 
 .section-soft {
-  background-color: var(--color-cream-alt);
+  background: var(--color-cream-alt);
 }
 
-.section-blue {
-  background-color: var(--color-blue-soft);
+.section-sky {
+  background: var(--color-sky);
 }
 
-.section-blue-pale {
-  background-color: var(--color-blue-pale);
+.section-butter {
+  background: var(--color-butter);
 }
 
-.section-gold {
-  background-color: var(--color-gold-soft);
+.section-mint {
+  background: var(--color-mint);
 }
 
-.section-green {
-  background-color: var(--color-green-soft);
+.section-blush {
+  background: var(--color-blush);
 }
 
 .section-lavender {
-  background-color: var(--color-lavender-soft);
-}
-
-.section-peach {
-  background-color: var(--color-peach-soft);
+  background: var(--color-lavender);
 }
 
 .section-navy {
-  background-color: var(--color-navy);
-  color: white;
-}
-
-.section-navy-deep {
-  background-color: var(--color-navy-deep);
-  color: white;
+  background: var(--color-forest);
 }
 
 /* =========================================================
-   CARD COLOR SYSTEM
+   PREMIUM SURFACE UTILITIES
    ========================================================= */
 
-.card-white {
-  background-color: var(--color-cream);
-  border: 1px solid rgba(23, 63, 58, 0.08);
+.soft-card {
+  border: 1px solid rgba(48, 70, 93, 0.08);
+  background: #ffffff;
+  box-shadow:
+    0 8px 30px rgba(48, 70, 93, 0.05),
+    0 1px 3px rgba(48, 70, 93, 0.04);
 }
 
-.card-soft {
-  background-color: var(--color-cream-alt);
-  border: 1px solid rgba(23, 63, 58, 0.07);
+.soft-card-dark {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--color-forest);
+  box-shadow:
+    0 12px 35px rgba(20, 35, 48, 0.16);
 }
 
-.card-blue {
-  background-color: var(--color-blue-soft);
-  border: 1px solid rgba(23, 63, 58, 0.07);
-}
-
-.card-gold {
-  background-color: var(--color-gold-soft);
-  border: 1px solid rgba(229, 184, 75, 0.18);
-}
-
-.card-green {
-  background-color: var(--color-green-soft);
-  border: 1px solid rgba(23, 63, 58, 0.07);
-}
-
-.card-lavender {
-  background-color: var(--color-lavender-soft);
-  border: 1px solid rgba(23, 63, 58, 0.07);
-}
-
-.card-peach {
-  background-color: var(--color-peach-soft);
-  border: 1px solid rgba(23, 63, 58, 0.07);
-}
-
-.card-navy {
-  background-color: var(--color-navy);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-/* =========================================================
-   BRAND ACCENTS
-   ========================================================= */
-
-.accent-gold {
+.gold-accent {
   color: var(--color-gold);
 }
 
-.accent-forest {
-  color: var(--color-forest);
+.gold-surface {
+  background: var(--color-butter);
 }
 
-.accent-navy {
-  color: var(--color-navy);
+.sky-surface {
+  background: var(--color-sky);
 }
 
-.border-brand {
-  border-color: rgba(23, 63, 58, 0.12);
-}
-
-.border-gold-soft {
-  border-color: rgba(229, 184, 75, 0.35);
+.mint-surface {
+  background: var(--color-mint);
 }
 
 /* =========================================================
-   BUTTON / CTA HELPERS
+   MOTION
    ========================================================= */
 
-.btn-primary {
-  @apply inline-flex items-center justify-center rounded-full px-6 py-3 font-medium transition-all duration-200 active:scale-95;
-  background-color: var(--color-gold);
-  color: var(--color-forest);
+@keyframes subtle-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-3px);
+  }
 }
 
-.btn-primary:hover {
-  filter: brightness(0.96);
-  transform: translateY(-1px);
-}
-
-.btn-secondary {
-  @apply inline-flex items-center justify-center rounded-full px-6 py-3 font-medium transition-all duration-200 active:scale-95;
-  background-color: var(--color-forest);
-  color: var(--color-cream);
-}
-
-.btn-secondary:hover {
-  background-color: var(--color-forest-light);
-  transform: translateY(-1px);
+.subtle-float {
+  animation: subtle-float 4s ease-in-out infinite;
 }
 
 /* =========================================================
-   MOTION ACCESSIBILITY
+   REDUCED MOTION
    ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
