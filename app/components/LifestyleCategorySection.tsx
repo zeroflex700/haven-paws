@@ -19,7 +19,9 @@ alt: boolean;
 return (
 <section
 id={category.key}
-className={"scroll-mt-24 border-b border-sage/10 py-16 md:py-20 lg:py-24 ${ alt ? "bg-cream-alt" : "bg-white" }"}
+className={`scroll-mt-24 border-b border-sage/10 py-16 md:py-20 lg:py-24 ${
+  alt ? "bg-cream-alt" : "bg-white"
+}`}
 >
 <div className="mx-auto max-w-6xl px-6 lg:px-10">
 <div className="grid items-start gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
