@@ -79,6 +79,7 @@ className={"scroll-mt-24 border-b border-sage/10 py-16 md:py-20 lg:py-24 ${ alt 
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sage">
               Recommended breeds
             </p>
+
             <p className="mt-1 text-sm text-ink/60">
               Explore breeds that may fit this lifestyle.
             </p>
