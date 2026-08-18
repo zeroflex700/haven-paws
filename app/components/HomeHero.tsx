@@ -28,19 +28,28 @@ export default function HomeHero({
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (boxRef.current && !boxRef.current.contains(e.target as Node)) {
+      if (
+        boxRef.current &&
+        !boxRef.current.contains(e.target as Node)
+      ) {
         setSuggestOpen(false);
       }
     }
 
     document.addEventListener("mousedown", handleClickOutside);
 
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   function goSearch(term: string) {
-    if (term.trim()) addTerm(term.trim());
-    router.push(`/puppies?search=${encodeURIComponent(term)}`);
+    if (term.trim()) {
+      addTerm(term.trim());
+    }
+
+    router.push(
+      `/puppies?search=${encodeURIComponent(term)}`
+    );
   }
 
   function handleSearch(e: React.FormEvent) {
@@ -49,17 +58,18 @@ export default function HomeHero({
   }
 
   return (
-    <section className="relative min-h-[650px] md:min-h-[700px] overflow-hidden bg-forest">
-      {heroVideo ? (
-        <ProtectedVideo
-          src={heroVideo}
-          autoPlay
-          muted
-          loop
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-      ) : heroImage ? (
-        <div className="absolute inset-0">
+    <section className="relative overflow-hidden bg-forest min-h-[720px] sm:min-h-[760px] lg:min-h-[800px]">
+      {/* Portrait video / image area */}
+      <div className="absolute inset-0">
+        {heroVideo ? (
+          <ProtectedVideo
+            src={heroVideo}
+            autoPlay
+            muted
+            loop
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) : heroImage ? (
           <OptimizedImage
             src={heroImage}
             alt="Haven Paws"
@@ -67,36 +77,48 @@ export default function HomeHero({
             sizes="100vw"
             className="object-cover"
           />
-        </div>
-      ) : (
-        <div className="absolute inset-0 bg-forest" />
-      )}
+        ) : (
+          <div className="absolute inset-0 bg-forest" />
+        )}
+      </div>
 
-      <div className="absolute inset-0 bg-gradient-to-r from-[#102d2a]/90 via-[#173f3a]/55 to-[#173f3a]/20" />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#102d2a]/65 via-transparent to-black/10" />
+      {/* Image/video readability overlays */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#102d2a]/35 via-[#102d2a]/35 to-[#102d2a]/80" />
 
-      <div className="absolute top-20 right-[8%] w-40 h-40 rounded-full border border-white/15" />
-      <div className="absolute top-28 right-[10%] w-24 h-24 rounded-full border border-white/10" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#102d2a]/45 via-transparent to-[#102d2a]/30" />
 
-      <div className="relative z-10 min-h-[650px] md:min-h-[700px] max-w-7xl mx-auto px-6 lg:px-10 flex items-center">
-        <div className="w-full max-w-2xl pt-12">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-md px-4 py-2 mb-6">
+      {/* Decorative rings */}
+      <div className="absolute top-16 right-[8%] w-40 h-40 rounded-full border border-white/15 pointer-events-none" />
+      <div className="absolute top-24 right-[10%] w-24 h-24 rounded-full border border-white/10 pointer-events-none" />
+
+      {/* Centered portrait composition */}
+      <div className="relative z-10 min-h-[720px] sm:min-h-[760px] lg:min-h-[800px] flex flex-col items-center justify-center px-5 sm:px-6 text-center">
+        <div className="w-full max-w-2xl pt-10 sm:pt-14">
+          {/* Eyebrow */}
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-md px-4 py-2 mb-5 sm:mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-gold" />
+
             <p className="text-[10px] uppercase tracking-[0.22em] font-semibold text-white/90">
               Where New Beginnings Start
             </p>
           </div>
 
-          <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl leading-[0.95] tracking-[-0.025em] text-white max-w-xl mb-6">
+          {/* Heading */}
+          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl leading-[0.98] tracking-[-0.025em] text-white max-w-2xl mx-auto mb-5 sm:mb-6">
             Trusted puppy placement, nationwide
           </h1>
 
-          <p className="text-white/78 text-base sm:text-lg leading-relaxed max-w-lg mb-8">
+          {/* Description */}
+          <p className="text-white/80 text-base sm:text-lg leading-relaxed max-w-xl mx-auto mb-7 sm:mb-8">
             Find a puppy you can feel confident bringing home, with trusted
             breeders and support from the first search to the first night.
           </p>
 
-          <div ref={boxRef} className="w-full max-w-xl relative mb-4">
+          {/* Search */}
+          <div
+            ref={boxRef}
+            className="w-full max-w-xl mx-auto relative mb-4"
+          >
             <form
               onSubmit={handleSearch}
               className="relative flex items-center rounded-2xl bg-white p-1.5 shadow-2xl shadow-black/20"
@@ -135,7 +157,8 @@ export default function HomeHero({
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          {/* Browse + rating */}
+          <div className="flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/puppies"
               className="inline-flex items-center gap-2 bg-gold text-forest px-6 py-3.5 rounded-full font-semibold hover:bg-gold-light active:scale-95 transition-all shadow-lg shadow-black/10"
@@ -146,7 +169,11 @@ export default function HomeHero({
 
             {reviewCount > 0 && avgRating && (
               <div className="flex items-center gap-2 rounded-full bg-white/10 border border-white/15 backdrop-blur-md px-4 py-3 text-white/90 text-sm">
-                <Star size={15} className="fill-gold text-gold" />
+                <Star
+                  size={15}
+                  className="fill-gold text-gold"
+                />
+
                 <span>
                   {avgRating} · {reviewCount} review
                   {reviewCount !== 1 ? "s" : ""}
