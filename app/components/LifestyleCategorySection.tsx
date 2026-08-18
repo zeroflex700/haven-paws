@@ -2,104 +2,94 @@ import LifestyleIcon from "./LifestyleIcon";
 import BreedCarousel from "./BreedCarousel";
 import { ProtectedImage } from "./ProtectedMedia";
 import type { LifestyleCategory } from "../data/lifestyleCategories";
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 
 export default function LifestyleCategorySection({
-category,
-heroImage,
-imageMap,
-alt,
+  category,
+  heroImage,
+  imageMap,
+  alt,
 }: {
-category: LifestyleCategory;
-heroImage: string | null;
-imageMap: Record<string, string>;
-alt: boolean;
+  category: LifestyleCategory;
+  heroImage: string | null;
+  imageMap: Record<string, string>;
+  alt: boolean;
 }) {
-return (
-<section
-id={category.key}
-className={`scroll-mt-24 border-b border-sage/10 py-16 md:py-20 lg:py-24 ${
-  alt ? "bg-cream-alt" : "bg-white"
-}`}
->
-<div className="mx-auto max-w-6xl px-6 lg:px-10">
-<div className="grid items-start gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
-{/* TEXT */}
-<div className="lg:sticky lg:top-28">
-<div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-forest/5">
-<LifestyleIcon categoryKey={category.key} />
-</div>
-
-        <p className="eyebrow mb-2">
-          Lifestyle
-        </p>
-
-        <h2 className="font-display text-3xl leading-tight tracking-[-0.025em] text-forest sm:text-4xl">
-          {category.title}
-        </h2>
-
-        <p className="mt-5 whitespace-pre-line text-sm leading-7 text-sage sm:text-base">
-          {category.description}
-        </p>
-
-        <Link
-          href="/puppies"
-          className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-forest transition-colors hover:text-sage"
-        >
-          Explore available puppies
-          <ArrowRight size={15} />
-        </Link>
-      </div>
-
-      {/* VISUAL + BREEDS */}
-      <div>
-        {heroImage ? (
-          <div className="group relative mb-8 aspect-[16/9] overflow-hidden rounded-[28px] bg-cream-alt shadow-xl shadow-forest/5">
-            <ProtectedImage
-              src={heroImage}
-              alt={category.title}
-            />
-
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-forest/30 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-          </div>
-        ) : (
-          <div className="mb-8 flex aspect-[16/9] items-center justify-center rounded-[28px] bg-cream-alt">
-            <div className="text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sage">
-                {category.title}
-              </p>
-              <p className="mt-1 text-xs text-sage/60">
-                Lifestyle image coming soon
-              </p>
+  return (
+    <section
+      id={category.key}
+      className={`scroll-mt-24 border-b border-sage/10 py-12 md:py-14 ${
+        alt ? "bg-cream-alt" : "bg-white"
+      }`}
+    >
+      <div className="mx-auto max-w-5xl px-6 lg:px-10">
+        <div className="max-w-3xl mx-auto">
+          {/* Category image */}
+          {heroImage && (
+            <div className="relative w-full max-w-2xl mx-auto aspect-[16/9] rounded-[20px] overflow-hidden mb-7 bg-cream-alt shadow-sm ring-1 ring-black/5">
+              <ProtectedImage
+                src={heroImage}
+                alt={category.title}
+              />
             </div>
-          </div>
-        )}
+          )}
 
-        <div className="mb-4 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sage">
-              Recommended breeds
+          {/* Category introduction */}
+          <div className="text-center">
+            <div className="flex justify-center mb-4">
+              <LifestyleIcon categoryKey={category.key} />
+            </div>
+
+            <h2 className="font-display text-2xl md:text-3xl tracking-[-0.02em] text-forest mb-3">
+              {category.title}
+            </h2>
+
+            <div className="mx-auto h-px w-10 bg-gold/70 mb-5" />
+
+            <p className="text-sm md:text-[15px] text-sage leading-7 whitespace-pre-line max-w-2xl mx-auto">
+              {category.description}
             </p>
-
-            <p className="mt-1 text-sm text-ink/60">
-              Explore breeds that may fit this lifestyle.
-            </p>
           </div>
 
-          <span className="hidden rounded-full bg-forest/5 px-3 py-1.5 text-[10px] font-semibold text-forest sm:block">
-            {category.breeds.length} breeds
-          </span>
+          {/* Breed recommendations */}
+          <div className="mt-8 md:mt-10">
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.2em] font-semibold text-gold">
+                  Recommended breeds
+                </p>
+                <p className="text-xs text-sage mt-1">
+                  Explore breeds that may fit this lifestyle.
+                </p>
+              </div>
+            </div>
+
+            <BreedCarousel
+              breeds={category.breeds}
+              imageMap={imageMap}
+            />
+          </div>
         </div>
-
-        <BreedCarousel
-          breeds={category.breeds}
-          imageMap={imageMap}
-        />
       </div>
-    </div>
-  </div>
-</section>
-
-);
+    </section>
+  );
 }
+
+And do not change "lifestyleCategories.ts", "OptimizedImage.tsx", or the testimonial files for this rollback.
+
+What this fixes
+
+- Keeps the hero images compact with "max-w-2xl".
+- Uses "aspect-[16/9]" so images can't become excessively tall.
+- Restores the familiar centered page structure.
+- Keeps alternating cream/white sections.
+- Preserves every category, description, and breed.
+- Keeps "#family", "#active", "#apartment", etc. working.
+- Adds a subtle premium divider and hierarchy without overwhelming the page.
+- Avoids the template-string syntax error from the previous deployment.
+- Doesn't introduce any new dependencies.
+
+After replacing the file, run:
+
+npm run build
+
+If that passes, deploy it.
