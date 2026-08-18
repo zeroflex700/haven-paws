@@ -1,52 +1,44 @@
 @import "tailwindcss";
 
 @theme {
-  /* Core neutrals */
-  --color-cream: #FFFFFF;
-  --color-cream-alt: #F8F9FA;
-  --color-white: #FFFFFF;
+  --color-cream: #ffffff;
+  --color-cream-alt: #f8f9fa;
 
-  /* Brand palette */
-  --color-forest: #30465D;
-  --color-forest-light: #4E647B;
-  --color-sage: #7A8794;
-  --color-gold: #E8B84A;
-  --color-ink: #222222;
+  --color-forest: #173f3a;
+  --color-forest-light: #285c55;
 
-  /* Supporting section colors */
-  --color-sky: #EAF3F8;
-  --color-sky-deep: #D8EAF2;
-  --color-butter: #FFF6D9;
-  --color-blush: #F9EEEE;
-  --color-mint: #EAF5EF;
-  --color-lavender: #F1EFF8;
+  --color-sage: #71827c;
+
+  --color-gold: #e7b84b;
+  --color-gold-light: #f7df9b;
+
+  --color-ink: #18201f;
+
+  --color-navy: #14283d;
+  --color-navy-light: #274766;
+
+  --color-sky: #e8f2f5;
+  --color-blue: #dcebf2;
+
+  --color-lavender: #eeeaf5;
+  --color-peach: #f8e9df;
+  --color-yellow: #fbf3d7;
 
   --font-display: var(--font-fraunces), serif;
   --font-body: var(--font-inter), sans-serif;
 }
 
-/* =========================================================
-   BASE
-   ========================================================= */
-
 html {
   scroll-behavior: smooth;
-  background: var(--color-cream);
 }
 
 body {
-  margin: 0;
-  background: var(--color-cream);
+  background-color: var(--color-cream);
   color: var(--color-ink);
   font-size: 15px;
   font-family: var(--font-body);
-  -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-}
-
-::selection {
-  background: rgba(232, 184, 74, 0.25);
-  color: var(--color-forest);
+  -webkit-font-smoothing: antialiased;
 }
 
 img,
@@ -59,14 +51,155 @@ video {
   -ms-user-select: none;
 }
 
-/* =========================================================
-   ACCESSIBILITY
-   ========================================================= */
-
 :focus-visible {
   outline: 2px solid var(--color-gold);
   outline-offset: 3px;
-  border-radius: 5px;
+  border-radius: 6px;
+}
+
+::selection {
+  background: var(--color-gold-light);
+  color: var(--color-forest);
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.interactive-card {
+  transition:
+    transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 280ms ease;
+}
+
+.interactive-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 22px 45px rgba(20, 40, 61, 0.11);
+}
+
+.interactive-card:active {
+  transform: scale(0.985);
+  box-shadow: none;
+}
+
+.tap-feedback {
+  transition:
+    transform 180ms ease,
+    opacity 180ms ease;
+}
+
+.tap-feedback:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+.eyebrow {
+  @apply text-[10px] uppercase tracking-[0.22em] font-body font-semibold;
+  color: var(--color-sage);
+}
+
+.gold-rule {
+  @apply w-12 h-[2px];
+  background: var(--color-gold);
+}
+
+.h1 {
+  @apply font-display text-3xl sm:text-4xl lg:text-5xl leading-[1.05];
+  color: var(--color-forest);
+}
+
+.h2 {
+  @apply font-display text-2xl sm:text-3xl leading-[1.12];
+  color: var(--color-forest);
+}
+
+.h3 {
+  @apply font-display text-lg sm:text-xl leading-snug;
+  color: var(--color-forest);
+}
+
+.body-text {
+  @apply text-sm sm:text-[15px] leading-relaxed;
+  color: rgb(24 32 31 / 0.78);
+}
+
+.small-text {
+  @apply text-xs sm:text-sm;
+  color: var(--color-sage);
+}
+
+/* Premium section helpers */
+
+.hp-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.hp-section::before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  width: 260px;
+  height: 260px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.22);
+  filter: blur(2px);
+  top: -150px;
+  right: -100px;
+}
+
+.hp-section-dark {
+  background: var(--color-navy);
+  color: white;
+}
+
+.hp-section-cream {
+  background: var(--color-cream);
+}
+
+.hp-section-soft {
+  background: var(--color-cream-alt);
+}
+
+.hp-section-blue {
+  background: var(--color-sky);
+}
+
+.hp-section-yellow {
+  background: var(--color-yellow);
+}
+
+.hp-section-peach {
+  background: var(--color-peach);
+}
+
+.hp-section-lavender {
+  background: var(--color-lavender);
+}
+
+.hp-section-green {
+  background: var(--color-forest);
+}
+
+.hp-container {
+  @apply max-w-7xl mx-auto px-6 lg:px-10;
+}
+
+.hp-pill {
+  @apply inline-flex items-center rounded-full px-4 py-2 text-xs font-medium;
+}
+
+.hp-glass {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 .sr-only {
@@ -92,183 +225,6 @@ video {
   white-space: normal;
 }
 
-/* =========================================================
-   SCROLL / HORIZONTAL CAROUSELS
-   ========================================================= */
-
-html,
-body {
-  overflow-x: hidden;
-}
-
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-/* =========================================================
-   INTERACTION
-   ========================================================= */
-
-.interactive-card {
-  transition:
-    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 220ms ease,
-    border-color 220ms ease;
-}
-
-.interactive-card:hover {
-  transform: translateY(-4px);
-  box-shadow:
-    0 18px 45px rgba(48, 70, 93, 0.09),
-    0 3px 12px rgba(48, 70, 93, 0.05);
-}
-
-.interactive-card:active {
-  transform: translateY(-1px) scale(0.985);
-}
-
-.tap-feedback {
-  transition:
-    transform 150ms ease,
-    opacity 150ms ease;
-}
-
-.tap-feedback:active {
-  transform: scale(0.96);
-  opacity: 0.9;
-}
-
-/* =========================================================
-   TYPOGRAPHY
-   ========================================================= */
-
-.eyebrow {
-  @apply text-[10px] uppercase tracking-[0.24em] text-sage font-body font-semibold;
-}
-
-.gold-rule {
-  @apply w-10 h-px bg-gold;
-}
-
-.h1 {
-  @apply font-display text-3xl sm:text-4xl lg:text-5xl text-forest leading-[1.08] tracking-[-0.025em];
-}
-
-.h2 {
-  @apply font-display text-2xl sm:text-3xl text-forest leading-[1.12] tracking-[-0.02em];
-}
-
-.h3 {
-  @apply font-display text-lg sm:text-xl text-forest leading-snug;
-}
-
-.body-text {
-  @apply text-sm sm:text-[15px] text-ink/75 leading-relaxed;
-}
-
-.small-text {
-  @apply text-xs sm:text-sm text-sage leading-relaxed;
-}
-
-/* =========================================================
-   BRAND SURFACES
-   ========================================================= */
-
-.section-white {
-  background: var(--color-cream);
-}
-
-.section-soft {
-  background: var(--color-cream-alt);
-}
-
-.section-sky {
-  background: var(--color-sky);
-}
-
-.section-butter {
-  background: var(--color-butter);
-}
-
-.section-mint {
-  background: var(--color-mint);
-}
-
-.section-blush {
-  background: var(--color-blush);
-}
-
-.section-lavender {
-  background: var(--color-lavender);
-}
-
-.section-navy {
-  background: var(--color-forest);
-}
-
-/* =========================================================
-   PREMIUM SURFACE UTILITIES
-   ========================================================= */
-
-.soft-card {
-  border: 1px solid rgba(48, 70, 93, 0.08);
-  background: #ffffff;
-  box-shadow:
-    0 8px 30px rgba(48, 70, 93, 0.05),
-    0 1px 3px rgba(48, 70, 93, 0.04);
-}
-
-.soft-card-dark {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: var(--color-forest);
-  box-shadow:
-    0 12px 35px rgba(20, 35, 48, 0.16);
-}
-
-.gold-accent {
-  color: var(--color-gold);
-}
-
-.gold-surface {
-  background: var(--color-butter);
-}
-
-.sky-surface {
-  background: var(--color-sky);
-}
-
-.mint-surface {
-  background: var(--color-mint);
-}
-
-/* =========================================================
-   MOTION
-   ========================================================= */
-
-@keyframes subtle-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-3px);
-  }
-}
-
-.subtle-float {
-  animation: subtle-float 4s ease-in-out infinite;
-}
-
-/* =========================================================
-   REDUCED MOTION
-   ========================================================= */
-
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -284,18 +240,14 @@ body {
   }
 }
 
-/* =========================================================
-   HIGH CONTRAST
-   ========================================================= */
-
 @media (prefers-contrast: more) {
   body {
-    color: #000000;
+    color: #000;
   }
 
   .text-sage,
   .text-ink\/70,
   .text-ink\/80 {
-    color: #1a1a1a !important;
+    color: #111 !important;
   }
 }
