@@ -1,4 +1,4 @@
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, LockKeyhole } from "lucide-react";
 import {
   FaCcVisa,
   FaCcMastercard,
@@ -33,7 +33,7 @@ export default function SecurePaymentsRow() {
     {
       name: "Apple Pay",
       icon: FaCcApplePay,
-      color: "text-black",
+      color: "text-white",
     },
     {
       name: "Google Pay",
@@ -43,54 +43,68 @@ export default function SecurePaymentsRow() {
   ];
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-8 sm:px-8 lg:px-10 lg:py-10">
-      <div className="rounded-3xl border border-white/10 bg-[#193348] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.14)] sm:p-6 lg:p-7">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          {/* Security heading */}
-          <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#D9B75D]/25 bg-[#D9B75D]/10">
+    <section className="border-y border-white/10 bg-[#263D53]">
+      <div className="max-w-7xl mx-auto px-6 lg:px-10 py-7">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          {/* Trust message */}
+          <div className="flex items-start gap-3 max-w-sm">
+            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/10 border border-gold/25">
               <ShieldCheck
-                size={21}
-                className="text-[#D9B75D]"
+                size={18}
+                className="text-gold"
                 strokeWidth={1.7}
               />
             </div>
 
             <div>
-              <p className="text-sm font-semibold text-white">
-                Secure Payments
-              </p>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-sm font-medium text-white">
+                  Secure &amp; protected
+                </h3>
 
-              <p className="mt-1 max-w-sm text-xs leading-5 text-white/45">
-                Your payment information is protected with secure payment
-                processing.
+                <LockKeyhole
+                  size={12}
+                  className="text-white/45"
+                  strokeWidth={1.7}
+                />
+              </div>
+
+              <p className="text-xs leading-relaxed text-white/55">
+                Your payments are handled securely with trusted payment
+                providers.
               </p>
             </div>
           </div>
 
           {/* Payment methods */}
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:flex lg:flex-wrap lg:justify-end">
+          <div className="flex flex-wrap items-center gap-2">
             {methods.map(({ name, icon: Icon, color }) => (
               <span
                 key={name}
-                className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-white/10 bg-[#213F55] px-3 py-2.5 text-xs text-white/70 transition-colors hover:border-white/20 hover:bg-[#294A61] sm:min-w-[125px]"
+                className="
+                  inline-flex items-center gap-2
+                  rounded-xl
+                  border border-white/10
+                  bg-white/[0.06]
+                  px-3 py-2
+                  text-xs text-white/65
+                  transition-colors duration-200
+                  hover:border-white/20
+                  hover:bg-white/[0.09]
+                "
               >
-                <span className="flex h-6 w-8 items-center justify-center rounded bg-white px-1">
-                  <Icon
-                    size={22}
-                    className={`${color} shrink-0`}
-                    aria-hidden="true"
-                  />
-                </span>
+                <Icon
+                  size={20}
+                  className={`${color} shrink-0`}
+                  aria-hidden="true"
+                />
 
-                <span className="whitespace-nowrap">
-                  {name}
-                </span>
+                <span className="hidden sm:inline">{name}</span>
               </span>
             ))}
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

@@ -1,45 +1,67 @@
 @import "tailwindcss";
 
 @theme {
-  --color-cream: #fffdf8;
-  --color-cream-alt: #f5f1e8;
+  /* =========================================================
+     HAVEN PAWS — CORE COLOR SYSTEM
+     ========================================================= */
 
-  --color-forest: #173f3a;
-  --color-forest-light: #285c55;
+  /* Primary surfaces */
+  --color-cream: #FFFFFF;
+  --color-cream-alt: #F8F9FA;
 
-  --color-sage: #71827c;
+  /* Brand blues */
+  --color-forest: #173F3A;
+  --color-forest-light: #285C55;
 
-  --color-gold: #e7b84b;
-  --color-gold-light: #f7df9b;
+  /* Supporting neutral */
+  --color-sage: #6B7280;
 
-  --color-ink: #18201f;
+  /* Primary accent */
+  --color-gold: #E5B84B;
 
-  --color-navy: #14283d;
-  --color-navy-light: #274766;
+  /* Text */
+  --color-ink: #222222;
 
-  --color-sky: #e8f2f5;
-  --color-blue: #dcebf2;
+  /* Additional section colors */
+  --color-navy: #213B53;
+  --color-navy-deep: #172E42;
+  --color-blue-soft: #EEF5F8;
+  --color-blue-pale: #F5F9FB;
+  --color-gold-soft: #FFF8E7;
+  --color-green-soft: #EEF7F3;
+  --color-lavender-soft: #F4F2F8;
+  --color-peach-soft: #FFF4ED;
 
-  --color-lavender: #eeeaf5;
-  --color-peach: #f8e9df;
-  --color-yellow: #fbf3d7;
-
+  /* Typography */
   --font-display: var(--font-fraunces), serif;
   --font-body: var(--font-inter), sans-serif;
 }
 
+/* =========================================================
+   BASE
+   ========================================================= */
+
 html {
   scroll-behavior: smooth;
+  background: var(--color-cream);
 }
 
 body {
+  margin: 0;
   background-color: var(--color-cream);
   color: var(--color-ink);
   font-size: 15px;
   font-family: var(--font-body);
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
 }
+
+/* Keep the main application surface white */
+main {
+  background-color: var(--color-cream);
+}
+
+/* =========================================================
+   MEDIA
+   ========================================================= */
 
 img,
 video {
@@ -51,155 +73,14 @@ video {
   -ms-user-select: none;
 }
 
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
 :focus-visible {
   outline: 2px solid var(--color-gold);
   outline-offset: 3px;
-  border-radius: 6px;
-}
-
-::selection {
-  background: var(--color-gold-light);
-  color: var(--color-forest);
-}
-
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-.interactive-card {
-  transition:
-    transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 280ms ease;
-}
-
-.interactive-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 22px 45px rgba(20, 40, 61, 0.11);
-}
-
-.interactive-card:active {
-  transform: scale(0.985);
-  box-shadow: none;
-}
-
-.tap-feedback {
-  transition:
-    transform 180ms ease,
-    opacity 180ms ease;
-}
-
-.tap-feedback:active {
-  transform: scale(0.97);
-  opacity: 0.9;
-}
-
-.eyebrow {
-  @apply text-[10px] uppercase tracking-[0.22em] font-body font-semibold;
-  color: var(--color-sage);
-}
-
-.gold-rule {
-  @apply w-12 h-[2px];
-  background: var(--color-gold);
-}
-
-.h1 {
-  @apply font-display text-3xl sm:text-4xl lg:text-5xl leading-[1.05];
-  color: var(--color-forest);
-}
-
-.h2 {
-  @apply font-display text-2xl sm:text-3xl leading-[1.12];
-  color: var(--color-forest);
-}
-
-.h3 {
-  @apply font-display text-lg sm:text-xl leading-snug;
-  color: var(--color-forest);
-}
-
-.body-text {
-  @apply text-sm sm:text-[15px] leading-relaxed;
-  color: rgb(24 32 31 / 0.78);
-}
-
-.small-text {
-  @apply text-xs sm:text-sm;
-  color: var(--color-sage);
-}
-
-/* Premium section helpers */
-
-.hp-section {
-  position: relative;
-  overflow: hidden;
-}
-
-.hp-section::before {
-  content: "";
-  position: absolute;
-  pointer-events: none;
-  width: 260px;
-  height: 260px;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.22);
-  filter: blur(2px);
-  top: -150px;
-  right: -100px;
-}
-
-.hp-section-dark {
-  background: var(--color-navy);
-  color: white;
-}
-
-.hp-section-cream {
-  background: var(--color-cream);
-}
-
-.hp-section-soft {
-  background: var(--color-cream-alt);
-}
-
-.hp-section-blue {
-  background: var(--color-sky);
-}
-
-.hp-section-yellow {
-  background: var(--color-yellow);
-}
-
-.hp-section-peach {
-  background: var(--color-peach);
-}
-
-.hp-section-lavender {
-  background: var(--color-lavender);
-}
-
-.hp-section-green {
-  background: var(--color-forest);
-}
-
-.hp-container {
-  @apply max-w-7xl mx-auto px-6 lg:px-10;
-}
-
-.hp-pill {
-  @apply inline-flex items-center rounded-full px-4 py-2 text-xs font-medium;
-}
-
-.hp-glass {
-  background: rgba(255, 255, 255, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  border-radius: 5px;
 }
 
 .sr-only {
@@ -225,6 +106,229 @@ video {
   white-space: normal;
 }
 
+/* =========================================================
+   HORIZONTAL SCROLL
+   ========================================================= */
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* =========================================================
+   INTERACTION
+   ========================================================= */
+
+.interactive-card {
+  transition:
+    transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 220ms ease,
+    border-color 220ms ease;
+}
+
+.interactive-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 35px rgba(23, 63, 58, 0.09);
+}
+
+.interactive-card:active {
+  transform: scale(0.985);
+  box-shadow: none;
+}
+
+.tap-feedback {
+  transition:
+    transform 150ms ease-out,
+    opacity 150ms ease-out;
+}
+
+.tap-feedback:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+
+/* =========================================================
+   BRAND TYPOGRAPHY
+   ========================================================= */
+
+.eyebrow {
+  @apply text-[11px] uppercase tracking-[0.2em] text-sage font-body font-medium;
+}
+
+.gold-rule {
+  @apply w-10 h-px bg-gold;
+}
+
+.h1 {
+  @apply font-display text-2xl sm:text-3xl lg:text-4xl text-forest leading-tight;
+}
+
+.h2 {
+  @apply font-display text-xl sm:text-2xl text-forest leading-snug;
+}
+
+.h3 {
+  @apply font-display text-lg text-forest leading-snug;
+}
+
+.body-text {
+  @apply text-sm sm:text-[15px] text-ink/80 leading-relaxed;
+}
+
+.small-text {
+  @apply text-xs sm:text-sm text-sage;
+}
+
+/* =========================================================
+   COLOR-BLOCKING UTILITIES
+   Use these for major homepage/page sections.
+   ========================================================= */
+
+.section-white {
+  background-color: var(--color-cream);
+}
+
+.section-soft {
+  background-color: var(--color-cream-alt);
+}
+
+.section-blue {
+  background-color: var(--color-blue-soft);
+}
+
+.section-blue-pale {
+  background-color: var(--color-blue-pale);
+}
+
+.section-gold {
+  background-color: var(--color-gold-soft);
+}
+
+.section-green {
+  background-color: var(--color-green-soft);
+}
+
+.section-lavender {
+  background-color: var(--color-lavender-soft);
+}
+
+.section-peach {
+  background-color: var(--color-peach-soft);
+}
+
+.section-navy {
+  background-color: var(--color-navy);
+  color: white;
+}
+
+.section-navy-deep {
+  background-color: var(--color-navy-deep);
+  color: white;
+}
+
+/* =========================================================
+   CARD COLOR SYSTEM
+   ========================================================= */
+
+.card-white {
+  background-color: var(--color-cream);
+  border: 1px solid rgba(23, 63, 58, 0.08);
+}
+
+.card-soft {
+  background-color: var(--color-cream-alt);
+  border: 1px solid rgba(23, 63, 58, 0.07);
+}
+
+.card-blue {
+  background-color: var(--color-blue-soft);
+  border: 1px solid rgba(23, 63, 58, 0.07);
+}
+
+.card-gold {
+  background-color: var(--color-gold-soft);
+  border: 1px solid rgba(229, 184, 75, 0.18);
+}
+
+.card-green {
+  background-color: var(--color-green-soft);
+  border: 1px solid rgba(23, 63, 58, 0.07);
+}
+
+.card-lavender {
+  background-color: var(--color-lavender-soft);
+  border: 1px solid rgba(23, 63, 58, 0.07);
+}
+
+.card-peach {
+  background-color: var(--color-peach-soft);
+  border: 1px solid rgba(23, 63, 58, 0.07);
+}
+
+.card-navy {
+  background-color: var(--color-navy);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* =========================================================
+   BRAND ACCENTS
+   ========================================================= */
+
+.accent-gold {
+  color: var(--color-gold);
+}
+
+.accent-forest {
+  color: var(--color-forest);
+}
+
+.accent-navy {
+  color: var(--color-navy);
+}
+
+.border-brand {
+  border-color: rgba(23, 63, 58, 0.12);
+}
+
+.border-gold-soft {
+  border-color: rgba(229, 184, 75, 0.35);
+}
+
+/* =========================================================
+   BUTTON / CTA HELPERS
+   ========================================================= */
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-full px-6 py-3 font-medium transition-all duration-200 active:scale-95;
+  background-color: var(--color-gold);
+  color: var(--color-forest);
+}
+
+.btn-primary:hover {
+  filter: brightness(0.96);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center rounded-full px-6 py-3 font-medium transition-all duration-200 active:scale-95;
+  background-color: var(--color-forest);
+  color: var(--color-cream);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-forest-light);
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   MOTION ACCESSIBILITY
+   ========================================================= */
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -240,14 +344,18 @@ video {
   }
 }
 
+/* =========================================================
+   HIGH CONTRAST
+   ========================================================= */
+
 @media (prefers-contrast: more) {
   body {
-    color: #000;
+    color: #000000;
   }
 
   .text-sage,
   .text-ink\/70,
   .text-ink\/80 {
-    color: #111 !important;
+    color: #1a1a1a !important;
   }
 }
