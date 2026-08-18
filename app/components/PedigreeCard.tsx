@@ -39,13 +39,7 @@ export default function PedigreeCard({
           className="transition-transform duration-300 group-hover:scale-105"
         />
 
-        {/* Favorite */}
-        <div className="absolute right-2 top-2 z-10">
-          <FavoriteButton
-            puppyId={id}
-            size={14}
-          />
-        </div>
+
 
         {/* Status */}
         {status !== "available" && (
