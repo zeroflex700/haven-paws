@@ -13,7 +13,8 @@ type FavoriteEntry = {
   addedAt: number;
 };
 
-const KEY = "havenpaws_favorites";
+const KEY =
+  "havenpaws_favorites";
 
 function readLocal(): FavoriteEntry[] {
   if (typeof window === "undefined") {
@@ -21,7 +22,8 @@ function readLocal(): FavoriteEntry[] {
   }
 
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw =
+      localStorage.getItem(KEY);
 
     if (!raw) {
       return [];
@@ -43,7 +45,9 @@ function readLocal(): FavoriteEntry[] {
   }
 }
 
-function writeLocal(items: FavoriteEntry[]) {
+function writeLocal(
+  items: FavoriteEntry[]
+) {
   if (typeof window === "undefined") {
     return;
   }
@@ -59,17 +63,19 @@ function writeLocal(items: FavoriteEntry[]) {
 }
 
 export function useFavorites() {
-  const [ids, setIds] = useState<Set<string>>(
-    new Set()
-  );
+  const [ids, setIds] =
+    useState<Set<string>>(
+      new Set()
+    );
 
-  const cloud = useCloudSync<FavoriteEntry[]>(
-    "favorites",
-    {
-      read: readLocal,
-      write: writeLocal,
-    }
-  );
+  const cloud =
+    useCloudSync<FavoriteEntry[]>(
+      "favorites",
+      {
+        read: readLocal,
+        write: writeLocal,
+      }
+    );
 
   const {
     load,
@@ -78,12 +84,6 @@ export function useFavorites() {
     authReady,
   } = cloud;
 
-  /*
-   * Load favorites once authentication is ready.
-   *
-   * `load` is now stable unless the actual authentication
-   * state changes, so this does not create a render/load loop.
-   */
   useEffect(() => {
     let cancelled = false;
 
@@ -105,10 +105,12 @@ export function useFavorites() {
               .filter(
                 (favorite) =>
                   favorite &&
-                  typeof favorite.id === "string"
+                  typeof favorite.id ===
+                    "string"
               )
               .map(
-                (favorite) => favorite.id
+                (favorite) =>
+                  favorite.id
               )
           )
         );
@@ -124,9 +126,6 @@ export function useFavorites() {
     };
   }, [authReady, load]);
 
-  /*
-   * Toggle a favorite.
-   */
   const toggle = useCallback(
     (puppyId: string) => {
       const current = readLocal();
@@ -152,7 +151,8 @@ export function useFavorites() {
       setIds(
         new Set(
           updated.map(
-            (favorite) => favorite.id
+            (favorite) =>
+              favorite.id
           )
         )
       );
@@ -181,7 +181,3 @@ export function useFavorites() {
     isLoggedIn,
   };
 }
-
-Notice that I also removed "isLoggedIn" from the loading effect dependency list. It isn't needed: "authReady" and the stable "load" callback are enough to trigger the correct load.
-
-Most importantly, one detail-page FavoriteButton now means one "useFavorites()" and one Supabase auth subscription, rather than one of each for every puppy card.
