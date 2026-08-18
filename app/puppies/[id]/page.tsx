@@ -161,12 +161,6 @@ export default async function PuppyDetailPage({
       {/* RECORD / RECENTLY VIEWED                                         */}
       {/* ================================================================ */}
 
-      <RecordPuppyView
-        id={puppy.id}
-        name={puppy.name}
-        breed={puppy.breed}
-        image={coverImage}
-      />
 
       {/* ================================================================ */}
       {/* BREADCRUMBS                                                       */}
