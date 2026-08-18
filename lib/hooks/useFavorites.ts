@@ -79,17 +79,10 @@ export function useFavorites() {
   } = cloud;
 
   /*
-   * Load favorites exactly when the authentication state
-   * becomes known.
+   * Load favorites once authentication is ready.
    *
-   * We deliberately don't load anything before authReady.
-   * This prevents:
-   *
-   * local favorites
-   *       ↓
-   * cloud favorites
-   *
-   * from causing the Favorites page to visibly jump.
+   * `load` is now stable unless the actual authentication
+   * state changes, so this does not create a render/load loop.
    */
   useEffect(() => {
     let cancelled = false;
@@ -129,7 +122,7 @@ export function useFavorites() {
     return () => {
       cancelled = true;
     };
-  }, [authReady, isLoggedIn, load]);
+  }, [authReady, load]);
 
   /*
    * Toggle a favorite.
@@ -156,9 +149,6 @@ export function useFavorites() {
             },
           ];
 
-      /*
-       * Update the UI immediately.
-       */
       setIds(
         new Set(
           updated.map(
@@ -167,9 +157,6 @@ export function useFavorites() {
         )
       );
 
-      /*
-       * Save locally and to cloud.
-       */
       save(updated);
     },
     [save]
@@ -181,10 +168,6 @@ export function useFavorites() {
     [ids]
   );
 
-  /*
-   * Keep the returned array stable when the actual
-   * favorite IDs haven't changed.
-   */
   const favoriteIds = useMemo(
     () => Array.from(ids),
     [ids]
@@ -198,3 +181,7 @@ export function useFavorites() {
     isLoggedIn,
   };
 }
+
+Notice that I also removed "isLoggedIn" from the loading effect dependency list. It isn't needed: "authReady" and the stable "load" callback are enough to trigger the correct load.
+
+Most importantly, one detail-page FavoriteButton now means one "useFavorites()" and one Supabase auth subscription, rather than one of each for every puppy card.

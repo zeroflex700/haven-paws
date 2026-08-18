@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Video } from "lucide-react";
 import OptimizedImage from "./OptimizedImage";
-import FavoriteButton from "./FavoriteButton";
 
 type Status = "available" | "reserved" | "sold";
 

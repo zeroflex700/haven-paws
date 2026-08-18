@@ -22,8 +22,20 @@ export function useCloudSync<T>(
     useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /*
-   * Determine the current authentication state once,
-   * then keep it synchronized with Supabase auth events.
+   * Keep the local fallback functions as the actual
+   * dependencies rather than depending on the wrapper
+   * object itself.
+   *
+   * Consumers may create the { read, write } object
+   * inline. The functions themselves are module-level
+   * stable references.
+   */
+  const readLocal = localFallback.read;
+  const writeLocal = localFallback.write;
+
+  /*
+   * Determine authentication state once and keep it
+   * synchronized with Supabase auth events.
    */
   useEffect(() => {
     let mounted = true;
@@ -58,19 +70,17 @@ export function useCloudSync<T>(
 
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
+        debounceRef.current = null;
       }
     };
   }, []);
 
   /*
-   * Load cloud data when logged in.
+   * Load cloud data when authentication is ready.
    *
    * If there is no cloud record, fall back to localStorage.
    */
   const load = useCallback(async (): Promise<T | null> => {
-    /*
-     * Authentication hasn't finished initializing yet.
-     */
     if (!authReady) {
       return null;
     }
@@ -88,20 +98,20 @@ export function useCloudSync<T>(
       }
     }
 
-    return localFallback.read();
-  }, [authReady, userId, key, localFallback]);
+    return readLocal();
+  }, [authReady, userId, key, readLocal]);
 
   /*
    * Save locally immediately.
    *
-   * If the user is logged in, synchronize to Supabase
-   * after a short debounce.
+   * Cloud synchronization is debounced so rapid changes
+   * do not create repeated Supabase writes.
    */
   const save = useCallback(
     (value: T) => {
-      localFallback.write(value);
+      writeLocal(value);
 
-      if (!userId) {
+      if (!authReady || !userId) {
         return;
       }
 
@@ -110,24 +120,26 @@ export function useCloudSync<T>(
       }
 
       debounceRef.current = setTimeout(async () => {
-        await supabase
-          .from("session_recovery")
-          .upsert(
-            {
-              user_id: userId,
-              key,
-              value: value as unknown as object,
-              updated_at: new Date().toISOString(),
-            },
-            {
-              onConflict: "user_id,key",
-            }
-          );
-
-        debounceRef.current = null;
+        try {
+          await supabase
+            .from("session_recovery")
+            .upsert(
+              {
+                user_id: userId,
+                key,
+                value: value as unknown as object,
+                updated_at: new Date().toISOString(),
+              },
+              {
+                onConflict: "user_id,key",
+              }
+            );
+        } finally {
+          debounceRef.current = null;
+        }
       }, 500);
     },
-    [userId, key, localFallback]
+    [authReady, userId, key, writeLocal]
   );
 
   return {
@@ -138,3 +150,12 @@ export function useCloudSync<T>(
     authReady,
   };
 }
+
+The key change is that "useCloudSync()" now depends on:
+
+localFallback.read
+localFallback.write
+
+rather than the freshly-created "localFallback" object.
+
+I also added "authReady" to "save()", so a save cannot try to synchronize to Supabase while authentication is still being established.

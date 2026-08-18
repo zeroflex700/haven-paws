@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
   Check,
-  Heart,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
@@ -18,6 +17,7 @@ import PuppyParents from "../../components/PuppyParents";
 import PuppySiblings from "../../components/PuppySiblings";
 import AboutBreeder from "../../components/AboutBreeder";
 import RelatedPuppies from "../../components/RelatedPuppies";
+import FavoriteButton from "../../components/FavoriteButton";
 import RelatedBreedsSection from "../../components/RelatedBreedsSection";
 import BreederAttributionCard from "../../components/BreederAttributionCard";
 import BreedGuideCard from "../../components/BreedGuideCard";
@@ -301,12 +301,13 @@ export default async function PuppyDetailPage({
 
                     </div>
 
-                    <div className="hidden sm:flex shrink-0 h-10 w-10 items-center justify-center rounded-full border border-sage/10 bg-cream-alt text-sage">
-                      <Heart
-                        size={17}
-                        strokeWidth={1.6}
-                      />
-                    </div>
+                   <div className="shrink-0">
+  <FavoriteButton
+    puppyId={puppy.id}
+    size={18}
+    className="h-10 w-10 border border-sage/10 bg-cream-alt"
+  />
+</div>
 
                   </div>
 
