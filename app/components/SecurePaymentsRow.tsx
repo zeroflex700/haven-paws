@@ -33,7 +33,7 @@ export default function SecurePaymentsRow() {
     {
       name: "Apple Pay",
       icon: FaCcApplePay,
-      color: "text-white",
+      color: "text-black",
     },
     {
       name: "Google Pay",
@@ -43,36 +43,53 @@ export default function SecurePaymentsRow() {
   ];
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-6">
-      {/* Secure payments heading */}
-      <div className="flex items-center gap-2 mb-3 text-white/90">
-        <ShieldCheck
-          size={16}
-          className="text-gold"
-          strokeWidth={1.5}
-        />
+    <div className="mx-auto max-w-7xl px-6 py-8 sm:px-8 lg:px-10 lg:py-10">
+      <div className="rounded-3xl border border-white/10 bg-[#193348] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.14)] sm:p-6 lg:p-7">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          {/* Security heading */}
+          <div className="flex items-start gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#D9B75D]/25 bg-[#D9B75D]/10">
+              <ShieldCheck
+                size={21}
+                className="text-[#D9B75D]"
+                strokeWidth={1.7}
+              />
+            </div>
 
-        <span className="text-sm font-medium">
-          Secure Payments
-        </span>
-      </div>
+            <div>
+              <p className="text-sm font-semibold text-white">
+                Secure Payments
+              </p>
 
-      {/* Payment methods */}
-      <div className="flex flex-wrap gap-2">
-        {methods.map(({ name, icon: Icon, color }) => (
-          <span
-            key={name}
-            className="flex items-center gap-2 rounded-md border border-white/20 bg-white/5 px-3 py-2 text-xs text-white/80"
-          >
-            <Icon
-              size={20}
-              className={`${color} shrink-0`}
-              aria-hidden="true"
-            />
+              <p className="mt-1 max-w-sm text-xs leading-5 text-white/45">
+                Your payment information is protected with secure payment
+                processing.
+              </p>
+            </div>
+          </div>
 
-            <span>{name}</span>
-          </span>
-        ))}
+          {/* Payment methods */}
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:flex lg:flex-wrap lg:justify-end">
+            {methods.map(({ name, icon: Icon, color }) => (
+              <span
+                key={name}
+                className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-white/10 bg-[#213F55] px-3 py-2.5 text-xs text-white/70 transition-colors hover:border-white/20 hover:bg-[#294A61] sm:min-w-[125px]"
+              >
+                <span className="flex h-6 w-8 items-center justify-center rounded bg-white px-1">
+                  <Icon
+                    size={22}
+                    className={`${color} shrink-0`}
+                    aria-hidden="true"
+                  />
+                </span>
+
+                <span className="whitespace-nowrap">
+                  {name}
+                </span>
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
