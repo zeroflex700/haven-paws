@@ -36,7 +36,6 @@ export default async function Home() {
     await getPageImages("homepage");
 
   const { count, avgRating } = await getReviewStats();
-
   const reviews = await getReviews(6);
   const videoStories = await getVideoStories();
   const locationCards = await getLocationCards();
@@ -48,75 +47,115 @@ export default async function Home() {
     .order("name");
 
   return (
-    <main className="home-page">
+    <main className="homepage">
       <Navbar />
 
-      <div className="home-hero-shell">
+      {/* HERO — warm, editorial opening */}
+      <section className="hp-section hp-hero-section">
+        <div className="hp-section-glow hp-glow-gold" />
         <HomeHero
           heroImage={heroImage}
           heroVideo={heroVideo}
           reviewCount={count}
           avgRating={avgRating}
         />
-      </div>
-
-      <section className="home-section home-section--floating">
-        <ContinueBrowsingBanner />
       </section>
 
-      <section className="home-section home-section--breeds">
-        <BreedDiscoveryRow breeds={breeds ?? []} />
+      {/* BROWSING — light blue interruption */}
+      <section className="hp-section hp-browsing-section">
+        <div className="hp-content">
+          <ContinueBrowsingBanner />
+        </div>
       </section>
 
-      <section className="home-section home-section--quiet">
-        <RecentlyViewedStrip />
+      {/* BREEDS — white editorial catalogue */}
+      <section className="hp-section hp-breeds-section">
+        <div className="hp-content hp-content-wide">
+          <BreedDiscoveryRow breeds={breeds ?? []} />
+        </div>
       </section>
 
-      <section className="home-section home-section--featured">
-        <RecommendedPuppies />
+      {/* RECENTLY VIEWED — subtle cream strip */}
+      <section className="hp-section hp-recent-section">
+        <div className="hp-content hp-content-wide">
+          <RecentlyViewedStrip />
+        </div>
       </section>
 
-      <section className="home-section home-section--trust">
-        <TrustBanner />
+      {/* RECOMMENDED PUPPIES — pale yellow / premium showcase */}
+      <section className="hp-section hp-recommended-section">
+        <div className="hp-section-glow hp-glow-blue" />
+        <div className="hp-content hp-content-wide">
+          <RecommendedPuppies />
+        </div>
       </section>
 
-      <section className="home-section home-section--verification">
-        <VerificationBadges
-          badge1={extraImages.verification_badge_1 ?? null}
-          badge2={extraImages.verification_badge_2 ?? null}
-          badge3={extraImages.verification_badge_3 ?? null}
-          badge4={extraImages.verification_badge_4 ?? null}
-        />
+      {/* TRUST — deep navy statement section */}
+      <section className="hp-section hp-trust-section">
+        <div className="hp-content hp-content-wide">
+          <TrustBanner />
+        </div>
       </section>
 
-      <section className="home-section home-section--process">
-        <HowItWorksAccordion />
+      {/* VERIFICATION — white / certification feel */}
+      <section className="hp-section hp-verification-section">
+        <div className="hp-content hp-content-narrow">
+          <VerificationBadges
+            badge1={extraImages.verification_badge_1 ?? null}
+            badge2={extraImages.verification_badge_2 ?? null}
+            badge3={extraImages.verification_badge_3 ?? null}
+            badge4={extraImages.verification_badge_4 ?? null}
+          />
+        </div>
       </section>
 
-      <section className="home-section home-section--stories">
-        <VideoStoryCarousel stories={videoStories} />
+      {/* HOW IT WORKS — pale blue */}
+      <section className="hp-section hp-process-section">
+        <div className="hp-content hp-content-narrow">
+          <HowItWorksAccordion />
+        </div>
       </section>
 
-      <section className="home-section home-section--locations">
-        <LocationCardsRow cards={locationCards} />
+      {/* BREEDER STORIES — dark editorial block */}
+      <section className="hp-section hp-video-section">
+        <div className="hp-content hp-content-wide">
+          <VideoStoryCarousel stories={videoStories} />
+        </div>
       </section>
 
-      <section className="home-section home-section--families">
-        <FamilyStoriesCarousel reviews={reviews} />
+      {/* LOCATIONS — warm yellow */}
+      <section className="hp-section hp-location-section">
+        <div className="hp-content hp-content-wide">
+          <LocationCardsRow cards={locationCards} />
+        </div>
       </section>
 
-      <section className="home-section home-section--explore">
-        <KeepExploringGrid
-          cards={exploringCards}
-          breeds={breeds ?? []}
-        />
+      {/* FAMILY STORIES — soft blush/cream */}
+      <section className="hp-section hp-family-section">
+        <div className="hp-content hp-content-wide">
+          <FamilyStoriesCarousel reviews={reviews} />
+        </div>
       </section>
 
-      <section className="home-section home-section--cta">
-        <DualCtaCards />
+      {/* EXPLORE — white catalogue */}
+      <section className="hp-section hp-explore-section">
+        <div className="hp-content hp-content-wide">
+          <KeepExploringGrid
+            cards={exploringCards}
+            breeds={breeds ?? []}
+          />
+        </div>
       </section>
 
-      <section className="home-closing">
+      {/* BREEDER / SHELTER CTA — intentionally contrasting cards */}
+      <section className="hp-section hp-dual-cta-section">
+        <div className="hp-content hp-content-wide">
+          <DualCtaCards />
+        </div>
+      </section>
+
+      {/* CLOSING — strong visual ending */}
+      <section className="hp-section hp-closing-section">
         <ClosingBanner
           image={extraImages.closing_banner ?? null}
         />

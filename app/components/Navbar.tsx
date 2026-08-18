@@ -85,7 +85,13 @@ export default function Navbar() {
       <header
         className={`
           sticky top-0 z-50
-          transition-all duration-500 ease-out
+          border-b
+          transition-all duration-500
+          ${
+            scrolled
+              ? "bg-[#fbf7ef]/94 border-[#193b35]/10 shadow-[0_8px_30px_rgba(25,59,53,0.07)]"
+              : "bg-[#fbf7ef]/80 border-transparent"
+          }
           ${
             scrollDirection === "down"
               ? "-translate-y-full"
@@ -96,65 +102,33 @@ export default function Navbar() {
           paddingTop: "env(safe-area-inset-top, 0px)",
         }}
       >
-        <div
-          className={`
-            mx-auto
-            transition-all duration-500 ease-out
-            ${
-              scrolled
-                ? "max-w-[78rem] px-3 sm:px-5 lg:px-6 pt-2"
-                : "max-w-7xl px-0 sm:px-3 lg:px-4 pt-0"
-            }
-          `}
-        >
-          <div
-            className={`
-              relative
-              flex items-center justify-between
-              min-h-[64px]
-              px-4 sm:px-5 lg:px-6
-              border
-              transition-all duration-500
-              ${
-                scrolled
-                  ? `
-                    rounded-2xl
-                    bg-white/88
-                    backdrop-blur-2xl
-                    border-forest/10
-                    shadow-[0_12px_40px_rgba(48,70,93,0.08)]
-                  `
-                  : `
-                    bg-white/75
-                    backdrop-blur-xl
-                    border-transparent
-                  `
-              }
-            `}
-          >
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-10">
+          <div className="h-[68px] flex items-center justify-between">
+
             {/* LEFT */}
             <div className="flex items-center gap-3">
+
               <button
                 onClick={() => setMenuOpen(true)}
                 className="
                   md:hidden
-                  flex h-10 w-10
-                  items-center justify-center
+                  w-10 h-10
                   rounded-full
-                  border border-forest/10
-                  bg-white/70
-                  text-forest
-                  transition-all
-                  hover:border-gold/40
+                  flex items-center justify-center
+                  border border-[#193b35]/10
+                  bg-white/50
+                  text-[#193b35]
                   hover:bg-white
+                  hover:border-[#d7a94b]/60
                   active:scale-90
+                  transition-all
                 "
                 aria-label="Open menu"
                 type="button"
               >
                 <Menu
                   size={19}
-                  strokeWidth={1.7}
+                  strokeWidth={1.6}
                 />
               </button>
 
@@ -163,38 +137,34 @@ export default function Navbar() {
                 className="
                   group
                   flex items-center gap-2.5
-                  rounded-full
-                  py-2
-                  pr-2
-                  text-forest
+                  shrink-0
                 "
                 aria-label="Haven Paws home"
               >
                 <span
                   className="
-                    flex h-8 w-8
-                    items-center justify-center
+                    w-9 h-9
                     rounded-full
-                    bg-forest
-                    shadow-sm
-                    transition-transform
-                    duration-300
-                    group-hover:scale-105
+                    bg-[#193b35]
+                    flex items-center justify-center
+                    shadow-[0_5px_15px_rgba(25,59,53,0.15)]
+                    group-hover:bg-[#d7a94b]
+                    transition-colors duration-300
                   "
                 >
                   <PawPrint
-                    size={16}
-                    className="text-white"
-                    strokeWidth={1.6}
+                    size={18}
+                    className="text-white group-hover:text-[#193b35] transition-colors"
+                    strokeWidth={1.5}
                   />
                 </span>
 
                 <span
                   className="
                     font-display
-                    text-[18px]
-                    tracking-[-0.02em]
-                    text-forest
+                    text-[19px]
+                    text-[#193b35]
+                    tracking-[-0.025em]
                   "
                 >
                   Haven Paws
@@ -206,11 +176,13 @@ export default function Navbar() {
             <nav
               className="
                 hidden md:flex
-                absolute left-1/2
-                -translate-x-1/2
                 items-center
                 gap-1
                 lg:gap-2
+                px-2 py-1
+                rounded-full
+                bg-white/45
+                border border-[#193b35]/[0.06]
               "
               aria-label="Main navigation"
             >
@@ -223,56 +195,58 @@ export default function Navbar() {
             </nav>
 
             {/* ACCOUNT */}
-            <div className="flex items-center">
-              {loggedIn ? (
-                <button
-                  onClick={() => setAccountOpen(true)}
-                  aria-label="Account"
-                  type="button"
+            {loggedIn ? (
+              <button
+                onClick={() => setAccountOpen(true)}
+                aria-label="Account"
+                type="button"
+                className="
+                  w-10 h-10
+                  rounded-full
+                  bg-[#193b35]
+                  border border-[#193b35]
+                  flex items-center justify-center
+                  hover:bg-[#d7a94b]
+                  hover:border-[#d7a94b]
+                  hover:text-[#193b35]
+                  active:scale-95
+                  transition-all duration-300
+                "
+              >
+                <User
+                  size={16}
+                  className="text-white"
+                  strokeWidth={1.6}
+                />
+              </button>
+            ) : (
+              <Link
+                href={getLoginUrl()}
+                aria-label="Account"
+                className="
+                  w-10 h-10
+                  rounded-full
+                  bg-white/65
+                  border border-[#193b35]/10
+                  flex items-center justify-center
+                  hover:bg-[#193b35]
+                  hover:border-[#193b35]
+                  active:scale-95
+                  transition-all duration-300
+                  group
+                "
+              >
+                <User
+                  size={16}
                   className="
-                    flex h-10 w-10
-                    items-center justify-center
-                    rounded-full
-                    border border-forest/10
-                    bg-white
-                    text-forest
-                    shadow-sm
-                    transition-all
-                    hover:border-gold/50
-                    hover:shadow-md
-                    active:scale-95
+                    text-[#193b35]
+                    group-hover:text-white
+                    transition-colors
                   "
-                >
-                  <User
-                    size={17}
-                    strokeWidth={1.5}
-                  />
-                </button>
-              ) : (
-                <Link
-                  href={getLoginUrl()}
-                  aria-label="Account"
-                  className="
-                    flex h-10 w-10
-                    items-center justify-center
-                    rounded-full
-                    border border-forest/10
-                    bg-white
-                    text-forest
-                    shadow-sm
-                    transition-all
-                    hover:border-gold/50
-                    hover:shadow-md
-                    active:scale-95
-                  "
-                >
-                  <User
-                    size={17}
-                    strokeWidth={1.5}
-                  />
-                </Link>
-              )}
-            </div>
+                  strokeWidth={1.6}
+                />
+              </Link>
+            )}
           </div>
         </div>
       </header>
