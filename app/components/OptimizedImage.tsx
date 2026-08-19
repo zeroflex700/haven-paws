@@ -1,126 +1,119 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useState } from "react";
+
+function cloudinaryLoader({
+  src,
+  width,
+  quality,
+}: {
+  src: string;
+  width: number;
+  quality?: number;
+}) {
+  if (!src.includes("/upload/")) return src;
+
+  return src.replace(
+    "/upload/",
+    `/upload/w_${width},q_${quality ?? "auto"},f_auto,c_limit/`
+  );
+}
+
+function blurUrl(src: string): string | null {
+  if (!src.includes("/upload/")) return null;
+
+  return src.replace(
+    "/upload/",
+    "/upload/w_32,e_blur:1000,q_1,f_auto/"
+  );
+}
 
 export type OptimizedImageProps = {
-src: string | null | undefined;
-alt: string;
-fill?: boolean;
-width?: number;
-height?: number;
-sizes?: string;
-priority?: boolean;
-className?: string;
-containerClassName?: string;
+  src: string | null | undefined;
+  alt: string;
+  fill?: boolean;
+  width?: number;
+  height?: number;
+  sizes?: string;
+  priority?: boolean;
+  className?: string;
+  containerClassName?: string;
 };
 
-function isCloudinaryUrl(src: string) {
-return src.includes("res.cloudinary.com") && src.includes("/upload/");
-}
-
-function cloudinaryUrl(src: string, width?: number) {
-if (!isCloudinaryUrl(src)) return src;
-
-const transformation = width
-? "w_${width},q_auto,f_auto,c_limit"
-: "q_auto,f_auto,c_limit";
-
-return src.replace("/upload/", "/upload/${transformation}/");
-}
-
 export default function OptimizedImage({
-src,
-alt,
-fill = true,
-width,
-height,
-sizes = "100vw",
-priority = false,
-className = "",
-containerClassName = "",
+  src,
+  alt,
+  fill = true,
+  width,
+  height,
+  sizes = "100vw",
+  priority = false,
+  className = "",
+  containerClassName = "",
 }: OptimizedImageProps) {
-const [loaded, setLoaded] = useState(false);
-const [failed, setFailed] = useState(false);
-const [usingOriginal, setUsingOriginal] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
 
-useEffect(() => {
-setLoaded(false);
-setFailed(false);
-setUsingOriginal(false);
-}, [src]);
+  if (!src) {
+    return (
+      <div
+        className={`w-full h-full bg-cream-alt flex items-center justify-center ${containerClassName}`}
+      >
+        <span className="text-sage text-xs">No image</span>
+      </div>
+    );
+  }
 
-if (!src) {
-return (
-<div
-className={"relative w-full h-full bg-cream-alt flex items-center justify-center ${containerClassName}"}
->
-<span className="text-sage text-xs">No image</span>
-</div>
-);
-}
+  const blur = blurUrl(src);
 
-const optimizedSrc = cloudinaryUrl(src, width);
-const imageSrc =
-usingOriginal || optimizedSrc === src ? src : optimizedSrc;
+  return (
+    <div
+      className={`relative overflow-hidden ${
+        fill ? "w-full h-full" : ""
+      } ${containerClassName}`}
+    >
+      {blur && !failed && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={blur}
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+          className={`absolute inset-0 w-full h-full object-cover scale-105 transition-opacity duration-500 ${
+            loaded ? "opacity-0" : "opacity-100"
+          }`}
+        />
+      )}
 
-function handleError() {
-if (!usingOriginal && optimizedSrc !== src) {
-setUsingOriginal(true);
-setLoaded(false);
-return;
-}
-
-setFailed(true);
-setLoaded(false);
-
-}
-
-if (failed) {
-return (
-<div
-className={"relative w-full h-full bg-cream-alt flex items-center justify-center ${containerClassName}"}
->
-<div className="text-center px-4">
-<span className="block text-sage text-xs">
-Image unavailable
-</span>
-</div>
-</div>
-);
-}
-
-return (
-<div
-className={"relative overflow-hidden ${ fill ? "w-full h-full" : "" } ${containerClassName}"}
->
-{!loaded && (
-<div
-aria-hidden="true"
-className="absolute inset-0 bg-cream-alt animate-pulse"
-/>
-)}
-
-  <img
-    src={imageSrc}
-    alt={alt}
-    width={!fill ? width : undefined}
-    height={!fill ? height : undefined}
-    sizes={sizes}
-    loading={priority ? "eager" : "lazy"}
-    decoding="async"
-    draggable={false}
-    onLoad={() => setLoaded(true)}
-    onError={handleError}
-    onContextMenu={(e) => e.preventDefault()}
-    className={`${
-      fill
-        ? "absolute inset-0 w-full h-full"
-        : "w-full h-auto"
-    } object-cover transition-opacity duration-300 ${
-      loaded ? "opacity-100" : "opacity-0"
-    } ${className}`}
-  />
-</div>
-
-);
+      {failed ? (
+        <div className="absolute inset-0 flex items-center justify-center bg-cream-alt">
+          <span className="px-4 text-center text-xs text-sage">
+            Image unavailable
+          </span>
+        </div>
+      ) : (
+        <Image
+          loader={cloudinaryLoader}
+          src={src}
+          alt={alt}
+          fill={fill}
+          width={!fill ? width : undefined}
+          height={!fill ? height : undefined}
+          sizes={sizes}
+          priority={priority}
+          draggable={false}
+          onLoad={() => setLoaded(true)}
+          onError={() => {
+            setFailed(true);
+            setLoaded(false);
+          }}
+          onContextMenu={(e) => e.preventDefault()}
+          className={`object-cover transition-opacity duration-500 ${
+            loaded ? "opacity-100" : "opacity-0"
+          } ${className}`}
+        />
+      )}
+    </div>
+  );
 }
