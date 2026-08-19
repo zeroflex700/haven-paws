@@ -13,9 +13,7 @@ export function ProtectedImage({
 }) {
   return (
     <div
-      className={`relative overflow-hidden select-none ${
-        className ?? ""
-      }`}
+      className={className}
       onContextMenu={(e) => e.preventDefault()}
       onDragStart={(e) => e.preventDefault()}
     >
@@ -23,7 +21,7 @@ export function ProtectedImage({
         src={src}
         alt={alt}
         fill
-        containerClassName="absolute inset-0"
+        containerClassName="w-full h-full"
       />
     </div>
   );
@@ -48,6 +46,7 @@ export function ProtectedVideo({
         className ?? ""
       }`}
       onContextMenu={(e) => e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
     >
       <video
         src={src}
@@ -62,11 +61,6 @@ export function ProtectedVideo({
         onContextMenu={(e) => e.preventDefault()}
         onDragStart={(e) => e.preventDefault()}
         className="w-full h-full object-cover"
-      />
-
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 pointer-events-none select-none"
       />
     </div>
   );

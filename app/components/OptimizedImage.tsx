@@ -3,6 +3,32 @@
 import Image from "next/image";
 import { useState } from "react";
 
+function cloudinaryLoader({
+  src,
+  width,
+  quality,
+}: {
+  src: string;
+  width: number;
+  quality?: number;
+}) {
+  if (!src.includes("/upload/")) return src;
+
+  return src.replace(
+    "/upload/",
+    `/upload/w_${width},q_${quality ?? "auto"},f_auto,c_limit/`
+  );
+}
+
+function blurUrl(src: string): string | null {
+  if (!src.includes("/upload/")) return null;
+
+  return src.replace(
+    "/upload/",
+    "/upload/w_32,e_blur:1000,q_1,f_auto/"
+  );
+}
+
 export type OptimizedImageProps = {
   src: string | null | undefined;
   alt: string;
@@ -39,25 +65,24 @@ export default function OptimizedImage({
     );
   }
 
-  /*
-   * IMPORTANT:
-   *
-   * These images are already hosted remotely (primarily Cloudinary).
-   * Do not generate another Cloudinary transformation here.
-   *
-   * Serving the original URL avoids breaking existing assets when
-   * Cloudinary transformation/security settings change.
-   */
+  const blur = blurUrl(src);
+
   return (
     <div
       className={`relative overflow-hidden ${
         fill ? "w-full h-full" : ""
       } ${containerClassName}`}
     >
-      {!loaded && !failed && (
-        <div
+      {blur && !failed && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={blur}
+          alt=""
           aria-hidden="true"
-          className="absolute inset-0 bg-cream-alt animate-pulse"
+          draggable={false}
+          className={`absolute inset-0 w-full h-full object-cover scale-105 transition-opacity duration-500 ${
+            loaded ? "opacity-0" : "opacity-100"
+          }`}
         />
       )}
 
@@ -69,6 +94,7 @@ export default function OptimizedImage({
         </div>
       ) : (
         <Image
+          loader={cloudinaryLoader}
           src={src}
           alt={alt}
           fill={fill}
@@ -76,15 +102,17 @@ export default function OptimizedImage({
           height={!fill ? height : undefined}
           sizes={sizes}
           priority={priority}
-          unoptimized
           draggable={false}
-          onLoad={() => setLoaded(true)}
+          onLoad={() => {
+            setLoaded(true);
+            setFailed(false);
+          }}
           onError={() => {
             setFailed(true);
             setLoaded(false);
           }}
           onContextMenu={(e) => e.preventDefault()}
-          className={`object-cover transition-opacity duration-300 ${
+          className={`object-cover transition-opacity duration-500 ${
             loaded ? "opacity-100" : "opacity-0"
           } ${className}`}
         />
