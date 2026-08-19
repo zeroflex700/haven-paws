@@ -64,7 +64,6 @@ export function ProtectedVideo({
         className="w-full h-full object-cover"
       />
 
-      {/* Prevent simple drag/save interactions */}
       <div
         aria-hidden="true"
         className="absolute inset-0 pointer-events-none select-none"
