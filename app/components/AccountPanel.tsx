@@ -38,7 +38,7 @@ const MENU_ITEMS = [
     icon: MessageSquare,
     label: "Messages",
     href: "/account/messages",
-    description: "Your conversations",
+    description: "Your conversations with our Breeders",
   },
   {
     icon: FileText,
