@@ -12,18 +12,12 @@ export function ProtectedImage({
   className?: string;
 }) {
   return (
-    <div
-      className={className}
-      onContextMenu={(e) => e.preventDefault()}
-      onDragStart={(e) => e.preventDefault()}
-    >
-      <OptimizedImage
-        src={src}
-        alt={alt}
-        fill
-        containerClassName="w-full h-full"
-      />
-    </div>
+    <OptimizedImage
+      src={src}
+      alt={alt}
+      fill
+      containerClassName={`w-full h-full ${className ?? ""}`}
+    />
   );
 }
 
@@ -42,7 +36,7 @@ export function ProtectedVideo({
 }) {
   return (
     <div
-      className={`relative overflow-hidden select-none ${
+      className={`relative w-full h-full overflow-hidden select-none ${
         className ?? ""
       }`}
       onContextMenu={(e) => e.preventDefault()}
@@ -60,7 +54,7 @@ export function ProtectedVideo({
         disablePictureInPicture
         onContextMenu={(e) => e.preventDefault()}
         onDragStart={(e) => e.preventDefault()}
-        className="w-full h-full object-cover"
+        className="absolute inset-0 w-full h-full object-cover"
       />
     </div>
   );
