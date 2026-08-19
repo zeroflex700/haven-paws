@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { notFound } from "next/navigation";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
@@ -34,7 +37,9 @@ export default async function BreederProfilePage({
 
   const breeder = await getBreederBySlug(slug);
 
-  if (!breeder) notFound();
+  if (!breeder) {
+    notFound();
+  }
 
   const [
     homePhotos,
