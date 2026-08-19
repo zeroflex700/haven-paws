@@ -23,13 +23,6 @@ function getImageUrl(
     return src;
   }
 
-  /*
-   * Keep existing Cloudinary URLs intact unless a size was
-   * explicitly requested.
-   *
-   * This avoids double-transforming URLs and lets us verify
-   * that the original assets are reachable again.
-   */
   if (!width && !height) {
     return src;
   }
@@ -61,7 +54,6 @@ export default function OptimizedImage({
   className = "",
   containerClassName = "",
 }: OptimizedImageProps) {
-  const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
 
   if (!src) {
@@ -82,65 +74,55 @@ export default function OptimizedImage({
     fill ? undefined : height
   );
 
+  if (failed) {
+    return (
+      <div
+        className={`relative overflow-hidden ${
+          fill ? "w-full h-full" : ""
+        } ${containerClassName}`}
+      >
+        <div className="absolute inset-0 flex items-center justify-center bg-cream-alt">
+          <span className="px-4 text-center text-xs text-sage">
+            Image unavailable
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`relative overflow-hidden ${
         fill ? "w-full h-full" : ""
       } ${containerClassName}`}
     >
-      {!loaded && !failed && (
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-cream-alt animate-pulse"
-        />
-      )}
+      {/* Loading background */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-cream-alt"
+      />
 
-      {failed ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-cream-alt">
-          <div className="text-center px-4">
-            <span className="block text-sage text-xs">
-              Image unavailable
-            </span>
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={imageUrl}
-            alt={alt}
-            width={!fill ? width : undefined}
-            height={!fill ? height : undefined}
-            loading={priority ? "eager" : "lazy"}
-            decoding="async"
-            draggable={false}
-            onLoad={() => {
-              setLoaded(true);
-              setFailed(false);
-            }}
-            onError={() => {
-              setFailed(true);
-              setLoaded(false);
-            }}
-            onContextMenu={(e) => e.preventDefault()}
-            className={`${
-              fill
-                ? "absolute inset-0 w-full h-full"
-                : "w-full h-auto"
-            } object-cover transition-opacity duration-300 ${
-              loaded ? "opacity-100" : "opacity-0"
-            } ${className}`}
-          />
-
-          {failed && (
-            <div className="absolute inset-0 flex items-center justify-center bg-cream-alt">
-              <span className="px-4 text-center text-xs text-sage">
-                Image unavailable
-              </span>
-            </div>
-          )}
-        </>
-      )}
+      {/* Actual image */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={imageUrl}
+        alt={alt}
+        width={!fill ? width : undefined}
+        height={!fill ? height : undefined}
+        sizes={sizes}
+        loading={priority ? "eager" : "lazy"}
+        decoding="async"
+        draggable={false}
+        onError={() => {
+          setFailed(true);
+        }}
+        onContextMenu={(e) => e.preventDefault()}
+        className={`relative ${
+          fill
+            ? "absolute inset-0 w-full h-full"
+            : "w-full h-auto"
+        } object-cover ${className}`}
+      />
     </div>
   );
 }
