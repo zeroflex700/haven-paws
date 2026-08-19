@@ -3,10 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminBreedsPage() {
   const supabase = await createClient();
-  const { data: breeds } = await supabase
-    .from("breeds")
-    .select("id, name, temperament, image_url, slug")
-    .order("name");
+  const { data: breeds, error } = await supabase
+  .from("breeds")
+  .select("id, name, temperament, image_url, slug")
+  .order("name");
+
+console.log("ADMIN BREEDS:", breeds);
+console.log("ADMIN BREEDS ERROR:", error);
 
   return (
     <main className="px-5 pt-6 pb-10">
