@@ -3,245 +3,233 @@ import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import PageContainer from "../../components/PageContainer";
 import TrainingCard from "../../components/TrainingCard";
-import SectionTabs from "../../components/SectionTabs";
 
 const TABS = [
-  { id: "get-coaching", label: "Start Here" },
-  { id: "first-week", label: "First Week" },
+  { id: "start", label: "Start here" },
+  { id: "first-week", label: "First week" },
   { id: "courses", label: "Courses" },
-  { id: "training-guides", label: "Guides" },
+  { id: "guides", label: "Guides" },
 ];
 
-const JOURNEY_STEPS = [
-  {
-    number: "01",
-    title: "Prepare",
-    text: "Set up your home, routines, and expectations before your puppy arrives.",
-  },
-  {
-    number: "02",
-    title: "Settle In",
-    text: "Navigate those important first days and build trust from the beginning.",
-  },
-  {
-    number: "03",
-    title: "Build Habits",
-    text: "Create consistent routines for training, sleep, feeding, and everyday life.",
-  },
-  {
-    number: "04",
-    title: "Grow Together",
-    text: "Keep building confidence, manners, and a happy lifelong relationship.",
-  },
-];
+function Arrow() {
+  return <span className="ml-2 transition-transform group-hover:translate-x-1">→</span>;
+}
 
 export default function PuppyTrainingHubPage() {
   return (
-    <main className="bg-[#faf8f2]">
+    <main className="bg-[#f7f5ef]">
       <Navbar />
-      <SectionTabs sections={TABS} />
 
-      {/* HERO */}
-      <section className="relative overflow-hidden border-b border-forest/10">
-        <div className="absolute inset-0 bg-[#163d32]" />
-
-        <div className="absolute -top-32 -right-24 h-96 w-96 rounded-full bg-gold/10 blur-3xl" />
-        <div className="absolute -bottom-40 -left-20 h-96 w-96 rounded-full bg-[#7ca58b]/20 blur-3xl" />
-
-        <PageContainer className="relative z-10 py-14 sm:py-20 lg:py-24">
-          <div className="max-w-4xl">
-            <div className="flex items-center gap-3 mb-6">
-              <span className="inline-flex h-2 w-2 rounded-full bg-gold animate-pulse" />
-              <p className="text-[10px] sm:text-xs tracking-[0.22em] uppercase text-white/65 font-medium">
+      {/* COMPACT LEARNING HUB HEADER */}
+      <section className="border-b border-forest/10 bg-cream">
+        <PageContainer className="py-6 sm:py-8">
+          <div className="max-w-5xl">
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <span className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.24em] text-forest/60">
+                <span className="h-2 w-2 rounded-full bg-gold" />
                 Haven &amp; Paws Learning Academy
-              </p>
+              </span>
+
+              <span className="hidden sm:inline text-forest/20">/</span>
+
+              <span className="text-xs font-medium text-forest/50">
+                Puppy Training
+              </span>
             </div>
 
-            <h1 className="max-w-3xl text-4xl sm:text-5xl lg:text-7xl font-semibold tracking-[-0.04em] leading-[0.98] text-white">
-              Raise a happy puppy.
-              <span className="block text-gold mt-2">One good habit at a time.</span>
-            </h1>
+            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5">
+              <div>
+                <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight text-forest">
+                  Puppy Training Hub
+                </h1>
 
-            <p className="mt-7 max-w-2xl text-base sm:text-lg lg:text-xl leading-relaxed text-white/70">
-              A structured, self-paced program with live coaching and community
-              support to help your puppy build good habits from day one.
-            </p>
-
-            <div className="mt-9 flex flex-wrap gap-3">
-              <a
-                href="#first-week"
-                className="inline-flex items-center gap-2 rounded-full bg-gold px-5 py-3 text-sm font-semibold text-forest transition hover:scale-[1.02] hover:shadow-lg"
-              >
-                Begin your journey
-                <span aria-hidden="true">→</span>
-              </a>
-
-              <a
-                href="#courses"
-                className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-3 text-sm font-medium text-white transition hover:bg-white/10"
-              >
-                Explore courses
-              </a>
-            </div>
-          </div>
-
-          <div className="mt-14 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-4">
-            {[
-              ["Self-paced", "Learn in your own time"],
-              ["Live coaching", "Guidance when you need it"],
-              ["Practical", "Simple steps for real life"],
-              ["Supportive", "You're not doing this alone"],
-            ].map(([title, subtitle]) => (
-              <div
-                key={title}
-                className="bg-[#163d32]/70 px-4 py-5 sm:px-6"
-              >
-                <p className="text-sm font-semibold text-white">{title}</p>
-                <p className="mt-1 text-xs leading-relaxed text-white/50">
-                  {subtitle}
+                <p className="mt-3 max-w-xl text-sm sm:text-base leading-7 text-ink/65">
+                  Practical lessons, step-by-step courses, and expert guidance
+                  to help you build good habits from day one.
                 </p>
               </div>
-            ))}
+
+              <Link
+                href="/puppy-training/first-week"
+                className="group inline-flex w-fit items-center rounded-full bg-forest px-5 py-3 text-sm font-medium text-white transition hover:opacity-90"
+              >
+                Begin your journey
+                <Arrow />
+              </Link>
+            </div>
           </div>
         </PageContainer>
       </section>
 
-      <PageContainer className="py-10 sm:py-14 lg:py-20">
-        {/* INTRO / PROGRAM */}
-        <section id="get-coaching" className="scroll-mt-28">
-          <div className="grid gap-8 lg:grid-cols-[1.05fr_1.95fr] lg:gap-14">
-            <div>
-              <p className="eyebrow mb-3">The program</p>
-              <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] text-forest leading-tight">
-                Training should feel less overwhelming.
-              </h2>
+      {/* COMPACT STICKY NAVIGATION */}
+      <div className="sticky top-0 z-20 border-b border-forest/10 bg-[#f7f5ef]/95 backdrop-blur">
+        <PageContainer>
+          <div className="flex gap-2 overflow-x-auto py-3 scrollbar-none">
+            {TABS.map((tab, index) => (
+              <a
+                key={tab.id}
+                href={`#${tab.id}`}
+                className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition ${
+                  index === 0
+                    ? "bg-forest text-white"
+                    : "border border-forest/10 bg-white text-forest hover:border-gold"
+                }`}
+              >
+                {String(index + 1).padStart(2, "0")} · {tab.label}
+              </a>
+            ))}
+          </div>
+        </PageContainer>
+      </div>
+
+      <PageContainer className="py-8 sm:py-12">
+        {/* START HERE */}
+        <section id="start" className="scroll-mt-28 mb-12">
+          <div className="grid gap-5 lg:grid-cols-[1.35fr_0.65fr]">
+            {/* FEATURED START CARD */}
+            <div className="rounded-2xl bg-forest p-6 sm:p-8 text-white overflow-hidden relative">
+              <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full border border-white/10" />
+              <div className="absolute right-12 bottom-[-80px] h-48 w-48 rounded-full bg-gold/10" />
+
+              <div className="relative">
+                <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-gold">
+                  Your starting point
+                </p>
+
+                <h2 className="mt-3 text-2xl sm:text-3xl font-semibold tracking-tight">
+                  Start strong. Build good habits early.
+                </h2>
+
+                <p className="mt-3 max-w-xl text-sm sm:text-base leading-7 text-white/70">
+                  A structured, self-paced program with live coaching and
+                  community support to help your puppy build good habits from
+                  day one.
+                </p>
+
+                <div className="mt-6 flex flex-wrap gap-2">
+                  {[
+                    "Self-paced",
+                    "Live coaching",
+                    "Practical lessons",
+                  ].map((item) => (
+                    <span
+                      key={item}
+                      className="rounded-full border border-white/15 px-3 py-1.5 text-xs text-white/75"
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
+
+                <Link
+                  href="/puppy-training/first-week"
+                  className="group mt-7 inline-flex items-center rounded-full bg-gold px-5 py-3 text-sm font-semibold text-forest transition hover:scale-[1.02]"
+                >
+                  Start with your first week
+                  <Arrow />
+                </Link>
+              </div>
             </div>
 
-            <div className="lg:pt-2">
-              <p className="body-text text-base sm:text-lg leading-relaxed">
-                Puppyhood moves quickly. The goal is not perfection — it is
-                knowing what to focus on next. This hub brings together the
-                essential lessons, courses, coaching, and practical resources
-                you need as your puppy grows.
+            {/* QUICK ACCESS */}
+            <div className="rounded-2xl border border-forest/10 bg-white p-5 sm:p-6">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-forest/45">
+                Quick access
               </p>
 
-              <div className="mt-7 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <TrainingCard
-                  title="Welcome"
-                  byline="Puppy Training Team"
-                  color="green"
-                />
-
-                <div className="rounded-xl border border-forest/10 bg-white p-5 shadow-[0_8px_30px_rgba(22,61,50,0.04)] transition hover:-translate-y-1">
-                  <div className="mb-4 flex items-center justify-between">
-                    <span className="h-2.5 w-2.5 rounded-full bg-gold" />
-                    <span className="text-[10px] tracking-wider uppercase text-ink/40">
-                      Live
-                    </span>
+              <div className="mt-4 divide-y divide-forest/10">
+                <Link
+                  href="/puppy-training/first-week"
+                  className="group flex items-center justify-between py-4"
+                >
+                  <div>
+                    <p className="font-semibold text-forest">Your First Week</p>
+                    <p className="mt-1 text-xs text-ink/55">
+                      Prepare for the first days together
+                    </p>
                   </div>
-                  <p className="font-semibold text-forest text-sm mb-1">
-                    Coaching Calls
-                  </p>
-                  <p className="text-xs leading-relaxed text-ink/60">
-                    Next call: this week
-                  </p>
-                  <button className="mt-4 text-xs font-medium text-forest border-b border-gold pb-0.5 transition hover:text-gold">
-                    RSVP →
-                  </button>
-                </div>
+                  <span className="text-forest/50 group-hover:text-gold">
+                    →
+                  </span>
+                </Link>
 
-                <div className="rounded-xl border border-forest/10 bg-[#e9f0e9] p-5 transition hover:-translate-y-1">
-                  <div className="mb-4 flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-forest" />
-                    <span className="h-1.5 w-1.5 rounded-full bg-forest/60" />
-                    <span className="h-1.5 w-1.5 rounded-full bg-forest/30" />
+                <Link
+                  href="/puppy-training/crate-training"
+                  className="group flex items-center justify-between py-4"
+                >
+                  <div>
+                    <p className="font-semibold text-forest">Crate Training</p>
+                    <p className="mt-1 text-xs text-ink/55">
+                      Create a calm, safe space
+                    </p>
                   </div>
-                  <p className="font-semibold text-forest text-sm mb-1">
-                    Private Community
-                  </p>
-                  <p className="text-xs leading-relaxed text-ink/60">
-                    Connect with other owners and share the journey.
-                  </p>
-                </div>
+                  <span className="text-forest/50 group-hover:text-gold">
+                    →
+                  </span>
+                </Link>
+
+                <Link
+                  href="/puppy-training/training-guides"
+                  className="group flex items-center justify-between py-4"
+                >
+                  <div>
+                    <p className="font-semibold text-forest">Training Guides</p>
+                    <p className="mt-1 text-xs text-ink/55">
+                      Helpful resources for everyday life
+                    </p>
+                  </div>
+                  <span className="text-forest/50 group-hover:text-gold">
+                    →
+                  </span>
+                </Link>
               </div>
             </div>
           </div>
         </section>
 
-        {/* JOURNEY */}
-        <section className="mt-16 sm:mt-24">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-7">
+        {/* COACHING STRIP */}
+        <section className="mb-12 rounded-2xl border border-forest/10 bg-[#ece8dd] p-5 sm:p-6">
+          <div className="grid gap-5 md:grid-cols-[1fr_auto_auto] md:items-center">
             <div>
-              <p className="eyebrow mb-2">Your roadmap</p>
-              <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-forest">
-                The puppyhood journey
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-forest/45">
+                Coaching &amp; community
+              </p>
+              <h2 className="mt-2 text-xl font-semibold text-forest">
+                You&apos;re not doing this alone.
               </h2>
             </div>
 
-            <p className="max-w-sm text-sm leading-relaxed text-ink/60">
-              You do not need to do everything at once. Start where you are and
-              take the next useful step.
-            </p>
-          </div>
+            <div className="border-l-0 md:border-l border-forest/10 md:pl-6">
+              <p className="text-sm font-semibold text-forest">Coaching Calls</p>
+              <p className="mt-1 text-xs text-ink/55">
+                Next call: this week
+              </p>
+              <button className="mt-2 text-xs font-medium text-forest underline decoration-gold underline-offset-4">
+                RSVP
+              </button>
+            </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {JOURNEY_STEPS.map((step, index) => (
-              <div
-                key={step.number}
-                className="group relative min-h-[210px] rounded-2xl border border-forest/10 bg-white p-6 transition duration-300 hover:-translate-y-1 hover:shadow-xl"
-              >
-                <span className="text-xs font-semibold tracking-[0.2em] text-gold">
-                  {step.number}
-                </span>
-
-                <div className="mt-8">
-                  <h3 className="text-xl font-semibold text-forest">
-                    {step.title}
-                  </h3>
-                  <p className="mt-3 text-sm leading-relaxed text-ink/60">
-                    {step.text}
-                  </p>
-                </div>
-
-                {index < JOURNEY_STEPS.length - 1 && (
-                  <span className="hidden lg:block absolute -right-2 top-1/2 z-10 text-gold text-lg">
-                    →
-                  </span>
-                )}
-              </div>
-            ))}
+            <div className="border-l-0 md:border-l border-forest/10 md:pl-6">
+              <p className="text-sm font-semibold text-forest">
+                Private Community
+              </p>
+              <p className="mt-1 text-xs text-ink/55">
+                Connect with other owners
+              </p>
+            </div>
           </div>
         </section>
 
         {/* FIRST WEEK */}
-        <section
-          id="first-week"
-          className="scroll-mt-28 mt-16 sm:mt-24 rounded-3xl bg-forest p-5 sm:p-8 lg:p-10"
-        >
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between mb-8">
-            <div className="max-w-xl">
-              <p className="text-[10px] sm:text-xs tracking-[0.2em] uppercase text-gold mb-3">
-                Start here
-              </p>
-              <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] text-white">
-                Your First Week
-              </h2>
-              <p className="mt-3 text-sm sm:text-base leading-relaxed text-white/65">
-                The first few days can shape your puppy&apos;s routines for weeks
-                to come. Focus on the essentials first.
-              </p>
-            </div>
+        <section id="first-week" className="scroll-mt-28 mb-14">
+          <SectionHeading
+            number="01"
+            title="Your First Week"
+            description="The essential lessons for settling in together."
+            href="/puppy-training/first-week"
+          />
 
-            <Link
-              href="/puppy-training/first-week"
-              className="inline-flex w-fit items-center gap-2 rounded-full border border-white/20 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-white/10"
-            >
-              View all
-              <span>→</span>
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <TrainingCard
               title="Prepare"
               description="Getting your home ready"
@@ -266,19 +254,14 @@ export default function PuppyTrainingHubPage() {
         </section>
 
         {/* COURSES */}
-        <section id="courses" className="scroll-mt-28 mt-16 sm:mt-24">
-          <div className="mb-8 max-w-2xl">
-            <p className="eyebrow mb-2">Learn by topic</p>
-            <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] text-forest">
-              Build the skills that matter most.
-            </h2>
-            <p className="mt-3 body-text">
-              Choose the area you want to work on and move through each lesson
-              at a pace that works for you and your puppy.
-            </p>
-          </div>
+        <section id="courses" className="scroll-mt-28 mb-14">
+          <SectionHeading
+            number="02"
+            title="Build the foundations"
+            description="Short, focused courses for the habits that matter most."
+          />
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
             <TrainingCard
               title="House Training"
               description="Build good bathroom habits"
@@ -301,157 +284,174 @@ export default function PuppyTrainingHubPage() {
             />
           </div>
 
-          {/* FEATURED LEARNING PATH */}
-          <div className="mt-14 grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
-            <div className="rounded-3xl bg-[#efe6d8] p-7 sm:p-10">
-              <p className="text-[10px] tracking-[0.2em] uppercase font-medium text-forest/55">
-                Featured learning path
-              </p>
+          {/* COURSE COLLECTIONS */}
+          <div className="grid gap-4 lg:grid-cols-2">
+            <CourseCollection
+              eyebrow="Focused course"
+              title="Get Started With Crate Training"
+              href="/puppy-training/crate-training"
+              items={[
+                "Intro",
+                "Supplies",
+                "Love the Crate",
+                "Stay Quiet",
+              ]}
+              color="orange"
+            />
 
-              <h3 className="mt-4 text-3xl sm:text-4xl font-semibold tracking-[-0.03em] text-forest leading-tight">
-                Get started with
-                <span className="block">Crate Training.</span>
-              </h3>
-
-              <p className="mt-4 text-sm sm:text-base leading-relaxed text-ink/65">
-                Help your puppy see the crate as a calm, comfortable, and safe
-                part of everyday life.
-              </p>
-
-              <Link
-                href="/puppy-training/crate-training"
-                className="inline-flex mt-7 items-center gap-2 rounded-full bg-forest px-5 py-3 text-sm font-semibold text-white transition hover:scale-[1.02]"
-              >
-                Explore the course
-                <span>→</span>
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <TrainingCard title="Intro" color="orange" />
-              <TrainingCard title="Supplies" color="orange" />
-              <TrainingCard title="Love the Crate" color="orange" />
-              <TrainingCard title="Stay Quiet" color="orange" />
-            </div>
-          </div>
-
-          {/* HEALTH */}
-          <div className="mt-14 border-t border-forest/10 pt-10">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-6">
-              <div>
-                <p className="eyebrow mb-2">Care essentials</p>
-                <h3 className="text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-forest">
-                  Health &amp; Wellness
-                </h3>
-              </div>
-
-              <Link
-                href="/puppy-training/health-wellness"
-                className="text-sm font-medium text-forest border-b border-gold pb-0.5 w-fit transition hover:text-gold"
-              >
-                View all →
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <TrainingCard title="Vaccinations" color="lavender" />
-              <TrainingCard title="Feeding" color="lavender" />
-              <TrainingCard title="Activity" color="lavender" />
-              <TrainingCard title="Spay/Neuter" color="lavender" />
-            </div>
+            <CourseCollection
+              eyebrow="Health & wellness"
+              title="Get Started With Health & Wellness"
+              href="/puppy-training/health-wellness"
+              items={[
+                "Vaccinations",
+                "Feeding",
+                "Activity",
+                "Spay/Neuter",
+              ]}
+              color="lavender"
+            />
           </div>
         </section>
 
         {/* GUIDES */}
-        <section
-          id="training-guides"
-          className="scroll-mt-28 mt-16 sm:mt-24"
-        >
-          <div className="rounded-3xl border border-forest/10 bg-white p-5 sm:p-8 lg:p-10">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between mb-8">
-              <div className="max-w-xl">
-                <p className="eyebrow mb-2">Keep it practical</p>
-                <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] text-forest">
-                  Get Our Training Guides
-                </h2>
-                <p className="mt-3 text-sm sm:text-base leading-relaxed text-ink/60">
-                  Simple resources you can return to whenever you need a little
-                  extra structure.
-                </p>
-              </div>
+        <section id="guides" className="scroll-mt-28 mb-14">
+          <SectionHeading
+            number="03"
+            title="Keep these close"
+            description="Useful guides and checklists for the moments you need them."
+            href="/puppy-training/training-guides"
+          />
 
-              <Link
-                href="/puppy-training/training-guides"
-                className="inline-flex w-fit items-center gap-2 rounded-full border border-forest/15 px-4 py-2.5 text-sm font-medium text-forest transition hover:bg-cream-alt"
-              >
-                View all guides
-                <span>→</span>
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <TrainingCard title="First Day Checklist" color="gray" />
-              <TrainingCard title="First Week Checklist" color="gray" />
-              <TrainingCard title="Family Worksheet" color="gray" />
-              <TrainingCard title="Sample Planner" color="gray" />
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <TrainingCard title="First Day Checklist" color="gray" />
+            <TrainingCard title="First Week Checklist" color="gray" />
+            <TrainingCard title="Family Worksheet" color="gray" />
+            <TrainingCard title="Sample Planner" color="gray" />
           </div>
         </section>
 
         {/* FEATURED COURSE */}
-        <section className="mt-16 sm:mt-24">
-          <div className="relative overflow-hidden rounded-3xl bg-[#ddd9ec] p-7 sm:p-10 lg:p-14">
-            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full border-[30px] border-white/20" />
-            <div className="absolute -bottom-24 right-1/4 h-52 w-52 rounded-full bg-white/15 blur-2xl" />
-
-            <div className="relative z-10 max-w-2xl">
-              <p className="text-[10px] tracking-[0.2em] uppercase font-semibold text-forest/55">
+        <section className="rounded-2xl bg-[#e6e0ee] p-5 sm:p-7">
+          <div className="grid gap-5 md:grid-cols-[1fr_auto] md:items-end">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-forest/50">
                 Featured course
               </p>
 
-              <h2 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-[-0.04em] leading-[1.02] text-forest">
+              <h2 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight text-forest">
                 Complete Puppy Foundations
               </h2>
 
-              <p className="mt-5 text-base sm:text-lg leading-relaxed text-ink/65">
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-ink/65">
                 Everything from house training to socialization, in one guided
                 course.
               </p>
-
-              <div className="mt-8">
-                <TrainingCard
-                  title="Complete Puppy Foundations"
-                  description="Everything from house training to socialization, in one guided course."
-                  color="lavender"
-                />
-              </div>
             </div>
-          </div>
-        </section>
 
-        {/* FINAL ENCOURAGEMENT */}
-        <section className="py-16 sm:py-20 text-center">
-          <div className="mx-auto max-w-2xl">
-            <span className="inline-block h-10 w-px bg-gold mb-6" />
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-forest">
-              Small lessons. Consistent practice. A lifetime of good habits.
-            </h2>
-            <p className="mt-4 text-sm sm:text-base leading-relaxed text-ink/60">
-              There is no need to rush through puppyhood. Come back whenever
-              you need guidance and take things one step at a time.
-            </p>
-
-            <a
-              href="#get-coaching"
-              className="inline-flex mt-7 items-center gap-2 text-sm font-semibold text-forest border-b border-gold pb-1 transition hover:text-gold"
+            <Link
+              href="/puppy-training"
+              className="group inline-flex items-center justify-center rounded-full bg-forest px-5 py-3 text-sm font-medium text-white transition hover:opacity-90"
             >
-              Back to the beginning ↑
-            </a>
+              Explore course
+              <Arrow />
+            </Link>
           </div>
         </section>
       </PageContainer>
 
       <Footer />
     </main>
+  );
+}
+
+function SectionHeading({
+  number,
+  title,
+  description,
+  href,
+}: {
+  number: string;
+  title: string;
+  description: string;
+  href?: string;
+}) {
+  return (
+    <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex gap-4">
+        <span className="pt-1 text-xs font-semibold text-gold">{number}</span>
+
+        <div>
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-forest">
+            {title}
+          </h2>
+          <p className="mt-1 text-sm text-ink/55">{description}</p>
+        </div>
+      </div>
+
+      {href && (
+        <Link
+          href={href}
+          className="group w-fit text-sm font-medium text-forest underline decoration-gold underline-offset-4"
+        >
+          View all
+          <Arrow />
+        </Link>
+      )}
+    </div>
+  );
+}
+
+function CourseCollection({
+  eyebrow,
+  title,
+  href,
+  items,
+  color,
+}: {
+  eyebrow: string;
+  title: string;
+  href: string;
+  items: string[];
+  color: "orange" | "lavender";
+}) {
+  const colorClass =
+    color === "orange"
+      ? "bg-[#f5eadf]"
+      : "bg-[#e9e4f0]";
+
+  return (
+    <div className={`rounded-2xl p-5 sm:p-6 ${colorClass}`}>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-forest/45">
+        {eyebrow}
+      </p>
+
+      <div className="mt-2 flex items-start justify-between gap-4">
+        <h3 className="text-lg font-semibold leading-snug text-forest">
+          {title}
+        </h3>
+
+        <Link
+          href={href}
+          className="shrink-0 text-sm font-medium text-forest underline decoration-gold underline-offset-4"
+        >
+          View
+        </Link>
+      </div>
+
+      <div className="mt-5 grid grid-cols-2 gap-2">
+        {items.map((item, index) => (
+          <div
+            key={item}
+            className="rounded-xl border border-forest/10 bg-white/55 px-3 py-3"
+          >
+            <span className="text-[10px] font-semibold text-forest/35">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <p className="mt-1 text-sm font-medium text-forest">{item}</p>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
