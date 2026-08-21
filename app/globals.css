@@ -6,7 +6,6 @@
 
   --color-forest: #173f3a;
   --color-forest-light: #285c55;
-  --color-forest-deep: #102d2a;
 
   --color-sage: #71827c;
 
@@ -29,13 +28,8 @@
   --font-body: var(--font-inter), sans-serif;
 }
 
-/* =========================================================
-   BASE
-========================================================= */
-
 html {
   scroll-behavior: smooth;
-  background: var(--color-cream);
 }
 
 body {
@@ -45,8 +39,6 @@ body {
   font-family: var(--font-body);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
 }
 
 img,
@@ -59,53 +51,16 @@ video {
   -ms-user-select: none;
 }
 
-button,
-a,
-input {
-  -webkit-tap-highlight-color: transparent;
-}
-
-::selection {
-  background: var(--color-gold-light);
-  color: var(--color-forest);
-}
-
-/* =========================================================
-   ACCESSIBILITY
-========================================================= */
-
 :focus-visible {
   outline: 2px solid var(--color-gold);
   outline-offset: 3px;
   border-radius: 6px;
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
+::selection {
+  background: var(--color-gold-light);
+  color: var(--color-forest);
 }
-
-.focus\:not-sr-only:focus {
-  position: fixed;
-  width: auto;
-  height: auto;
-  padding: inherit;
-  margin: inherit;
-  overflow: visible;
-  clip: auto;
-  white-space: normal;
-}
-
-/* =========================================================
-   SCROLLBARS
-========================================================= */
 
 .no-scrollbar {
   -ms-overflow-style: none;
@@ -116,9 +71,33 @@ input {
   display: none;
 }
 
-/* =========================================================
-   TYPOGRAPHY
-========================================================= */
+.interactive-card {
+  transition:
+    transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 280ms ease;
+}
+
+.interactive-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 22px 45px rgba(20, 40, 61, 0.11);
+}
+
+.interactive-card:active {
+  transform: scale(0.985);
+  box-shadow: none;
+}
+
+.tap-feedback {
+  transition:
+    transform 180ms ease,
+    opacity 180ms ease;
+}
+
+.tap-feedback:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
 
 .eyebrow {
   @apply text-[10px] uppercase tracking-[0.22em] font-body font-semibold;
@@ -155,124 +134,25 @@ input {
   color: var(--color-sage);
 }
 
-/* =========================================================
-   INTERACTION FOUNDATION
-========================================================= */
-
-.interactive-card {
-  will-change: transform;
-  transform: translateZ(0);
-  transition:
-    transform 380ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 380ms cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 280ms ease;
-}
-
-.interactive-card:hover {
-  transform: translate3d(0, -6px, 0);
-  box-shadow: 0 24px 55px rgba(20, 40, 61, 0.12);
-}
-
-.interactive-card:active {
-  transform: translate3d(0, -1px, 0) scale(0.985);
-  box-shadow: none;
-}
-
-.tap-feedback {
-  will-change: transform;
-  transition:
-    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 180ms ease;
-}
-
-.tap-feedback:active {
-  transform: scale(0.97);
-  opacity: 0.9;
-}
-
-/* =========================================================
-   HOMEPAGE — CORE ARCHITECTURE
-========================================================= */
-
-.homepage {
-  position: relative;
-  isolation: isolate;
-  overflow: clip;
-}
+/* Premium section helpers */
 
 .hp-section {
   position: relative;
-  overflow: clip;
-  isolation: isolate;
+  overflow: hidden;
 }
-
-.hp-content {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  max-width: 72rem;
-  margin-inline: auto;
-  padding-inline: 1.5rem;
-}
-
-.hp-content-wide {
-  max-width: 80rem;
-}
-
-.hp-content-narrow {
-  max-width: 64rem;
-}
-
-/* =========================================================
-   SECTION ATMOSPHERE
-========================================================= */
 
 .hp-section::before {
   content: "";
   position: absolute;
   pointer-events: none;
-  z-index: 0;
-
-  width: 30rem;
-  height: 30rem;
+  width: 260px;
+  height: 260px;
   border-radius: 9999px;
-
-  background: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.3) 0%,
-    rgba(255, 255, 255, 0.08) 38%,
-    transparent 72%
-  );
-
-  top: -18rem;
-  right: -13rem;
-
+  background: rgba(255, 255, 255, 0.22);
   filter: blur(2px);
+  top: -150px;
+  right: -100px;
 }
-
-.hp-section::after {
-  content: "";
-  position: absolute;
-  pointer-events: none;
-  z-index: 0;
-
-  width: 16rem;
-  height: 16rem;
-  border-radius: 9999px;
-
-  background: radial-gradient(
-    circle,
-    rgba(231, 184, 75, 0.08),
-    transparent 70%
-  );
-
-  bottom: -10rem;
-  left: -8rem;
-}
-
-/* =========================================================
-   SECTION BACKGROUNDS
-========================================================= */
 
 .hp-section-dark {
   background: var(--color-navy);
@@ -288,23 +168,11 @@ input {
 }
 
 .hp-section-blue {
-  background:
-    radial-gradient(
-      circle at 85% 20%,
-      rgba(255, 255, 255, 0.7),
-      transparent 30%
-    ),
-    var(--color-sky);
+  background: var(--color-sky);
 }
 
 .hp-section-yellow {
-  background:
-    radial-gradient(
-      circle at 15% 10%,
-      rgba(255, 255, 255, 0.55),
-      transparent 28%
-    ),
-    var(--color-yellow);
+  background: var(--color-yellow);
 }
 
 .hp-section-peach {
@@ -317,458 +185,45 @@ input {
 
 .hp-section-green {
   background: var(--color-forest);
-  color: white;
 }
-
-/* =========================================================
-   HOMEPAGE SPECIFIC SECTION SYSTEM
-========================================================= */
-
-.hp-hero-section {
-  background: var(--color-forest-deep);
-}
-
-.hp-browsing-section {
-  background:
-    linear-gradient(
-      180deg,
-      #eef6f7 0%,
-      var(--color-sky) 100%
-    );
-}
-
-.hp-breeds-section {
-  background:
-    linear-gradient(
-      180deg,
-      #ffffff 0%,
-      #fbfcfc 100%
-    );
-}
-
-.hp-recent-section {
-  background: var(--color-cream-alt);
-}
-
-.hp-recommended-section {
-  background:
-    radial-gradient(
-      circle at 85% 20%,
-      rgba(255, 255, 255, 0.7),
-      transparent 28%
-    ),
-    linear-gradient(
-      135deg,
-      #fffdf7 0%,
-      var(--color-yellow) 100%
-    );
-}
-
-.hp-trust-section {
-  background:
-    radial-gradient(
-      circle at 15% 0%,
-      rgba(255, 255, 255, 0.07),
-      transparent 30%
-    ),
-    linear-gradient(
-      135deg,
-      var(--color-navy) 0%,
-      #102d2a 100%
-    );
-  color: white;
-}
-
-.hp-trust-section::before,
-.hp-video-section::before {
-  background: radial-gradient(
-    circle,
-    rgba(231, 184, 75, 0.12),
-    transparent 70%
-  );
-}
-
-.hp-verification-section {
-  background: #ffffff;
-}
-
-.hp-process-section {
-  background:
-    radial-gradient(
-      circle at 90% 10%,
-      rgba(255, 255, 255, 0.75),
-      transparent 30%
-    ),
-    var(--color-blue);
-}
-
-.hp-video-section {
-  background:
-    linear-gradient(
-      135deg,
-      #14283d 0%,
-      #173f3a 100%
-    );
-  color: white;
-}
-
-.hp-location-section {
-  background:
-    radial-gradient(
-      circle at 10% 15%,
-      rgba(255, 255, 255, 0.5),
-      transparent 25%
-    ),
-    var(--color-yellow);
-}
-
-.hp-family-section {
-  background:
-    linear-gradient(
-      180deg,
-      #fffdfc 0%,
-      var(--color-peach) 100%
-    );
-}
-
-.hp-explore-section {
-  background: #ffffff;
-}
-
-.hp-dual-cta-section {
-  background:
-    linear-gradient(
-      135deg,
-      var(--color-lavender) 0%,
-      #f8f7fb 48%,
-      var(--color-sky) 100%
-    );
-}
-
-.hp-closing-section {
-  background: var(--color-forest);
-}
-
-/* =========================================================
-   CONTAINERS
-========================================================= */
 
 .hp-container {
-  position: relative;
-  z-index: 2;
   @apply max-w-7xl mx-auto px-6 lg:px-10;
 }
 
-/* =========================================================
-   GLOW SYSTEM
-========================================================= */
-
-.hp-section-glow {
-  position: absolute;
-  z-index: 0;
-  pointer-events: none;
-
-  width: min(48vw, 42rem);
-  aspect-ratio: 1;
-  border-radius: 9999px;
-
-  filter: blur(70px);
-  opacity: 0.45;
-
-  transform: translateZ(0);
-  will-change: transform;
+.hp-pill {
+  @apply inline-flex items-center rounded-full px-4 py-2 text-xs font-medium;
 }
-
-.hp-glow-gold {
-  top: -25%;
-  right: -15%;
-
-  background: radial-gradient(
-    circle,
-    rgba(231, 184, 75, 0.34) 0%,
-    rgba(231, 184, 75, 0.08) 45%,
-    transparent 72%
-  );
-}
-
-.hp-glow-blue {
-  top: 10%;
-  left: -15%;
-
-  background: radial-gradient(
-    circle,
-    rgba(132, 184, 209, 0.26) 0%,
-    rgba(132, 184, 209, 0.08) 48%,
-    transparent 74%
-  );
-}
-
-/* =========================================================
-   GLASS
-========================================================= */
 
 .hp-glass {
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.45),
-    0 16px 45px rgba(20, 40, 61, 0.08);
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
-.hp-glass-dark {
-  background: rgba(20, 40, 61, 0.34);
-  border: 1px solid rgba(255, 255, 255, 0.13);
-
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-}
-
-/* =========================================================
-   DEPTH / HARDWARE COMPOSITING
-========================================================= */
-
-.hp-depth {
-  transform: translateZ(0);
-  will-change: transform;
-}
-
-.hp-perspective {
-  perspective: 1200px;
-  transform-style: preserve-3d;
-}
-
-.hp-layer {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform: translateZ(0);
-}
-
-/* =========================================================
-   PREMIUM BUTTON MOTION
-========================================================= */
-
-.hp-button {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-
-  transform: translateZ(0);
-
-  transition:
-    transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 240ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.hp-button::before {
-  content: "";
+.sr-only {
   position: absolute;
-  inset: 0;
-  z-index: -1;
-
-  background: linear-gradient(
-    110deg,
-    transparent 20%,
-    rgba(255, 255, 255, 0.2) 50%,
-    transparent 80%
-  );
-
-  transform: translateX(-120%);
-  transition: transform 550ms ease;
-}
-
-.hp-button:hover {
-  transform: translateY(-2px);
-}
-
-.hp-button:hover::before {
-  transform: translateX(120%);
-}
-
-.hp-button:active {
-  transform: scale(0.97);
-}
-
-/* =========================================================
-   PREMIUM IMAGE REVEAL
-========================================================= */
-
-.hp-image-frame {
-  position: relative;
-  overflow: hidden;
-  transform: translateZ(0);
-}
-
-.hp-image-frame img,
-.hp-image-frame video {
-  transition:
-    transform 900ms cubic-bezier(0.22, 1, 0.36, 1),
-    filter 500ms ease;
-}
-
-.hp-image-frame:hover img,
-.hp-image-frame:hover video {
-  transform: scale(1.045);
-}
-
-/* =========================================================
-   MARQUEE / VELOCITY READY
-   Kept lightweight — no JS dependency yet.
-========================================================= */
-
-.hp-marquee-track {
-  display: flex;
-  width: max-content;
-  will-change: transform;
-  transform: translateZ(0);
-}
-
-/* =========================================================
-   EDITORIAL DIVIDERS
-========================================================= */
-
-.hp-divider {
-  width: 100%;
+  width: 1px;
   height: 1px;
-
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(23, 63, 58, 0.14),
-    transparent
-  );
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 
-.hp-divider-light {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.18),
-    transparent
-  );
+.focus\:not-sr-only:focus {
+  position: fixed;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
 }
-
-/* =========================================================
-   FLOATING MICRO-ANIMATIONS
-========================================================= */
-
-@keyframes hp-float {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-
-  50% {
-    transform: translate3d(0, -10px, 0);
-  }
-}
-
-@keyframes hp-drift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-
-  50% {
-    transform: translate3d(2%, -3%, 0) scale(1.04);
-  }
-}
-
-@keyframes hp-pulse-soft {
-  0%,
-  100% {
-    opacity: 0.45;
-    transform: scale(1);
-  }
-
-  50% {
-    opacity: 0.7;
-    transform: scale(1.06);
-  }
-}
-
-.hp-float {
-  animation: hp-float 7s ease-in-out infinite;
-}
-
-.hp-drift {
-  animation: hp-drift 14s ease-in-out infinite;
-}
-
-.hp-pulse-soft {
-  animation: hp-pulse-soft 6s ease-in-out infinite;
-}
-
-/* =========================================================
-   REVEAL FOUNDATION
-   These classes are ready for the component upgrades.
-========================================================= */
-
-@keyframes hp-reveal-up {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 18px, 0);
-  }
-
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-}
-
-.hp-reveal-up {
-  animation: hp-reveal-up 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.hp-delay-1 {
-  animation-delay: 80ms;
-}
-
-.hp-delay-2 {
-  animation-delay: 160ms;
-}
-
-.hp-delay-3 {
-  animation-delay: 240ms;
-}
-
-.hp-delay-4 {
-  animation-delay: 320ms;
-}
-
-/* =========================================================
-   RESPONSIVE
-========================================================= */
-
-@media (max-width: 640px) {
-  .hp-content {
-    padding-inline: 1.25rem;
-  }
-
-  .hp-section::before {
-    width: 20rem;
-    height: 20rem;
-    top: -12rem;
-    right: -10rem;
-  }
-
-  .hp-section-glow {
-    width: 20rem;
-    filter: blur(55px);
-    opacity: 0.32;
-  }
-
-  .hp-perspective {
-    perspective: none;
-  }
-}
-
-/* =========================================================
-   MOTION SAFETY
-========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -783,17 +238,7 @@ input {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-
-  .hp-float,
-  .hp-drift,
-  .hp-pulse-soft {
-    animation: none !important;
-  }
 }
-
-/* =========================================================
-   HIGH CONTRAST
-========================================================= */
 
 @media (prefers-contrast: more) {
   body {
@@ -804,11 +249,5 @@ input {
   .text-ink\/70,
   .text-ink\/80 {
     color: #111 !important;
-  }
-
-  .hp-glass {
-    border-color: rgba(0, 0, 0, 0.35);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
   }
 }
