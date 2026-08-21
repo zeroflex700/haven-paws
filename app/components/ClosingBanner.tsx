@@ -1,6 +1,7 @@
 import { ArrowRight, Check, Heart, Search } from "lucide-react";
 import Link from "next/link";
 import { ProtectedImage } from "./ProtectedMedia";
+import ParticleField from "./ParticleField";
 
 export default function ClosingBanner({
 image,
@@ -9,9 +10,12 @@ image: string | null;
 }) {
 return (
 <section className="relative overflow-hidden bg-[#102d2a] py-16 sm:py-20 lg:py-28">
-{/* Ambient composition */}
-<div className="pointer-events-none absolute inset-0">
-<div className="absolute left-1/2 top-0 h-px w-[70%] -translate-x-1/2 bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+{/* Animated ambient dust field */}
+<ParticleField density={80} className="z-0 opacity-80" />
+
+  {/* Ambient composition */}
+  <div className="pointer-events-none absolute inset-0 z-[1]">
+    <div className="absolute left-1/2 top-0 h-px w-[70%] -translate-x-1/2 bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
 
     <div className="absolute -left-40 top-1/2 h-[520px] w-[520px] -translate-y-1/2 rounded-full border border-white/[0.05]" />
     <div className="absolute -left-20 top-1/2 h-[360px] w-[360px] -translate-y-1/2 rounded-full border border-white/[0.06]" />
@@ -22,12 +26,13 @@ return (
     <div className="absolute bottom-10 left-1/2 h-px w-32 -translate-x-1/2 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
   </div>
 
-  <div className="relative hp-container">
+  <div className="relative z-10 hp-container">
     <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:gap-20">
       {/* Final invitation */}
       <div className="order-2 lg:order-1">
         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 backdrop-blur-sm">
           <span className="h-1.5 w-1.5 rounded-full bg-gold" />
+
           <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">
             Your Next Chapter
           </span>
@@ -68,10 +73,12 @@ return (
             icon={<Search size={14} />}
             label="Explore"
           />
+
           <ClosingSignal
             icon={<Check size={14} />}
             label="Connect"
           />
+
           <ClosingSignal
             icon={<Heart size={14} />}
             label="Bring home"
@@ -84,11 +91,11 @@ return (
         <div className="absolute -inset-4 rounded-[36px] border border-white/[0.08]" />
         <div className="absolute -inset-8 rounded-[48px] border border-white/[0.04]" />
 
-        {/* Floating label */}
         <div className="absolute -left-2 top-5 z-20 rounded-2xl border border-white/15 bg-[#173f3a]/85 px-4 py-3 shadow-xl backdrop-blur-xl sm:-left-7 sm:top-8">
           <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-gold/80">
             Start here
           </p>
+
           <p className="mt-1 text-xs font-medium text-white">
             Find a puppy that feels like home.
           </p>
@@ -115,6 +122,7 @@ return (
               <div className="max-w-sm">
                 <div className="mb-2 flex items-center gap-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-gold" />
+
                   <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/60">
                     Haven Paws
                   </span>
@@ -128,16 +136,17 @@ return (
           </div>
         </div>
 
-        {/* Small offset detail */}
-        <div className="absolute -bottom-5 right-5 hidden rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 backdrop-blur-md sm:block">
+        <div className="absolute -bottom-5 right-5 hidden rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 shadow-xl backdrop-blur-md sm:block">
           <div className="flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gold/15 text-gold">
               <Heart size={13} />
             </span>
+
             <div>
               <p className="text-[9px] uppercase tracking-[0.14em] text-white/35">
                 The journey
               </p>
+
               <p className="text-xs font-medium text-white/85">
                 Starts with a feeling
               </p>
