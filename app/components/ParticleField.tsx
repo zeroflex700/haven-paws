@@ -88,12 +88,11 @@ function draw() {
   for (const particle of particles) {
     context.beginPath();
 
-    const glow =
+    context.fillStyle =
       particle.size > 1.5
         ? `rgba(231, 184, 75, ${particle.opacity})`
         : `rgba(255, 255, 255, ${particle.opacity})`;
 
-    context.fillStyle = glow;
     context.arc(
       particle.x,
       particle.y,
@@ -101,6 +100,7 @@ function draw() {
       0,
       Math.PI * 2
     );
+
     context.fill();
 
     if (!reducedMotion) {
@@ -130,7 +130,10 @@ function draw() {
 resize();
 draw();
 
-const resizeObserver = new ResizeObserver(resize);
+const resizeObserver = new ResizeObserver(() => {
+  resize();
+});
+
 resizeObserver.observe(canvas);
 
 return () => {
