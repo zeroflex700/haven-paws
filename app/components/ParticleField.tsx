@@ -23,29 +23,27 @@ density = 70,
 const canvasRef = useRef<HTMLCanvasElement>(null);
 
 useEffect(() => {
-const canvas = canvasRef.current;
+  const canvas = canvasRef.current;
 
-if (!canvas) return;
+  if (!canvas) return;
 
-const context = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d");
 
-if (!context) return;
+  if (!ctx) return;
 
-const reducedMotion = window.matchMedia(
-  "(prefers-reduced-motion: reduce)"
-).matches;
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
 
-let animationFrame = 0;
-let width = 0;
-let height = 0;
-let particles: Particle[] = [];
+    width = rect.width;
+    height = rect.height;
 
-const getParticleCount = () => {
-  const area = window.innerWidth * window.innerHeight;
+    canvas.width = width * pixelRatio;
+    canvas.height = height * pixelRatio;
 
-  if (window.innerWidth < 640) {
-    return Math.min(28, Math.max(16, Math.round(area / 35000)));
+    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
   }
+
 
   return Math.min(
     density,
