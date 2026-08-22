@@ -89,11 +89,11 @@ return crypto.randomUUID();
 }
 
 export default function ConversationThread({
-conversationId,
-currentUserId,
-initialMessages,
-initialCursor,
-initialHasMore,
+  conversationId,
+  puppy,
+  initialMessages,
+  initialNextCursor,
+  initialHasMore,
 }: ConversationThreadProps) {
 const [messages, setMessages] =
 useState<ThreadMessage[]>(() =>
@@ -106,9 +106,9 @@ status: "sent",
 const [input, setInput] = useState("");
 
 const [nextCursor, setNextCursor] =
-useState<MessageCursor | null>(
-initialCursor
-);
+  useState<MessageCursor | null>(
+    initialNextCursor
+  );
 
 const [hasMore, setHasMore] =
 useState(initialHasMore);
