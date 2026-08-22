@@ -48,8 +48,6 @@ function formatMessageTime(
   ).format(new Date(value));
 }
 
-function getErrorMessage(
-  error: unknown
 ) {
   if (
     error &&
@@ -664,7 +662,7 @@ export default function ConversationThread({
             </p>
 
             <p className="text-xs text-ink/55 leading-5 mt-1.5 max-w-xs">
-              Ask the breeder anything you'd like
+              Ask the breeder anything you&apos;d like
               to know about {puppy.name}.
             </p>
 
