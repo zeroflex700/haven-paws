@@ -22,7 +22,10 @@ function parseLimit(value: string | null): number {
 
   const parsed = Number.parseInt(value, 10);
 
-  if (!Number.isFinite(parsed) || parsed < 1) {
+  if (
+    !Number.isFinite(parsed) ||
+    parsed < 1
+  ) {
     return DEFAULT_LIMIT;
   }
 
@@ -33,10 +36,16 @@ function parseCursor(
   createdAt: string | null,
   id: string | null
 ): MessageCursor | null {
+  /*
+   * No cursor means this is the first page.
+   */
   if (!createdAt && !id) {
     return null;
   }
 
+  /*
+   * A valid keyset cursor requires both values.
+   */
   if (!createdAt || !id) {
     return null;
   }
@@ -84,9 +93,10 @@ export async function GET(
     );
 
     /*
-     * Verify authentication on the server.
+     * Check authentication before loading anything.
      *
-     * Never trust a user ID supplied by the browser.
+     * getCustomerMessages() independently checks again
+     * and verifies conversation ownership.
      */
     const supabase =
       await createClient();
@@ -108,19 +118,42 @@ export async function GET(
     }
 
     /*
-     * getCustomerMessages() must enforce conversation ownership
-     * using the authenticated user's ID.
+     * The query function gets the authenticated user
+     * from the server and verifies:
      *
-     * The browser never gets unrestricted access to another
-     * conversation through this route.
+     * conversations.id === conversationId
+     * AND
+     * conversations.customer_id === auth.uid()
+     *
+     * So a customer cannot use this API route to read
+     * another customer's conversation.
      */
     const page =
-      await getCustomerMessages({
+      await getCustomerMessages(
         conversationId,
-        customerId: user.id,
-        cursor,
-        limit,
-      });
+        {
+          cursor,
+          limit,
+        }
+      );
+
+    if (!page) {
+      /*
+       * Do not reveal whether the conversation exists.
+       *
+       * From a customer's perspective, an inaccessible
+       * conversation and a nonexistent conversation should
+       * look the same.
+       */
+      return NextResponse.json(
+        {
+          error: "Conversation not found",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
 
     return NextResponse.json(page);
   } catch (error) {
