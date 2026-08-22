@@ -48,7 +48,6 @@ type Puppy = {
 
 type ConversationThreadProps = {
   conversationId: string;
-  currentUserId: string;
   puppy: Puppy;
   initialMessages: Message[];
   initialNextCursor: MessageCursor | null;
@@ -96,12 +95,14 @@ function createClientMessageId(): string {
 
 export default function ConversationThread({
   conversationId,
-  currentUserId,
   puppy,
   initialMessages,
   initialNextCursor,
   initialHasMore,
 }: ConversationThreadProps) {
+  const [currentUserId, setCurrentUserId] =
+    useState<string | null>(null);
+
   const [messages, setMessages] =
     useState<ThreadMessage[]>(() =>
       initialMessages.map((message) => ({
@@ -150,6 +151,30 @@ export default function ConversationThread({
         )
       )
     );
+
+  // Resolve the current user client-side rather than requiring the
+  // caller to pass it in — keeps this component self-contained and
+  // avoids coupling it to how the parent page fetches auth state.
+  useEffect(() => {
+    let cancelled = false;
+
+    supabase.auth.getUser().then(({ data }) => {
+      if (!cancelled) {
+        setCurrentUserId(data.user?.id ?? null);
+      }
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setCurrentUserId(session?.user?.id ?? null);
+      }
+    );
+
+    return () => {
+      cancelled = true;
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
   const scrollToBottom = useCallback(
     (
@@ -252,6 +277,8 @@ export default function ConversationThread({
   );
 
   useEffect(() => {
+    if (!currentUserId) return;
+
     const channel = supabase
       .channel(
         `conversation:${conversationId}`
@@ -471,7 +498,7 @@ export default function ConversationThread({
   async function submitMessage() {
     const content = input.trim();
 
-    if (!content || isSending) {
+    if (!content || isSending || !currentUserId) {
       return;
     }
 
@@ -575,7 +602,8 @@ export default function ConversationThread({
 
   const canSend =
     input.trim().length > 0 &&
-    !isSending;
+    !isSending &&
+    !!currentUserId;
 
   const messageCount = useMemo(
     () => messages.length,
@@ -591,6 +619,7 @@ export default function ConversationThread({
       <div className="border-b border-sage/10 bg-white px-4 py-4 sm:px-6">
         <div className="mx-auto flex max-w-4xl items-center gap-3">
           {puppy.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={puppy.image}
               alt={puppy.name}
@@ -653,8 +682,9 @@ export default function ConversationThread({
       <div className="flex-1 space-y-4 px-4 pb-6 sm:px-6">
         {messages.map((message) => {
           const isMine =
+            currentUserId !== null &&
             message.senderId ===
-            currentUserId;
+              currentUserId;
 
           return (
             <div
