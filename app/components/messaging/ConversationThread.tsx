@@ -48,6 +48,8 @@ function formatMessageTime(
   ).format(new Date(value));
 }
 
+function getErrorMessage(
+  error: unknown
 ) {
   if (
     error &&
