@@ -10,7 +10,7 @@ import {
   getCustomerMessages,
   type Message,
   type MessageCursor,
-} from "@/lib/queries/customerMessages";
+} from "@/lib/queries/messages";
 
 type ConversationRow = {
   id: string;
