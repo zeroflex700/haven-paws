@@ -3,116 +3,54 @@ import { createClient } from "@/lib/supabase/server";
 export type ConversationListItem = {
   id: string;
   status: "open" | "closed";
+
+  puppy: {
+    id: string;
+    name: string;
+    breed: string;
+    imageUrl: string | null;
+  };
+
   lastMessageAt: string | null;
   lastMessagePreview: string | null;
   lastMessageSenderRole: "customer" | "admin" | null;
+
   createdAt: string;
 
-  puppy: {
-    id: string;
-    name: string;
-    breed: string;
-    coverImage: string | null;
-  };
-
-  breeder: {
-    name: string | null;
-    slug: string | null;
-    photoUrl: string | null;
-  };
+  hasUnread: boolean;
+  unreadCount: number;
 };
 
-export type ConversationDetail = {
+type RawConversation = {
   id: string;
   status: "open" | "closed";
-  customerId: string;
-  createdAt: string;
+  last_message_at: string | null;
+  last_message_preview: string | null;
+  last_message_sender_role: "customer" | "admin" | null;
+  created_at: string;
 
   puppy: {
     id: string;
     name: string;
-    breed: string;
-    coverImage: string | null;
-  };
-
-  breeder: {
-    name: string | null;
-    slug: string | null;
-    photoUrl: string | null;
-  };
+    breed: {
+      name: string;
+    } | null;
+  } | null;
 };
 
-type RawMedia = {
-  url: string;
-  media_type: "image" | "video";
-  is_cover: boolean;
-  sort_order: number;
+type RawParticipant = {
+  conversation_id: string;
+  last_read_at: string | null;
 };
 
-type RawBreeder = {
-  name: string;
-  slug: string;
-  photo_url: string | null;
-} | null;
-
-type RawBreed = {
-  name: string;
-} | null;
-
-type RawPuppy = {
+type RawMessage = {
   id: string;
-  name: string;
-  breeds: RawBreed;
-  breeders: RawBreeder;
-  puppy_media: RawMedia[] | null;
-} | null;
+  conversation_id: string;
+  sender_id: string;
+  sender_role: "customer" | "admin";
+  created_at: string;
+};
 
-function getCoverImage(
-  media: RawMedia[] | null | undefined
-): string | null {
-  if (!media || media.length === 0) {
-    return null;
-  }
-
-  const sortedMedia = [...media].sort(
-    (a, b) => a.sort_order - b.sort_order
-  );
-
-  return (
-    sortedMedia.find((item) => item.is_cover)?.url ??
-    sortedMedia[0]?.url ??
-    null
-  );
-}
-
-function mapPuppyContext(puppy: RawPuppy) {
-  return {
-    puppy: {
-      id: puppy?.id ?? "",
-      name: puppy?.name ?? "Unknown puppy",
-      breed: puppy?.breeds?.name ?? "Unknown",
-      coverImage: getCoverImage(
-        puppy?.puppy_media
-      ),
-    },
-
-    breeder: {
-      name: puppy?.breeders?.name ?? null,
-      slug: puppy?.breeders?.slug ?? null,
-      photoUrl:
-        puppy?.breeders?.photo_url ?? null,
-    },
-  };
-}
-
-/**
- * Load the authenticated customer's inbox.
- *
- * Security:
- * - Authentication is checked server-side.
- * - customer_id is explicitly restricted to auth user.
- * - RLS remains the database-level security boundary.
- */
 export async function getCustomerConversations(): Promise<
   ConversationListItem[]
 > {
@@ -126,7 +64,15 @@ export async function getCustomerConversations(): Promise<
     return [];
   }
 
-  const { data, error } = await supabase
+  /*
+   * First load only conversations belonging to this customer.
+   *
+   * RLS independently enforces conversation access.
+   */
+  const {
+    data: conversationData,
+    error: conversationError,
+  } = await supabase
     .from("conversations")
     .select(
       `
@@ -136,26 +82,11 @@ export async function getCustomerConversations(): Promise<
         last_message_preview,
         last_message_sender_role,
         created_at,
-
-        puppies (
+        puppy:puppies (
           id,
           name,
-
-          breeds (
+          breed:breeds (
             name
-          ),
-
-          breeders (
-            name,
-            slug,
-            photo_url
-          ),
-
-          puppy_media (
-            url,
-            media_type,
-            is_cover,
-            sort_order
           )
         )
       `
@@ -169,141 +100,259 @@ export async function getCustomerConversations(): Promise<
       ascending: false,
     });
 
-  if (error) {
+  if (conversationError) {
     console.error(
       "Failed to load customer conversations:",
-      error
+      conversationError
     );
 
     return [];
   }
 
-  return (data ?? []).map((conversation) => {
-    const rawConversation =
-      conversation as unknown as {
-        id: string;
-        status: "open" | "closed";
-        last_message_at: string | null;
-        last_message_preview: string | null;
-        last_message_sender_role:
-          | "customer"
-          | "admin"
-          | null;
-        created_at: string;
-        puppies: RawPuppy;
-      };
+  const conversations =
+    (conversationData ?? []) as unknown as RawConversation[];
 
-    const context = mapPuppyContext(
-      rawConversation.puppies
-    );
-
-    return {
-      id: rawConversation.id,
-      status: rawConversation.status,
-      lastMessageAt:
-        rawConversation.last_message_at,
-      lastMessagePreview:
-        rawConversation.last_message_preview,
-      lastMessageSenderRole:
-        rawConversation.last_message_sender_role,
-      createdAt: rawConversation.created_at,
-
-      ...context,
-    };
-  });
-}
-
-/**
- * Securely load one conversation belonging to the current customer.
- *
- * The conversation ID in the URL is never sufficient authorization.
- *
- * Returns null when:
- * - user is not authenticated
- * - conversation does not exist
- * - conversation belongs to another customer
- */
-export async function getCustomerConversation(
-  conversationId: string
-): Promise<ConversationDetail | null> {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return null;
+  if (conversations.length === 0) {
+    return [];
   }
 
-  const { data, error } = await supabase
-    .from("conversations")
+  const conversationIds =
+    conversations.map(
+      (conversation) => conversation.id
+    );
+
+  /*
+   * Load the current customer's read state.
+   *
+   * There should be exactly one participant row per
+   * conversation/customer pair.
+   */
+  const {
+    data: participantData,
+    error: participantError,
+  } = await supabase
+    .from("conversation_participants")
+    .select(
+      `
+        conversation_id,
+        last_read_at
+      `
+    )
+    .eq("user_id", user.id)
+    .in(
+      "conversation_id",
+      conversationIds
+    );
+
+  if (participantError) {
+    console.error(
+      "Failed to load conversation read state:",
+      participantError
+    );
+  }
+
+  const readStateByConversation =
+    new Map<string, string | null>(
+      (
+        (participantData ?? []) as RawParticipant[]
+      ).map((participant) => [
+        participant.conversation_id,
+        participant.last_read_at,
+      ])
+    );
+
+  /*
+   * Load admin messages so we can calculate unread counts.
+   *
+   * We intentionally do not trust client-side timestamps for this.
+   */
+  const {
+    data: messageData,
+    error: messageError,
+  } = await supabase
+    .from("messages")
     .select(
       `
         id,
-        status,
-        customer_id,
-        created_at,
-
-        puppies (
-          id,
-          name,
-
-          breeds (
-            name
-          ),
-
-          breeders (
-            name,
-            slug,
-            photo_url
-          ),
-
-          puppy_media (
-            url,
-            media_type,
-            is_cover,
-            sort_order
-          )
-        )
+        conversation_id,
+        sender_id,
+        sender_role,
+        created_at
       `
     )
-    .eq("id", conversationId)
-    .eq("customer_id", user.id)
-    .maybeSingle();
+    .in(
+      "conversation_id",
+      conversationIds
+    )
+    .eq("sender_role", "admin")
+    .order("created_at", {
+      ascending: true,
+    });
 
-  if (error) {
+  if (messageError) {
     console.error(
-      "Failed to load customer conversation:",
-      error
+      "Failed to load unread message state:",
+      messageError
+    );
+  }
+
+  const adminMessagesByConversation =
+    new Map<string, RawMessage[]>();
+
+  for (const message of
+    (messageData ?? []) as RawMessage[]) {
+    const existing =
+      adminMessagesByConversation.get(
+        message.conversation_id
+      ) ?? [];
+
+    existing.push(message);
+
+    adminMessagesByConversation.set(
+      message.conversation_id,
+      existing
+    );
+  }
+
+  /*
+   * Puppy cover images are loaded separately because the
+   * inbox only needs one image per puppy.
+   */
+  const puppyIds = conversations
+    .map(
+      (conversation) =>
+        conversation.puppy?.id
+    )
+    .filter(
+      (id): id is string => Boolean(id)
     );
 
-    return null;
+  const coverImageByPuppy =
+    new Map<string, string | null>();
+
+  if (puppyIds.length > 0) {
+    const {
+      data: mediaData,
+      error: mediaError,
+    } = await supabase
+      .from("puppy_media")
+      .select(
+        `
+          puppy_id,
+          url,
+          is_cover,
+          sort_order
+        `
+      )
+      .in(
+        "puppy_id",
+        puppyIds
+      )
+      .order("is_cover", {
+        ascending: false,
+      })
+      .order("sort_order", {
+        ascending: true,
+      });
+
+    if (mediaError) {
+      console.error(
+        "Failed to load puppy cover images:",
+        mediaError
+      );
+    } else {
+      for (const media of mediaData ?? []) {
+        const puppyId =
+          media.puppy_id as string;
+
+        if (
+          !coverImageByPuppy.has(puppyId)
+        ) {
+          coverImageByPuppy.set(
+            puppyId,
+            media.url as string
+          );
+        }
+      }
+    }
   }
 
-  if (!data) {
-    return null;
-  }
+  return conversations
+    .filter(
+      (
+        conversation
+      ): conversation is RawConversation & {
+        puppy: NonNullable<
+          RawConversation["puppy"]
+        >;
+      } => Boolean(conversation.puppy)
+    )
+    .map((conversation) => {
+      const lastReadAt =
+        readStateByConversation.get(
+          conversation.id
+        ) ?? null;
 
-  const rawConversation =
-    data as unknown as {
-      id: string;
-      status: "open" | "closed";
-      customer_id: string;
-      created_at: string;
-      puppies: RawPuppy;
-    };
+      const adminMessages =
+        adminMessagesByConversation.get(
+          conversation.id
+        ) ?? [];
 
-  const context = mapPuppyContext(
-    rawConversation.puppies
-  );
+      const unreadMessages =
+        adminMessages.filter((message) => {
+          /*
+           * If the customer has never read this conversation,
+           * every admin message is unread.
+           */
+          if (!lastReadAt) {
+            return true;
+          }
 
-  return {
-    id: rawConversation.id,
-    status: rawConversation.status,
-    customerId: rawConversation.customer_id,
-    createdAt: rawConversation.created_at,
+          return (
+            new Date(
+              message.created_at
+            ).getTime() >
+            new Date(
+              lastReadAt
+            ).getTime()
+          );
+        });
 
-    ...context,
-  };
+      const puppy = conversation.puppy;
+
+      return {
+        id: conversation.id,
+        status: conversation.status,
+
+        puppy: {
+          id: puppy.id,
+          name: puppy.name,
+          breed:
+            puppy.breed?.name ??
+            "Unknown breed",
+          imageUrl:
+            coverImageByPuppy.get(
+              puppy.id
+            ) ?? null,
+        },
+
+        lastMessageAt:
+          conversation.last_message_at,
+
+        lastMessagePreview:
+          conversation.last_message_preview,
+
+        lastMessageSenderRole:
+          conversation.last_message_sender_role,
+
+        createdAt:
+          conversation.created_at,
+
+        hasUnread:
+          unreadMessages.length > 0,
+
+        unreadCount:
+          unreadMessages.length,
+      };
+    });
 }
