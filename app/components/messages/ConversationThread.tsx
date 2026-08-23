@@ -468,7 +468,7 @@ export default function ConversationThread({
       const channel =
         presenceChannelRef.current;
 
-      if (!channel) {
+      if (!channel || !currentUserId) {
         return;
       }
 
