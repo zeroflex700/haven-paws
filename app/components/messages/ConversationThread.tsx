@@ -848,6 +848,124 @@ export default function ConversationThread({
         </div>
       </div>
 
+      {/* ===================================================== */}
+      {/* LOAD OLDER                                            */}
+      {/* ===================================================== */}
+
+      <div className="flex justify-center px-4 py-4">
+        {hasMore ? (
+          <button
+            type="button"
+            onClick={() =>
+              void loadOlderMessages()
+            }
+            disabled={isLoadingOlder}
+            className="inline-flex items-center gap-2 rounded-full border border-sage/20 bg-white px-4 py-2 text-xs font-medium text-forest transition hover:border-forest/30 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isLoadingOlder ? (
+              <>
+                <Loader2
+                  size={14}
+                  className="animate-spin"
+                />
+                Loading…
+              </>
+            ) : (
+              "Load older messages"
+            )}
+          </button>
+        ) : messageCount === 0 ? (
+          <p className="text-sm text-ink/45">
+            Start the conversation.
+          </p>
+        ) : null}
+      </div>
+
+      {/* ===================================================== */}
+      {/* MESSAGE LIST                                          */}
+      {/* ===================================================== */}
+
+      <div className="flex-1 space-y-4 px-4 pb-6 sm:px-6">
+        {messages.map((message) => {
+          const isMine =
+            currentUserId !== null &&
+            message.senderId ===
+              currentUserId;
+
+          return (
+            <div
+              key={
+                message.clientGeneratedId
+              }
+              className={`flex ${
+                isMine
+                  ? "justify-end"
+                  : "justify-start"
+              }`}
+            >
+              <div
+                className={`max-w-[85%] rounded-2xl px-4 py-3 sm:max-w-[75%] ${
+                  isMine
+                    ? "rounded-br-md bg-forest text-cream"
+                    : "rounded-bl-md border border-sage/10 bg-white text-ink"
+                }`}
+              >
+                <p className="whitespace-pre-wrap break-words text-sm leading-6">
+                  {message.content}
+                </p>
+
+                <div
+                  className={`mt-1.5 flex items-center gap-2 text-[10px] ${
+                    isMine
+                      ? "text-cream/60"
+                      : "text-ink/40"
+                  }`}
+                >
+                  <span>
+                    {new Date(
+                      message.createdAt
+                    ).toLocaleTimeString(
+                      [],
+                      {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      }
+                    )}
+                  </span>
+
+                  {isMine &&
+                    message.status ===
+                      "sending" && (
+                      <span>
+                        Sending…
+                      </span>
+                    )}
+
+                  {isMine &&
+                    message.status ===
+                      "failed" && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          void retryMessage(
+                            message
+                          )
+                        }
+                        disabled={isSending}
+                        className="inline-flex items-center gap-1 font-medium text-gold hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        <RefreshCw
+                          size={11}
+                        />
+                        Retry
+                      </button>
+                    )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+
         {otherParticipantTyping && (
           <div className="flex justify-start">
             <div className="rounded-2xl rounded-bl-md border border-sage/10 bg-white px-4 py-3 text-xs text-ink/50 shadow-sm">
