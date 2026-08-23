@@ -54,7 +54,17 @@ type ConversationThreadProps = {
   initialHasMore: boolean;
 };
 
+type PresenceUser = {
+  userId: string;
+  role: "customer" | "admin";
+  typing: boolean;
+  lastActiveAt: string;
+};
+
 const PAGE_SIZE = 30;
+
+const TYPING_IDLE_MS = 2_000;
+const ACTIVITY_HEARTBEAT_MS = 30_000;
 
 function mapRealtimeMessage(
   message: RealtimeMessage
@@ -126,6 +136,22 @@ export default function ConversationThread({
 
   const [isSending, setIsSending] =
     useState(false);
+
+  const [otherParticipantTyping, setOtherParticipantTyping] =
+    useState(false);
+
+  const typingTimeoutRef =
+    useRef<ReturnType<typeof setTimeout> | null>(
+      null
+    );
+
+  const lastActivityRef =
+    useRef(0);
+
+  const presenceChannelRef =
+    useRef<ReturnType<typeof supabase.channel> | null>(
+      null
+    );
 
   const bottomRef =
     useRef<HTMLDivElement | null>(null);
@@ -276,6 +302,112 @@ export default function ConversationThread({
     []
   );
 
+  /*
+   * Conversation Presence
+   *
+   * This channel is separate from database Realtime.
+   *
+   * Presence is ephemeral:
+   * - no database writes
+   * - no stale "online" rows
+   * - automatically disappears when the connection closes
+   *
+   * The future admin conversation UI will join this exact
+   * same channel and immediately know whether the customer
+   * is online and active.
+   */
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const channelName =
+      `conversation-presence:${conversationId}`;
+
+    const channel = supabase.channel(
+      channelName,
+      {
+        config: {
+          presence: {
+            key: currentUserId,
+          },
+        },
+      }
+    );
+
+    presenceChannelRef.current = channel;
+
+    function updateRemotePresence() {
+      const state = channel.presenceState<
+        PresenceUser
+      >();
+
+      const remoteStates =
+        Object.values(state)
+          .flat()
+          .filter(
+            (presence) =>
+              presence.userId !== currentUserId
+          );
+
+      setOtherParticipantTyping(
+        remoteStates.some(
+          (presence) => presence.typing
+        )
+      );
+    }
+
+    channel
+      .on(
+        "presence",
+        {
+          event: "sync",
+        },
+        updateRemotePresence
+      )
+      .on(
+        "presence",
+        {
+          event: "join",
+        },
+        updateRemotePresence
+      )
+      .on(
+        "presence",
+        {
+          event: "leave",
+        },
+        updateRemotePresence
+      )
+      .subscribe(async (status) => {
+        if (status !== "SUBSCRIBED") {
+          return;
+        }
+
+        await channel.track({
+          userId: currentUserId,
+          role: "customer",
+          typing: false,
+          lastActiveAt: new Date().toISOString(),
+        } satisfies PresenceUser);
+
+        lastActivityRef.current = Date.now();
+      });
+
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(
+          typingTimeoutRef.current
+        );
+      }
+
+      presenceChannelRef.current = null;
+
+      void supabase.removeChannel(channel);
+    };
+  }, [
+    conversationId,
+    currentUserId,
+  ]);
+
   useEffect(() => {
     if (!currentUserId) return;
 
@@ -330,6 +462,58 @@ export default function ConversationThread({
     mergePersistedMessage,
     scrollToBottom,
   ]);
+
+  const markPresenceActive = useCallback(
+    (typing = false) => {
+      const channel =
+        presenceChannelRef.current;
+
+      if (!channel) {
+        return;
+      }
+
+      const now = Date.now();
+
+      /*
+       * Avoid sending unnecessary activity updates.
+       *
+       * Typing changes are always sent immediately.
+       * General activity is throttled.
+       */
+      if (
+        !typing &&
+        now - lastActivityRef.current <
+          ACTIVITY_HEARTBEAT_MS
+      ) {
+        return;
+      }
+
+      lastActivityRef.current = now;
+
+      void channel.track({
+        userId: currentUserId,
+        role: "customer",
+        typing,
+        lastActiveAt: new Date().toISOString(),
+      } satisfies PresenceUser);
+    },
+    [currentUserId]
+  );
+
+  const handleTyping = useCallback(() => {
+    markPresenceActive(true);
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(
+        typingTimeoutRef.current
+      );
+    }
+
+    typingTimeoutRef.current =
+      setTimeout(() => {
+        markPresenceActive(false);
+      }, TYPING_IDLE_MS);
+  }, [markPresenceActive]);
 
   async function loadOlderMessages() {
     if (
@@ -535,6 +719,15 @@ export default function ConversationThread({
     );
 
     setInput("");
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(
+        typingTimeoutRef.current
+      );
+    }
+
+    markPresenceActive(false);
+
     setIsSending(true);
 
     requestAnimationFrame(() => {
@@ -760,6 +953,25 @@ export default function ConversationThread({
           );
         })}
 
+        {otherParticipantTyping && (
+          <div className="flex justify-start">
+            <div className="rounded-2xl rounded-bl-md border border-sage/10 bg-white px-4 py-3 text-xs text-ink/50 shadow-sm">
+              <div className="flex items-center gap-2">
+                <span>Typing</span>
+
+                <span
+                  className="flex gap-1"
+                  aria-label="Typing"
+                >
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-forest/40 [animation-delay:-0.3s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-forest/40 [animation-delay:-0.15s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-forest/40" />
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div ref={bottomRef} />
       </div>
 
@@ -772,11 +984,24 @@ export default function ConversationThread({
           <textarea
             ref={textareaRef}
             value={input}
-            onChange={(event) =>
-              setInput(
-                event.target.value
-              )
-            }
+            onChange={(event) => {
+              setInput(event.target.value);
+
+              if (event.target.value.trim()) {
+                handleTyping();
+              } else {
+                if (typingTimeoutRef.current) {
+                  clearTimeout(
+                    typingTimeoutRef.current
+                  );
+                }
+
+                markPresenceActive(false);
+              }
+            }}
+            onFocus={() => markPresenceActive(false)}
+            onClick={() => markPresenceActive(false)}
+            onTouchStart={() => markPresenceActive(false)}
             onKeyDown={handleKeyDown}
             placeholder="Write a message…"
             rows={1}
