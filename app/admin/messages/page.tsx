@@ -211,11 +211,16 @@ export default async function AdminMessagesPage() {
       });
 
   if (error) {
-    console.error(
-      "Failed to load admin conversations:",
-      error
-    );
-  }
+  return (
+    <main className="p-6">
+      <h1>Admin conversations error</h1>
+
+      <pre className="mt-4 whitespace-pre-wrap">
+        {JSON.stringify(error, null, 2)}
+      </pre>
+    </main>
+  );
+}
 
   const conversations =
     (data ?? []) as ConversationRow[];
