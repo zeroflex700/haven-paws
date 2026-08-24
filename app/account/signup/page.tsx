@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PawPrint } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import GoogleAuthButton from "@/app/components/auth/GoogleAuthButton";
 
 export default function CustomerSignupPage() {
   const router = useRouter();
@@ -40,6 +41,14 @@ export default function CustomerSignupPage() {
         <div className="flex items-center justify-center gap-2 mb-8">
           <PawPrint size={22} className="text-gold" strokeWidth={1.5} />
           <span className="font-display text-xl text-forest">Create your account</span>
+        </div>
+
+        <GoogleAuthButton label="Sign up with Google" nextPath="/account" />
+
+        <div className="flex items-center gap-3 my-6">
+          <div className="flex-1 h-px bg-sage/20" />
+          <span className="text-xs text-ink/50 uppercase tracking-wider">or</span>
+          <div className="flex-1 h-px bg-sage/20" />
         </div>
 
         <form onSubmit={handleSignup}>
