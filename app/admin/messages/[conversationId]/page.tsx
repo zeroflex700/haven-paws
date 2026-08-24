@@ -5,7 +5,7 @@ import type {
   Message,
   MessageCursor,
 } from "@/lib/queries/messages";
-import ConversationThread from "@/app/components/messages/ConversationThread";
+import AdminConversationThread from "@/app/admin/components/messages/AdminConversationThread";
 
 const PAGE_SIZE = 30;
 
@@ -27,6 +27,12 @@ type PuppyRow = {
   id: string;
   name: string;
   image: string | null;
+};
+
+type CustomerRow = {
+  first_name: string | null;
+  last_name: string | null;
+  avatar_url: string | null;
 };
 
 type MessageRow = {
@@ -155,6 +161,35 @@ export default async function AdminConversationPage({
     puppyData as PuppyRow;
 
   /* ========================================================= */
+  /* CUSTOMER                                                   */
+  /* ========================================================= */
+
+  const {
+    data: customerData,
+    error: customerError,
+  } = await supabase
+    .from("profiles")
+    .select(
+      `
+        first_name,
+        last_name,
+        avatar_url
+      `
+    )
+    .eq("id", conversation.customer_id)
+    .maybeSingle();
+
+  if (
+    customerError ||
+    !customerData
+  ) {
+    redirect("/admin/messages");
+  }
+
+  const customer =
+    customerData as CustomerRow;
+
+  /* ========================================================= */
   /* INITIAL MESSAGE PAGE                                       */
   /* ========================================================= */
 
@@ -241,12 +276,20 @@ export default async function AdminConversationPage({
   /* ========================================================= */
 
   return (
-    <ConversationThread
+    <AdminConversationThread
       conversationId={conversationId}
       puppy={{
         id: puppy.id,
         name: puppy.name,
         image: puppy.image,
+      }}
+      customer={{
+        firstName:
+          customer.first_name ?? "",
+        lastName:
+          customer.last_name ?? "",
+        avatarUrl:
+          customer.avatar_url,
       }}
       initialMessages={initialMessages}
       initialNextCursor={
