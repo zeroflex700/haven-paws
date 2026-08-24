@@ -48,9 +48,14 @@ type Puppy = {
   image: string | null;
 };
 
+type ConversationRole =
+  | "customer"
+  | "admin";
+
 type ConversationThreadProps = {
   conversationId: string;
   puppy: Puppy;
+  role: ConversationRole;
   initialMessages: Message[];
   initialNextCursor: MessageCursor | null;
   initialHasMore: boolean;
@@ -108,6 +113,7 @@ function createClientMessageId(): string {
 export default function ConversationThread({
   conversationId,
   puppy,
+  role,
   initialMessages,
   initialNextCursor,
   initialHasMore,
@@ -180,9 +186,6 @@ export default function ConversationThread({
       )
     );
 
-  // Resolve the current user client-side rather than requiring the
-  // caller to pass it in — keeps this component self-contained and
-  // avoids coupling it to how the parent page fetches auth state.
   useEffect(() => {
     let cancelled = false;
 
@@ -304,20 +307,6 @@ export default function ConversationThread({
     []
   );
 
-  /*
-   * Conversation Presence
-   *
-   * This channel is separate from database Realtime.
-   *
-   * Presence is ephemeral:
-   * - no database writes
-   * - no stale "online" rows
-   * - automatically disappears when the connection closes
-   *
-   * The future admin conversation UI will join this exact
-   * same channel and immediately know whether the customer
-   * is online and active.
-   */
   useEffect(() => {
     if (!currentUserId) return;
 
@@ -386,7 +375,7 @@ export default function ConversationThread({
 
         await channel.track({
           userId: currentUserId,
-          role: "customer",
+          role,
           typing: false,
           lastActiveAt: new Date().toISOString(),
         } satisfies PresenceUser);
@@ -408,6 +397,7 @@ export default function ConversationThread({
   }, [
     conversationId,
     currentUserId,
+    role,
   ]);
 
   useEffect(() => {
@@ -476,12 +466,6 @@ export default function ConversationThread({
 
       const now = Date.now();
 
-      /*
-       * Avoid sending unnecessary activity updates.
-       *
-       * Typing changes are always sent immediately.
-       * General activity is throttled.
-       */
       if (
         !typing &&
         now - lastActivityRef.current <
@@ -494,12 +478,12 @@ export default function ConversationThread({
 
       void channel.track({
         userId: currentUserId,
-        role: "customer",
+        role,
         typing,
         lastActiveAt: new Date().toISOString(),
       } satisfies PresenceUser);
     },
-    [currentUserId]
+    [currentUserId, role]
   );
 
   const handleTyping = useCallback(() => {
@@ -537,8 +521,13 @@ export default function ConversationThread({
           id: nextCursor.id,
         });
 
+      const endpoint =
+        role === "admin"
+          ? `/api/admin/messages/${conversationId}`
+          : `/api/messages/${conversationId}`;
+
       const response = await fetch(
-        `/api/messages/${conversationId}?${params.toString()}`
+        `${endpoint}?${params.toString()}`
       );
 
       if (!response.ok) {
@@ -699,7 +688,7 @@ export default function ConversationThread({
         id: optimisticId,
         conversationId,
         senderId: currentUserId,
-        senderRole: "customer",
+        senderRole: role,
         content,
         clientGeneratedId,
         createdAt:
