@@ -55,7 +55,7 @@ type ConversationRole =
 type ConversationThreadProps = {
   conversationId: string;
   puppy: Puppy;
-  role: ConversationRole;
+  role?: ConversationRole;
   initialMessages: Message[];
   initialNextCursor: MessageCursor | null;
   initialHasMore: boolean;
@@ -113,7 +113,7 @@ function createClientMessageId(): string {
 export default function ConversationThread({
   conversationId,
   puppy,
-  role,
+  role = "customer",
   initialMessages,
   initialNextCursor,
   initialHasMore,
