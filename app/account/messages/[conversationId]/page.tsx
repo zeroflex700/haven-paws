@@ -123,7 +123,8 @@ export default async function ConversationPage({
       puppyError
     );
   }
-
+  
+console.error("DEBUG puppy fetch result:", JSON.stringify(puppy));
   if (!puppy) {
     notFound();
   }
