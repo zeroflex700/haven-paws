@@ -32,17 +32,24 @@ type PuppyRow = {
       }[]
     | null;
   breed:
-    | {
-        name: string;
-      }
+    | { name: string }
+    | { name: string }[]
     | null;
   breeder:
-    | {
-        name: string;
-        photo_url: string | null;
-      }
+    | { name: string; photo_url: string | null }
+    | { name: string; photo_url: string | null }[]
     | null;
 };
+
+function getSingleRelation<T>(
+  relation: T | T[] | null
+): T | null {
+  if (Array.isArray(relation)) {
+    return relation[0] ?? null;
+  }
+
+  return relation;
+}
 
 export default async function ConversationPage({
   params,
@@ -199,9 +206,9 @@ export default async function ConversationPage({
             id: typedPuppy.id,
             name: typedPuppy.name,
             image: coverImage,
-            breed: typedPuppy.breed?.name ?? null,
-            breederName: typedPuppy.breeder?.name ?? null,
-            breederPhotoUrl: typedPuppy.breeder?.photo_url ?? null,
+            breed: getSingleRelation(typedPuppy.breed)?.name ?? null,
+            breederName: getSingleRelation(typedPuppy.breeder)?.name ?? null,
+            breederPhotoUrl: getSingleRelation(typedPuppy.breeder)?.photo_url ?? null,
           }}
             initialMessages={initialMessages}
             initialNextCursor={nextCursor}
