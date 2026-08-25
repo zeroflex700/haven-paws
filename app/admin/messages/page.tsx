@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import AdminInboxRealtime from "@/app/admin/components/messages/AdminInboxRealtime";
 import {
   MessageSquare,
   ChevronRight,
@@ -326,7 +327,15 @@ export default async function AdminMessagesPage() {
       );
     }
   }
+return (
+    <main className="min-h-screen pb-28">
+      <AdminInboxRealtime />
 
+      {/* ===================================================== */}
+      {/* HEADER                                                */}
+      {/* ===================================================== */}
+      ...
+      
   return (
     <main className="min-h-screen pb-28">
       {/* ===================================================== */}
