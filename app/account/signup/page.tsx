@@ -166,6 +166,8 @@ export default function CustomerSignupPage() {
     }
 
     function handleMove(event: PointerEvent) {
+      if (!scene) return;
+
       const rect =
         scene.getBoundingClientRect();
 
