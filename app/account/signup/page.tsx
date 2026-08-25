@@ -77,6 +77,38 @@ export default function CustomerSignupPage() {
       setNext(getSafeRedirect(saved));
     }
   }, []);
+  
+  useEffect(() => {
+  if (
+    !window.matchMedia("(pointer: fine)").matches
+  ) {
+    return;
+  }
+
+  function handleCursorMove(event: PointerEvent) {
+    document.documentElement.style.setProperty(
+      "--cursor-x",
+      `${event.clientX}px`
+    );
+
+    document.documentElement.style.setProperty(
+      "--cursor-y",
+      `${event.clientY}px`
+    );
+  }
+
+  window.addEventListener(
+    "pointermove",
+    handleCursorMove
+  );
+
+  return () => {
+    window.removeEventListener(
+      "pointermove",
+      handleCursorMove
+    );
+  };
+}, []);
 
   useEffect(() => {
     const target = "Begin here.";
