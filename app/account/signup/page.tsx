@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PawPrint } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import { getSafeRedirect } from "@/lib/auth/safe-redirect";
 import GoogleAuthButton from "@/app/components/auth/GoogleAuthButton";
+
+const RETURN_URL_KEY = "haven_paws_login_return_url";
 
 export default function CustomerSignupPage() {
   const router = useRouter();
@@ -14,6 +17,26 @@ export default function CustomerSignupPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [next, setNext] = useState("/account");
+
+  // Same "next" resolution as the login page, so switching between
+  // sign-in and sign-up never loses the original destination.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const queryNext = params.get("next");
+
+    if (queryNext) {
+      const safe = getSafeRedirect(queryNext);
+      setNext(safe);
+      sessionStorage.setItem(RETURN_URL_KEY, safe);
+      return;
+    }
+
+    const saved = sessionStorage.getItem(RETURN_URL_KEY);
+    if (saved) {
+      setNext(getSafeRedirect(saved));
+    }
+  }, []);
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
@@ -31,9 +54,15 @@ export default function CustomerSignupPage() {
       setError(error.message);
       return;
     }
-    router.push("/account");
+
+    const destination = getSafeRedirect(next);
+    sessionStorage.removeItem(RETURN_URL_KEY);
+
+    router.push(destination);
     router.refresh();
   }
+
+  const loginHref = `/account/login?next=${encodeURIComponent(next)}`;
 
   return (
     <main className="min-h-screen bg-cream flex items-center justify-center px-6 py-16">
@@ -43,7 +72,7 @@ export default function CustomerSignupPage() {
           <span className="font-display text-xl text-forest">Create your account</span>
         </div>
 
-        <GoogleAuthButton label="Sign up with Google" nextPath="/account" />
+        <GoogleAuthButton label="Sign up with Google" nextPath={next} />
 
         <div className="flex items-center gap-3 my-6">
           <div className="flex-1 h-px bg-sage/20" />
@@ -89,7 +118,7 @@ export default function CustomerSignupPage() {
 
         <p className="text-center text-sm text-ink/70 mt-6">
           Already have an account?{" "}
-          <Link href="/account/login" className="text-forest underline">
+          <Link href={loginHref} className="text-forest underline">
             Log in
           </Link>
         </p>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { PawPrint, Menu, User } from "lucide-react";
 import MobileMenu from "./MobileMenu";
@@ -18,6 +18,24 @@ type Thumbnails = {
   our_standards: string | null;
 };
 
+const AUTH_PAGES = ["/account/login", "/account/signup"];
+
+function AccountLink() {
+  // Isolated in its own component + Suspense boundary because
+  // useSearchParams() requires one; this keeps the rest of the
+  // navbar rendering immediately without waiting on it.
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const search = searchParams.toString();
+  const currentPath =
+    pathname && !AUTH_PAGES.includes(pathname)
+      ? `${pathname}${search ? `?${search}` : ""}`
+      : "/";
+
+  return `/account/login?next=${encodeURIComponent(currentPath)}`;
+}
+
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
@@ -29,8 +47,6 @@ export default function Navbar() {
     our_standards: null,
   });
 
-  const pathname = usePathname();
-
   const scrollDirection = useScrollDirection();
   const scrolled = useStickyNavigation();
 
@@ -39,10 +55,11 @@ export default function Navbar() {
       setLoggedIn(!!data.session);
     });
 
-    const { data: listener } =
-      supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
         setLoggedIn(!!session);
-      });
+      }
+    );
 
     return () => {
       listener.subscription.unsubscribe();
@@ -56,8 +73,7 @@ export default function Navbar() {
       .eq("slug", "account-menu")
       .single()
       .then(({ data }) => {
-        const images =
-          (data?.extra_images as Record<string, string>) ?? {};
+        const images = (data?.extra_images as Record<string, string>) ?? {};
 
         setThumbnails({
           how_it_works: images.how_it_works ?? null,
@@ -68,17 +84,6 @@ export default function Navbar() {
   }, []);
 
   const navSections = buildNavSections(loggedIn);
-
-  function getLoginUrl() {
-    const currentPath =
-      pathname && pathname !== "/account/login"
-        ? pathname
-        : "/";
-
-    return `/account/login?redirectTo=${encodeURIComponent(
-      currentPath
-    )}`;
-  }
 
   return (
     <>
@@ -126,10 +131,7 @@ export default function Navbar() {
                 aria-label="Open menu"
                 type="button"
               >
-                <Menu
-                  size={19}
-                  strokeWidth={1.6}
-                />
+                <Menu size={19} strokeWidth={1.6} />
               </button>
 
               <Link
@@ -187,10 +189,7 @@ export default function Navbar() {
               aria-label="Main navigation"
             >
               {navSections.map((section) => (
-                <HeaderNavDropdown
-                  key={section.title}
-                  section={section}
-                />
+                <HeaderNavDropdown key={section.title} section={section} />
               ))}
             </nav>
 
@@ -213,48 +212,43 @@ export default function Navbar() {
                   transition-all duration-300
                 "
               >
-                <User
-                  size={16}
-                  className="text-white"
-                  strokeWidth={1.6}
-                />
+                <User size={16} className="text-white" strokeWidth={1.6} />
               </button>
             ) : (
-              <Link
-                href={getLoginUrl()}
-                aria-label="Account"
-                className="
-                  w-10 h-10
-                  rounded-full
-                  bg-white/65
-                  border border-[#193b35]/10
-                  flex items-center justify-center
-                  hover:bg-[#193b35]
-                  hover:border-[#193b35]
-                  active:scale-95
-                  transition-all duration-300
-                  group
-                "
+              <Suspense
+                fallback={
+                  <Link
+                    href="/account/login"
+                    aria-label="Account"
+                    className="
+                      w-10 h-10
+                      rounded-full
+                      bg-white/65
+                      border border-[#193b35]/10
+                      flex items-center justify-center
+                      hover:bg-[#193b35]
+                      hover:border-[#193b35]
+                      active:scale-95
+                      transition-all duration-300
+                      group
+                    "
+                  >
+                    <User
+                      size={16}
+                      className="text-[#193b35] group-hover:text-white transition-colors"
+                      strokeWidth={1.6}
+                    />
+                  </Link>
+                }
               >
-                <User
-                  size={16}
-                  className="
-                    text-[#193b35]
-                    group-hover:text-white
-                    transition-colors
-                  "
-                  strokeWidth={1.6}
-                />
-              </Link>
+                <AccountIconLink />
+              </Suspense>
             )}
           </div>
         </div>
       </header>
 
-      <MobileMenu
-        open={menuOpen}
-        onClose={() => setMenuOpen(false)}
-      />
+      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
 
       <AccountPanel
         open={accountOpen}
@@ -262,5 +256,34 @@ export default function Navbar() {
         thumbnails={thumbnails}
       />
     </>
+  );
+}
+
+function AccountIconLink() {
+  const href = AccountLink();
+
+  return (
+    <Link
+      href={href}
+      aria-label="Account"
+      className="
+        w-10 h-10
+        rounded-full
+        bg-white/65
+        border border-[#193b35]/10
+        flex items-center justify-center
+        hover:bg-[#193b35]
+        hover:border-[#193b35]
+        active:scale-95
+        transition-all duration-300
+        group
+      "
+    >
+      <User
+        size={16}
+        className="text-[#193b35] group-hover:text-white transition-colors"
+        strokeWidth={1.6}
+      />
+    </Link>
   );
 }
