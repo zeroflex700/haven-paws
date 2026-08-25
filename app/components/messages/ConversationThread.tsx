@@ -307,8 +307,19 @@ export default function ConversationThread({
     []
   );
 
+  /*
+   * Customer/admin joins the same Presence channel for this conversation.
+   *
+   * This connection self-heals: mobile browsers (especially split-screen
+   * or pop-up multitasking) throttle backgrounded windows and can silently
+   * drop the realtime socket. Without explicit handling, the channel just
+   * dies and presence never recovers — messages still work because they
+   * ride on Postgres replication, not this socket's heartbeat.
+   */
   useEffect(() => {
     if (!currentUserId) return;
+
+    const userId = currentUserId; // narrowed, stable for the life of this effect
 
     let isMounted = true;
     let retryTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -319,7 +330,7 @@ export default function ConversationThread({
       if (!channel) return;
 
       void channel.track({
-        userId: currentUserId,
+        userId,
         role,
         typing,
         lastActiveAt: new Date().toISOString(),
@@ -335,7 +346,7 @@ export default function ConversationThread({
 
       const remoteStates = Object.values(state)
         .flat()
-        .filter((presence) => presence.userId !== currentUserId);
+        .filter((presence) => presence.userId !== userId);
 
       setOtherParticipantTyping(
         remoteStates.some((presence) => presence.typing)
@@ -348,7 +359,7 @@ export default function ConversationThread({
         {
           config: {
             presence: {
-              key: currentUserId!,
+              key: userId,
             },
           },
         }
@@ -398,6 +409,8 @@ export default function ConversationThread({
 
     setupChannel();
 
+    // Re-assert presence whenever this window regains focus/visibility —
+    // covers the case of a backgrounded pop-up window resuming.
     function handleVisibilityOrFocus() {
       if (document.visibilityState === "visible") {
         trackPresence(false);
@@ -407,6 +420,7 @@ export default function ConversationThread({
     document.addEventListener("visibilitychange", handleVisibilityOrFocus);
     window.addEventListener("focus", handleVisibilityOrFocus);
 
+    // Periodic heartbeat so presence doesn't go stale on an idle-but-open tab.
     heartbeatInterval = setInterval(() => {
       if (document.visibilityState === "visible") {
         trackPresence(false);

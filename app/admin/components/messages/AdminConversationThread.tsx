@@ -313,7 +313,7 @@ export default function AdminConversationThread({
     []
   );
 
-/*
+  /*
    * Admin joins the same Presence channel as the customer.
    *
    * This connection self-heals: mobile browsers (especially split-screen
@@ -325,6 +325,8 @@ export default function AdminConversationThread({
   useEffect(() => {
     if (!currentUserId) return;
 
+    const userId = currentUserId; // narrowed, stable for the life of this effect
+
     let isMounted = true;
     let retryTimeout: ReturnType<typeof setTimeout> | null = null;
     let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
@@ -334,7 +336,7 @@ export default function AdminConversationThread({
       if (!channel) return;
 
       void channel.track({
-        userId: currentUserId,
+        userId,
         role: "admin",
         typing,
         lastActiveAt: new Date().toISOString(),
@@ -350,7 +352,7 @@ export default function AdminConversationThread({
 
       const remoteStates = Object.values(state)
         .flat()
-        .filter((presence) => presence.userId !== currentUserId);
+        .filter((presence) => presence.userId !== userId);
 
       const customerStates = remoteStates.filter(
         (presence) => presence.role === "customer"
@@ -369,7 +371,7 @@ export default function AdminConversationThread({
         {
           config: {
             presence: {
-              key: currentUserId!,
+              key: userId,
             },
           },
         }
@@ -421,7 +423,7 @@ export default function AdminConversationThread({
     setupChannel();
 
     // Re-assert presence whenever this window regains focus/visibility —
-    // covers the exact case of a backgrounded pop-up window resuming.
+    // covers the case of a backgrounded pop-up window resuming.
     function handleVisibilityOrFocus() {
       if (document.visibilityState === "visible") {
         trackPresence(false);
