@@ -9,6 +9,7 @@ export type ConversationListItem = {
     name: string;
     breed: string;
     breederName: string | null;
+    breederPhotoUrl: string | null;
     imageUrl: string | null;
   };
 
@@ -38,6 +39,7 @@ type RawConversation = {
     } | null;
     breeder: {
       name: string;
+      photo_url: string | null;
     } | null;
   } | null;
 };
@@ -93,7 +95,8 @@ export async function getCustomerConversations(): Promise<
             name
           ),
           breeder:breeders (
-            name
+            name,
+            photo_url
           )
         )
       `
@@ -339,6 +342,8 @@ export async function getCustomerConversations(): Promise<
             "Unknown breed",
           breederName:
             puppy.breeder?.name ?? null,
+          breederPhotoUrl:
+            puppy.breeder?.photo_url ?? null,
           imageUrl:
             coverImageByPuppy.get(
               puppy.id

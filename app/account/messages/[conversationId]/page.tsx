@@ -39,6 +39,7 @@ type PuppyRow = {
   breeder:
     | {
         name: string;
+        photo_url: string | null;
       }[]
     | null;
 };
@@ -128,7 +129,8 @@ export default async function ConversationPage({
         name
       ),
       breeder:breeders (
-        name
+        name,
+        photo_url
       )
     `)
     .eq("id", typedConversation.puppy_id)
@@ -215,6 +217,7 @@ export default async function ConversationPage({
             image: coverImage,
             breed: typedPuppy.breed?.[0]?.name ?? null,
             breederName: typedPuppy.breeder?.[0]?.name ?? null,
+            breederPhotoUrl: typedPuppy.breeder?.[0]?.photo_url ?? null,
           }}
           initialMessages={
             initialMessages

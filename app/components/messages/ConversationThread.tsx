@@ -48,6 +48,7 @@ type Puppy = {
   image: string | null;
   breed: string | null;
   breederName: string | null;
+  breederPhotoUrl: string | null;
 };
 
 type ConversationRole =
@@ -860,37 +861,31 @@ export default function ConversationThread({
             className="flex items-center gap-3 rounded-2xl transition hover:bg-cream/60 active:scale-[0.99]"
             aria-label={`View ${puppy.name}'s profile`}
           >
-            {puppy.image ? (
+            {puppy.breederPhotoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={puppy.image}
-                alt={puppy.name}
+                src={puppy.breederPhotoUrl}
+                alt={puppy.breederName ?? "Breeder"}
                 className="h-11 w-11 rounded-full object-cover"
               />
             ) : (
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-sage/10 text-sm font-semibold text-forest">
-                {puppy.name.charAt(0)}
+                {(puppy.breederName ?? puppy.name).charAt(0)}
               </div>
             )}
 
             <div className="min-w-0">
-              <p className="text-xs text-ink/45">
-                Conversation about
+              <p className="text-sm font-semibold text-forest transition group-hover:text-forest-light">
+                {puppy.breederName ?? "Breeder"}
               </p>
 
-              <p className="text-sm font-semibold text-forest transition group-hover:text-forest-light">
-                {puppy.name}
+              <p className="text-xs text-sage truncate">
+                Puppy: {puppy.name}
               </p>
 
               {puppy.breed && (
-                <p className="text-xs text-sage truncate">
-                  {puppy.breed}
-                </p>
-              )}
-
-              {puppy.breederName && (
                 <p className="text-[11px] text-ink/40 truncate">
-                  Breeder: {puppy.breederName}
+                  {puppy.breed}
                 </p>
               )}
             </div>

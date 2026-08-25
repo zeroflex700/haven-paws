@@ -122,15 +122,16 @@ export default async function MessagesPage() {
 
                       <div className="relative h-16 w-16 sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-2xl bg-cream-alt border border-sage/10">
 
-                        {conversation.puppy.imageUrl ? (
+                        {conversation.puppy.breederPhotoUrl ? (
                           <Image
                             src={
                               conversation.puppy
-                                .imageUrl
+                                .breederPhotoUrl
                             }
                             alt={
                               conversation.puppy
-                                .name
+                                .breederName ??
+                              "Breeder"
                             }
                             fill
                             className="object-cover"
@@ -143,6 +144,9 @@ export default async function MessagesPage() {
                               strokeWidth={1.5}
                             />
                           </div>
+                        )}
+
+                      </div>
                         )}
 
                       </div>
@@ -168,23 +172,18 @@ export default async function MessagesPage() {
                                     : "font-medium text-forest"
                                 }`}
                               >
-                                {conversation.puppy.name}
+                                {conversation.puppy.breederName ?? "Breeder"}
                               </p>
 
                             </div>
 
                             <p className="text-xs sm:text-sm text-sage mt-1 truncate">
-                              {
-                                conversation.puppy
-                                  .breed
-                              }
+                              Puppy: {conversation.puppy.name}
                             </p>
 
-                            {conversation.puppy.breederName && (
-                              <p className="text-[11px] sm:text-xs text-ink/40 mt-0.5 truncate">
-                                Breeder: {conversation.puppy.breederName}
-                              </p>
-                            )}
+                            <p className="text-[11px] sm:text-xs text-ink/40 mt-0.5 truncate">
+                              {conversation.puppy.breed}
+                            </p>
                           </div>
 
                           <div className="shrink-0 flex items-center gap-2">
