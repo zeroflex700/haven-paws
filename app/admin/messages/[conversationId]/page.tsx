@@ -168,7 +168,7 @@ export default async function AdminConversationPage({
     data: customerData,
     error: customerError,
   } = await supabase
-    .from("profiles")
+    .from("customer_profiles")
     .select(
       `
         first_name,
