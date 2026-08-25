@@ -23,10 +23,17 @@ type ConversationRow = {
   created_at: string;
 };
 
+type PuppyMediaRow = {
+  url: string;
+  media_type: string;
+  is_cover: boolean;
+  sort_order: number;
+};
+
 type PuppyRow = {
   id: string;
   name: string;
-  image: string | null;
+  puppy_media: PuppyMediaRow[] | null;
 };
 
 type CustomerRow = {
@@ -147,7 +154,12 @@ export default async function AdminConversationPage({
       `
         id,
         name,
-        image
+        puppy_media (
+          url,
+          media_type,
+          is_cover,
+          sort_order
+        )
       `
     )
     .eq("id", conversation.puppy_id)
@@ -157,8 +169,44 @@ export default async function AdminConversationPage({
     redirect("/admin/messages");
   }
 
-  const puppy =
+  const rawPuppy =
     puppyData as PuppyRow;
+
+  function getPuppyImage(
+    media: PuppyMediaRow[] | null
+  ): string | null {
+    if (!media || media.length === 0) {
+      return null;
+    }
+
+    const images = media.filter(
+      (item) => item.media_type === "image"
+    );
+
+    if (images.length === 0) {
+      return null;
+    }
+
+    const cover = images.find(
+      (item) => item.is_cover
+    );
+
+    if (cover) {
+      return cover.url;
+    }
+
+    const sorted = [...images].sort(
+      (a, b) => a.sort_order - b.sort_order
+    );
+
+    return sorted[0].url;
+  }
+
+  const puppy = {
+    id: rawPuppy.id,
+    name: rawPuppy.name,
+    image: getPuppyImage(rawPuppy.puppy_media),
+  };
 
   /* ========================================================= */
   /* CUSTOMER                                                   */

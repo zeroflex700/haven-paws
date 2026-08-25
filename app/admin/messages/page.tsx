@@ -23,12 +23,10 @@ type ConversationRow = {
     | {
         id: string;
         name: string;
-        image: string | null;
       }
     | {
         id: string;
         name: string;
-        image: string | null;
       }[]
     | null;
 
@@ -195,8 +193,7 @@ export default async function AdminMessagesPage() {
           created_at,
           puppies (
             id,
-            name,
-            image
+            name
           ),
           customer_profiles (
             first_name,
