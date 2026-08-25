@@ -34,12 +34,12 @@ type PuppyRow = {
   breed:
     | {
         name: string;
-      }
+      }[]
     | null;
   breeder:
     | {
         name: string;
-      }
+      }[]
     | null;
 };
 
@@ -213,8 +213,8 @@ export default async function ConversationPage({
             id: typedPuppy.id,
             name: typedPuppy.name,
             image: coverImage,
-            breed: typedPuppy.breed?.name ?? null,
-            breederName: typedPuppy.breeder?.name ?? null,
+            breed: typedPuppy.breed?.[0]?.name ?? null,
+            breederName: typedPuppy.breeder?.[0]?.name ?? null,
           }}
           initialMessages={
             initialMessages
