@@ -88,7 +88,6 @@ export default function CustomerLoginPage() {
     const target = "Welcome back.";
 
     let frame = 0;
-    let interval: ReturnType<typeof setInterval>;
 
    const interval = setInterval(() => {
       const revealed = Math.min(
