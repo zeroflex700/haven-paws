@@ -327,12 +327,14 @@ export default async function AdminMessagesPage() {
       );
     }
   }
-
-  return (
+return (
     <main className="min-h-screen pb-28">
+      <AdminInboxRealtime />
+
       {/* ===================================================== */}
       {/* HEADER                                                */}
       {/* ===================================================== */}
+
 
       <div className="border-b border-sage/10 bg-white px-4 py-6 sm:px-6">
         <div className="mx-auto max-w-5xl">
