@@ -12,30 +12,11 @@ import {
   EyeOff,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import { getSafeRedirect } from "@/lib/auth/safe-redirect";
+import GoogleAuthButton from "@/app/components/auth/GoogleAuthButton";
 
 const RETURN_URL_KEY = "haven_paws_login_return_url";
 
-function getSafeRedirect(path: string | null | undefined) {
-  if (!path) {
-    return "/account";
-  }
-
-  // Only allow internal URLs.
-  if (!path.startsWith("/") || path.startsWith("//")) {
-    return "/account";
-  }
-
-  // Never allow the authentication pages themselves as the return page.
-  if (
-    path === "/account/login" ||
-    path.startsWith("/account/login?") ||
-    path === "/auth/callback"
-  ) {
-    return "/account";
-  }
-
-  return path;
-}
 
 export default function CustomerLoginPage() {
   const router = useRouter();
@@ -244,21 +225,7 @@ export default function CustomerLoginPage() {
           {/* SOCIAL LOGIN */}
           <div className="space-y-3">
 
-            <button
-              type="button"
-              onClick={() =>
-                handleOAuth("google")
-              }
-              className="relative w-full h-14 border border-ink/40 rounded-full flex items-center justify-center text-sm sm:text-base font-medium text-ink hover:border-forest transition-colors"
-            >
-              <span className="absolute left-1/2 -translate-x-[115px] sm:-translate-x-[140px] w-8 h-8 flex items-center justify-center">
-                <span className="text-2xl font-semibold leading-none">
-                  G
-                </span>
-              </span>
-
-              Continue with Google
-            </button>
+            <GoogleAuthButton label="Continue with Google" nextPath={redirectTo} />
 
             <button
               type="button"
