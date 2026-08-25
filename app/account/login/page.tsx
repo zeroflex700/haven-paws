@@ -142,6 +142,8 @@ export default function CustomerLoginPage() {
     if (!media.matches) return;
 
     function handleMove(event: PointerEvent) {
+      if (!scene) return;
+      
       const rect = scene.getBoundingClientRect();
 
       const x =
