@@ -34,13 +34,13 @@ type PuppyRow = {
   breed:
     | {
         name: string;
-      }[]
+      }
     | null;
   breeder:
     | {
         name: string;
         photo_url: string | null;
-      }[]
+      }
     | null;
 };
 
@@ -124,7 +124,6 @@ export default async function ConversationPage({
     );
   }
   
-console.error("DEBUG puppy fetch result:", JSON.stringify(puppy));
   if (!puppy) {
     notFound();
   }
@@ -197,19 +196,13 @@ console.error("DEBUG puppy fetch result:", JSON.stringify(puppy));
           <ConversationThread
             conversationId={typedConversation.id}
             puppy={{
-              id: typedPuppy.id,
-              name: typedPuppy.name,
-              image: coverImage,
-              breed:
-                typedPuppy.breed?.[0]?.name ??
-                null,
-              breederName:
-                typedPuppy.breeder?.[0]?.name ??
-                null,
-              breederPhotoUrl:
-                typedPuppy.breeder?.[0]?.photo_url ??
-                null,
-            }}
+            id: typedPuppy.id,
+            name: typedPuppy.name,
+            image: coverImage,
+            breed: typedPuppy.breed?.name ?? null,
+            breederName: typedPuppy.breeder?.name ?? null,
+            breederPhotoUrl: typedPuppy.breeder?.photo_url ?? null,
+          }}
             initialMessages={initialMessages}
             initialNextCursor={nextCursor}
             initialHasMore={page.hasMore}
