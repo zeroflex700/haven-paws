@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import AccountInboxRealtime from "./AccountInboxRealtime";
 import { MessageCircle, ChevronRight } from "lucide-react";
 
 import Navbar from "../../components/Navbar";
@@ -65,7 +66,10 @@ export default async function MessagesPage() {
 
   return (
     <main className="min-h-screen bg-cream">
+      <AccountInboxRealtime />
+
       <Navbar />
+      
 
       <section className="border-b border-sage/10 bg-white">
         <div className="max-w-5xl mx-auto px-5 sm:px-6 lg:px-10 py-10 sm:py-14">
