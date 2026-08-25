@@ -965,7 +965,7 @@ return (
         </div>
 
         <span className="text-[10px] font-medium text-forest/45 transition group-hover:text-forest">
-          View puppy →
+          View puppy in question →
         </span>
       </Link>
     </div>
