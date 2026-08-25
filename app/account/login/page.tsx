@@ -3,26 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { PawPrint, Eye, EyeOff } from "lucide-react";
+import { PawPrint, Menu, Phone, User, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { getSafeRedirect } from "@/lib/auth/safe-redirect";
 import GoogleAuthButton from "@/app/components/auth/GoogleAuthButton";
-import AuthMotionProvider from "@/app/components/auth/AuthMotionProvider";
-import AuthBackground from "@/app/components/auth/AuthBackground";
-import AuthCard from "@/app/components/auth/AuthCard";
-import AuthHeading from "@/app/components/auth/AuthHeading";
-import AuthInput from "@/app/components/auth/AuthInput";
-import AuthSocialButton from "@/app/components/auth/AuthSocialButton";
 
 const RETURN_URL_KEY = "haven_paws_login_return_url";
-
-function FacebookIcon() {
-  return (
-    <span className="w-5 h-5 rounded-full bg-[#1877F2] text-white flex items-center justify-center">
-      <span className="text-[13px] font-bold leading-none">f</span>
-    </span>
-  );
-}
 
 export default function CustomerLoginPage() {
   const router = useRouter();
@@ -111,200 +97,176 @@ export default function CustomerLoginPage() {
   const signupHref = `/account/signup?next=${encodeURIComponent(next)}`;
 
   return (
-    <AuthMotionProvider>
-      <main className="min-h-[100dvh] bg-[#193b35] lg:grid lg:grid-cols-[minmax(0,480px)_1fr]">
-        {/* FORM SIDE */}
-        <div className="relative flex flex-col min-h-[100dvh] lg:min-h-0">
-          <div
-            className="lg:hidden absolute inset-0 -z-10"
-            style={{ maxHeight: "38vh" }}
-          >
-            <AuthBackground variant="login" />
+    <main className="min-h-screen bg-white text-ink">
+
+      {/* HEADER */}
+      <header className="border-b border-sage/20 bg-white">
+        <div className="max-w-7xl mx-auto h-[76px] px-5 sm:px-6 lg:px-10 flex items-center justify-between">
+
+          <div className="flex items-center">
+            <button
+              type="button"
+              aria-label="Menu"
+              className="p-2 -ml-2 text-forest hover:text-gold transition-colors md:hidden"
+            >
+              <Menu size={24} strokeWidth={1.7} />
+            </button>
           </div>
 
-          <div className="pt-[calc(env(safe-area-inset-top,0px)+20px)] px-6 sm:px-10 lg:px-12">
-            <Link
-              href="/"
-              aria-label="Haven Paws home"
-              className="auth-logo-link inline-flex items-center gap-2.5"
+          <Link
+            href="/"
+            aria-label="Haven Paws home"
+            className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2"
+          >
+            <PawPrint size={22} className="text-gold" strokeWidth={1.5} />
+            <span className="font-display text-xl text-forest tracking-tight">
+              Haven Paws
+            </span>
+          </Link>
+
+          <div className="ml-auto flex items-center gap-3">
+            <a
+              href="tel:"
+              aria-label="Call Haven Paws"
+              className="hidden sm:flex w-9 h-9 items-center justify-center rounded-full text-forest hover:text-gold transition-colors"
             >
-              <span className="w-9 h-9 rounded-full bg-[#d7a94b]/90 flex items-center justify-center">
-                <PawPrint size={17} className="text-[#193b35]" strokeWidth={1.7} />
-              </span>
-              <span className="font-display text-lg text-white tracking-tight">
-                Haven Paws
-              </span>
+              <Phone size={20} strokeWidth={1.7} />
+            </a>
+
+            <Link
+              href="/account/login"
+              aria-label="Account"
+              className="w-9 h-9 rounded-full border border-sage/30 bg-cream-alt flex items-center justify-center text-forest hover:border-gold transition-colors"
+            >
+              <User size={17} strokeWidth={1.6} />
             </Link>
           </div>
+        </div>
+      </header>
 
-          <div className="flex-1 flex items-center justify-center px-6 sm:px-10 lg:px-12 py-10">
-            <AuthCard>
-              <AuthHeading eyebrow="Welcome back" text="Log in to Haven Paws" />
-              <p className="text-white/60 text-[14px] mt-3 mb-8">
-                Pick up right where you left off.
-              </p>
+      {/* LOGIN CONTENT */}
+      <section className="px-5 sm:px-6 py-10 sm:py-14">
+        <div className="w-full max-w-[590px] mx-auto">
 
-              <div className="space-y-3">
-                <GoogleAuthButton label="Continue with Google" nextPath={next} />
-                <AuthSocialButton
-                  icon={<FacebookIcon />}
-                  label="Continue with Facebook"
-                  onClick={handleFacebookOAuth}
-                />
-              </div>
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <PawPrint size={24} className="text-gold" strokeWidth={1.5} />
+            <h1 className="font-display text-2xl sm:text-3xl text-forest">
+              Log in to Haven Paws
+            </h1>
+          </div>
 
-              <div className="flex items-center gap-4 my-7">
-                <div className="flex-1 h-px bg-white/15" />
-                <span className="text-[12px] text-white/45 whitespace-nowrap uppercase tracking-wider">
-                  Or with email
-                </span>
-                <div className="flex-1 h-px bg-white/15" />
-              </div>
+          <div className="space-y-3">
+            <GoogleAuthButton label="Continue with Google" nextPath={next} />
 
-              <form onSubmit={handleLogin} className="space-y-4">
-                <AuthInput
-                  id="email"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  placeholder="Email"
-                  label="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+            <button
+              type="button"
+              onClick={handleFacebookOAuth}
+              className="relative w-full h-14 border border-ink/40 rounded-full flex items-center justify-center text-sm sm:text-base font-medium text-ink hover:border-forest transition-colors"
+            >
+              <span className="absolute left-1/2 -translate-x-[115px] sm:-translate-x-[140px] w-8 h-8 rounded-full bg-[#1877F2] text-white flex items-center justify-center">
+                <span className="text-xl font-bold leading-none">f</span>
+              </span>
+              Continue with Facebook
+            </button>
+          </div>
 
-                <AuthInput
+          <div className="flex items-center gap-4 my-7">
+            <div className="flex-1 h-px bg-sage/25" />
+            <span className="text-sm text-sage whitespace-nowrap">
+              Or continue with email
+            </span>
+            <div className="flex-1 h-px bg-sage/25" />
+          </div>
+
+          <form onSubmit={handleLogin}>
+            <div className="mb-4">
+              <label htmlFor="email" className="sr-only">Email</label>
+              <input
+                id="email"
+                type="email"
+                required
+                autoComplete="email"
+                placeholder="Email*"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full h-14 border border-ink/25 rounded-xl px-5 text-base text-ink placeholder:text-ink/50 bg-white focus:outline-none focus:border-forest focus:ring-1 focus:ring-forest/20 transition-colors"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="password" className="sr-only">Password</label>
+              <div className="relative">
+                <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   required
                   autoComplete="current-password"
-                  placeholder="Password"
-                  label="Password"
+                  placeholder="Password*"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  endAdornment={
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((current) => !current)}
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                      className="text-white/60 hover:text-[#d7a94b] transition-colors p-1"
-                    >
-                      {showPassword ? (
-                        <EyeOff size={20} strokeWidth={1.7} />
-                      ) : (
-                        <Eye size={20} strokeWidth={1.7} />
-                      )}
-                    </button>
-                  }
+                  className="w-full h-14 border border-ink/25 rounded-xl pl-5 pr-14 text-base text-ink placeholder:text-ink/50 bg-white focus:outline-none focus:border-forest focus:ring-1 focus:ring-forest/20 transition-colors"
                 />
-
-                <div className="flex items-center justify-between gap-4 pt-1 text-sm">
-                  <label className="flex items-center gap-2.5 text-white/75 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <span className="w-5 h-5 rounded-md border border-white/25 bg-white/5 flex items-center justify-center peer-checked:bg-[#d7a94b] peer-checked:border-[#d7a94b] transition-colors">
-                      {rememberMe && (
-                        <svg viewBox="0 0 20 20" fill="none" className="w-3.5 h-3.5 text-[#193b35]">
-                          <path
-                            d="M4 10.5L8 14L16 6"
-                            stroke="currentColor"
-                            strokeWidth="2.4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      )}
-                    </span>
-                    Remember me
-                  </label>
-
-                  <Link
-                    href="/account/forgot-password"
-                    className="text-[#d7a94b] font-medium underline-offset-4 hover:underline whitespace-nowrap"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-
-                {error && (
-                  <p role="alert" className="text-sm text-red-300">
-                    {error}
-                  </p>
-                )}
-
                 <button
-                  type="submit"
-                  disabled={loading}
-                  className="auth-submit-btn relative w-full h-14 rounded-full bg-[#d7a94b] text-[#193b35] text-[15px] font-semibold overflow-hidden transition-transform duration-200 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0"
+                  type="button"
+                  onClick={() => setShowPassword((c) => !c)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-ink/70 hover:text-forest transition-colors"
                 >
-                  {loading ? "Logging in..." : "Log in"}
+                  {showPassword ? <EyeOff size={22} strokeWidth={1.7} /> : <Eye size={22} strokeWidth={1.7} />}
                 </button>
-              </form>
+              </div>
+            </div>
 
-              <p className="text-center text-[14px] text-white/60 mt-7">
-                Don&apos;t have an account?{" "}
-                <Link
-                  href={signupHref}
-                  className="text-[#d7a94b] font-medium underline-offset-4 hover:underline"
-                >
-                  Create an account
-                </Link>
-              </p>
-            </AuthCard>
-          </div>
+            <div className="flex items-center justify-between gap-4 mb-7 text-sm">
+              <label className="flex items-center gap-3 text-ink/80 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <span className="w-5 h-5 rounded-md border border-ink/25 bg-white flex items-center justify-center peer-checked:bg-forest peer-checked:border-forest transition-colors">
+                  {rememberMe && (
+                    <svg viewBox="0 0 20 20" fill="none" className="w-3.5 h-3.5 text-white">
+                      <path d="M4 10.5L8 14L16 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </span>
+                Remember me
+              </label>
+
+              <Link
+                href="/account/forgot-password"
+                className="text-forest font-medium underline underline-offset-2 hover:text-gold transition-colors whitespace-nowrap"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
+            {error && (
+              <p role="alert" className="text-sm text-red-600 mb-4">{error}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full h-14 rounded-full bg-ink text-white text-base font-medium hover:bg-forest transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? "Logging in..." : "Log in"}
+            </button>
+          </form>
+
+          <p className="text-center text-sm sm:text-base text-ink/75 mt-7">
+            Don&apos;t have an account?{" "}
+            <Link
+              href={signupHref}
+              className="text-forest font-medium underline underline-offset-2 hover:text-gold transition-colors"
+            >
+              Create an account
+            </Link>
+          </p>
         </div>
-
-        {/* VISUAL SIDE — desktop only */}
-        <div className="relative hidden lg:block">
-          <AuthBackground variant="login" />
-          <div className="relative h-full flex flex-col justify-end p-16 xl:p-20">
-            <p className="font-display text-white/90 text-[26px] xl:text-[30px] leading-snug max-w-md">
-              Every good match starts with a warm welcome.
-            </p>
-            <p className="text-white/55 text-[14px] mt-3 max-w-sm">
-              Your saved breeds, favorites, and conversations are exactly where you left them.
-            </p>
-          </div>
-        </div>
-      </main>
-
-      <style jsx global>{`
-        .auth-logo-link {
-          transition: transform 0.25s ease;
-        }
-        .auth-logo-link:hover {
-          transform: translateY(-1px);
-        }
-        .auth-submit-btn::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(
-            100deg,
-            transparent 30%,
-            rgba(255, 255, 255, 0.35) 50%,
-            transparent 70%
-          );
-          transform: translateX(-120%);
-        }
-        .auth-submit-btn:hover::after {
-          transform: translateX(120%);
-          transition: transform 0.7s ease;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .auth-logo-link,
-          .auth-submit-btn {
-            transition: none;
-          }
-          .auth-submit-btn::after {
-            display: none;
-          }
-        }
-      `}</style>
-    </AuthMotionProvider>
+      </section>
+    </main>
   );
 }
