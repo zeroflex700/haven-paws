@@ -13,6 +13,11 @@ import {
   Send,
   Loader2,
   RefreshCw,
+  ArrowLeft,
+  ExternalLink,
+  PawPrint,
+  MoreHorizontal,
+  CheckCheck,
 } from "lucide-react";
 
 import { supabase } from "@/lib/supabase/client";
@@ -941,74 +946,278 @@ export default function ConversationThread({
             message.senderId ===
               currentUserId;
 
-          return (
-            <div
-              key={
-                message.clientGeneratedId
-              }
-              className={`flex ${
-                isMine
-                  ? "justify-end"
-                  : "justify-start"
-              }`}
-            >
-              <div
-                className={`max-w-[85%] rounded-2xl px-4 py-3 sm:max-w-[75%] ${
-                  isMine
-                    ? "rounded-br-md bg-forest text-cream"
-                    : "rounded-bl-md border border-sage/10 bg-white text-ink"
-                }`}
-              >
-                <p className="whitespace-pre-wrap break-words text-sm leading-6">
-                  {message.content}
-                </p>
+return (
+  <div className="flex min-h-[720px] flex-col bg-[#faf9f5]">
+    {/* ===================================================== */}
+    {/* PREMIUM CHAT HEADER                                   */}
+    {/* ===================================================== */}
 
-                <div
-                  className={`mt-1.5 flex items-center gap-2 text-[10px] ${
-                    isMine
-                      ? "text-cream/60"
-                      : "text-ink/40"
-                  }`}
-                >
-                  <span>
+    <div className="sticky top-0 z-20 border-b border-sage/10 bg-white/95 backdrop-blur-xl">
+      <div className="flex items-center gap-3 px-4 py-4 sm:px-6">
+        <Link
+          href="/account/messages"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-sage/10 bg-[#faf9f5] text-forest transition hover:bg-cream hover:shadow-sm active:scale-95"
+          aria-label="Back to messages"
+        >
+          <ArrowLeft size={18} strokeWidth={1.7} />
+        </Link>
+
+        <Link
+          href={`/puppies/${puppy.id}`}
+          className="group flex min-w-0 flex-1 items-center gap-3"
+          aria-label={`View ${puppy.name}'s profile`}
+        >
+          <div className="relative h-12 w-12 shrink-0">
+            <div className="h-full w-full overflow-hidden rounded-2xl border border-sage/10 bg-cream-alt shadow-sm">
+              {puppy.breederPhotoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={puppy.breederPhotoUrl}
+                  alt={puppy.breederName ?? "Breeder"}
+                  className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-forest text-sm font-bold text-cream">
+                  {(puppy.breederName ?? puppy.name)
+                    .charAt(0)
+                    .toUpperCase()}
+                </div>
+              )}
+            </div>
+
+            <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-[#82a67d]" />
+          </div>
+
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="truncate text-sm font-bold text-forest sm:text-[15px]">
+                {puppy.breederName ?? "Breeder"}
+              </p>
+
+              <CheckCheck
+                size={14}
+                strokeWidth={1.8}
+                className="hidden text-sage sm:block"
+              />
+            </div>
+
+            <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[11px]">
+              <span className="truncate font-medium text-sage">
+                {puppy.name}
+              </span>
+
+              {puppy.breed && (
+                <>
+                  <span className="h-1 w-1 shrink-0 rounded-full bg-sage/40" />
+
+                  <span className="truncate text-ink/40">
+                    {puppy.breed}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+        </Link>
+
+        <Link
+          href={`/puppies/${puppy.id}`}
+          className="hidden h-10 items-center gap-2 rounded-xl border border-sage/10 px-3 text-xs font-semibold text-forest transition hover:border-forest/20 hover:bg-[#faf9f5] sm:inline-flex"
+        >
+          Puppy profile
+          <ExternalLink size={14} />
+        </Link>
+
+        <button
+          type="button"
+          className="flex h-10 w-10 items-center justify-center rounded-xl text-sage transition hover:bg-[#faf9f5] sm:hidden"
+          aria-label="More conversation options"
+        >
+          <MoreHorizontal size={20} />
+        </button>
+      </div>
+
+      {/* Puppy context strip */}
+      <Link
+        href={`/puppies/${puppy.id}`}
+        className="group flex items-center gap-3 border-t border-sage/10 bg-[#fcfbf8] px-4 py-3 transition hover:bg-cream sm:px-6"
+      >
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/10 text-gold">
+          <PawPrint size={15} />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/35">
+            Discussing
+          </p>
+
+          <p className="mt-0.5 truncate text-xs font-semibold text-forest">
+            {puppy.name}
+            {puppy.breed ? ` · ${puppy.breed}` : ""}
+          </p>
+        </div>
+
+        <span className="text-[10px] font-medium text-forest/45 transition group-hover:text-forest">
+          View puppy →
+        </span>
+      </Link>
+    </div>
+
+    {/* ===================================================== */}
+    {/* LOAD OLDER                                             */}
+    {/* ===================================================== */}
+
+    <div className="flex justify-center px-4 py-5">
+      {hasMore ? (
+        <button
+          type="button"
+          onClick={() => void loadOlderMessages()}
+          disabled={isLoadingOlder}
+          className="inline-flex items-center gap-2 rounded-full border border-sage/15 bg-white px-4 py-2 text-[11px] font-semibold text-forest shadow-sm transition hover:border-forest/20 hover:shadow disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isLoadingOlder ? (
+            <>
+              <Loader2 size={13} className="animate-spin" />
+              Loading messages…
+            </>
+          ) : (
+            "Load earlier messages"
+          )}
+        </button>
+      ) : messageCount === 0 ? (
+        <div className="rounded-2xl border border-dashed border-sage/20 bg-white/70 px-5 py-4 text-center">
+          <p className="text-xs font-medium text-ink/45">
+            This is the beginning of your conversation about{" "}
+            <span className="text-forest">{puppy.name}</span>.
+          </p>
+        </div>
+      ) : null}
+    </div>
+
+    {/* ===================================================== */}
+    {/* MESSAGE LIST                                           */}
+    {/* ===================================================== */}
+
+    <div className="flex-1 px-4 pb-8 sm:px-6 sm:pb-10">
+      <div className="mx-auto max-w-3xl space-y-3">
+        {messages.map((message, index) => {
+          const isMine =
+            currentUserId !== null &&
+            message.senderId === currentUserId;
+
+          const previousMessage = messages[index - 1];
+
+          const showDate =
+            !previousMessage ||
+            new Date(
+              previousMessage.createdAt
+            ).toDateString() !==
+              new Date(
+                message.createdAt
+              ).toDateString();
+
+          return (
+            <div key={message.clientGeneratedId}>
+              {showDate && (
+                <div className="flex items-center gap-3 py-5">
+                  <div className="h-px flex-1 bg-sage/10" />
+
+                  <span className="rounded-full bg-white px-3 py-1 text-[10px] font-medium text-ink/40 shadow-sm">
                     {new Date(
                       message.createdAt
-                    ).toLocaleTimeString(
-                      [],
-                      {
-                        hour: "numeric",
-                        minute: "2-digit",
-                      }
-                    )}
+                    ).toLocaleDateString([], {
+                      weekday: "long",
+                      month: "short",
+                      day: "numeric",
+                    })}
                   </span>
 
-                  {isMine &&
-                    message.status ===
-                      "sending" && (
-                      <span>
-                        Sending…
-                      </span>
-                    )}
+                  <div className="h-px flex-1 bg-sage/10" />
+                </div>
+              )}
 
-                  {isMine &&
-                    message.status ===
-                      "failed" && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          void retryMessage(
-                            message
-                          )
-                        }
-                        disabled={isSending}
-                        className="inline-flex items-center gap-1 font-medium text-gold hover:underline disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        <RefreshCw
-                          size={11}
-                        />
-                        Retry
-                      </button>
+              <div
+                className={`flex ${
+                  isMine
+                    ? "justify-end"
+                    : "justify-start"
+                }`}
+              >
+                {!isMine && (
+                  <div className="mr-2 mt-auto flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-forest text-[9px] font-bold text-cream">
+                    {puppy.breederPhotoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={puppy.breederPhotoUrl}
+                        alt={puppy.breederName ?? "Breeder"}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      (puppy.breederName ?? "B")
+                        .charAt(0)
+                        .toUpperCase()
                     )}
+                  </div>
+                )}
+
+                <div
+                  className={`group relative max-w-[82%] px-4 py-3 shadow-sm sm:max-w-[70%] ${
+                    isMine
+                      ? "rounded-[22px] rounded-br-md bg-forest text-cream"
+                      : "rounded-[22px] rounded-bl-md border border-sage/10 bg-white text-ink"
+                  }`}
+                >
+                  <p className="whitespace-pre-wrap break-words text-sm leading-6">
+                    {message.content}
+                  </p>
+
+                  <div
+                    className={`mt-1.5 flex items-center gap-1.5 text-[10px] ${
+                      isMine
+                        ? "justify-end text-cream/55"
+                        : "text-ink/35"
+                    }`}
+                  >
+                    <span>
+                      {new Date(
+                        message.createdAt
+                      ).toLocaleTimeString([], {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </span>
+
+                    {isMine &&
+                      message.status === "sending" && (
+                        <>
+                          <span className="text-cream/30">·</span>
+                          <span>Sending</span>
+                        </>
+                      )}
+
+                    {isMine &&
+                      message.status === "sent" && (
+                        <CheckCheck
+                          size={12}
+                          strokeWidth={1.8}
+                          className="text-cream/50"
+                        />
+                      )}
+
+                    {isMine &&
+                      message.status === "failed" && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            void retryMessage(message)
+                          }
+                          disabled={isSending}
+                          className="ml-1 inline-flex items-center gap-1 font-semibold text-gold hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          <RefreshCw size={10} />
+                          Retry
+                        </button>
+                      )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1016,10 +1225,18 @@ export default function ConversationThread({
         })}
 
         {otherParticipantTyping && (
-          <div className="flex justify-start">
-            <div className="rounded-2xl rounded-bl-md border border-sage/10 bg-white px-4 py-3 text-xs text-ink/50 shadow-sm">
+          <div className="flex items-end">
+            <div className="mr-2 flex h-7 w-7 items-center justify-center rounded-full bg-forest text-[9px] font-bold text-cream">
+              {(puppy.breederName ?? "B")
+                .charAt(0)
+                .toUpperCase()}
+            </div>
+
+            <div className="rounded-[22px] rounded-bl-md border border-sage/10 bg-white px-4 py-3 shadow-sm">
               <div className="flex items-center gap-2">
-                <span>Typing</span>
+                <span className="text-[11px] text-ink/40">
+                  {puppy.breederName ?? "Breeder"} is typing
+                </span>
 
                 <span
                   className="flex gap-1"
@@ -1036,13 +1253,15 @@ export default function ConversationThread({
 
         <div ref={bottomRef} />
       </div>
+    </div>
 
-      {/* ===================================================== */}
-      {/* COMPOSER                                              */}
-      {/* ===================================================== */}
+    {/* ===================================================== */}
+    {/* COMPOSER                                               */}
+    {/* ===================================================== */}
 
-      <div className="sticky bottom-0 border-t border-sage/10 bg-cream/95 px-4 py-4 backdrop-blur sm:px-6">
-        <div className="mx-auto flex max-w-4xl items-end gap-3">
+    <div className="sticky bottom-0 z-20 border-t border-sage/10 bg-white/95 px-4 py-4 backdrop-blur-xl sm:px-6">
+      <div className="mx-auto max-w-3xl">
+        <div className="flex items-end gap-2 rounded-[24px] border border-sage/15 bg-[#faf9f5] p-1.5 shadow-[0_10px_35px_rgba(39,63,48,0.06)] transition focus-within:border-forest/25 focus-within:bg-white">
           <textarea
             ref={textareaRef}
             value={input}
@@ -1063,22 +1282,24 @@ export default function ConversationThread({
             }}
             onFocus={() => markPresenceActive(false)}
             onClick={() => markPresenceActive(false)}
-            onTouchStart={() => markPresenceActive(false)}
+            onTouchStart={() =>
+              markPresenceActive(false)
+            }
             onKeyDown={handleKeyDown}
-            placeholder="Write a message…"
+            placeholder={`Message ${
+              puppy.breederName ?? "breeder"
+            } about ${puppy.name}…`}
             rows={1}
             maxLength={5000}
             disabled={isSending}
-            className="min-h-[48px] flex-1 resize-none rounded-2xl border border-sage/15 bg-white px-4 py-3 text-sm text-ink outline-none transition placeholder:text-ink/35 focus:border-forest/30 focus:ring-2 focus:ring-forest/5 disabled:opacity-60"
+            className="min-h-[48px] max-h-32 flex-1 resize-none bg-transparent px-3 py-3 text-sm leading-6 text-ink outline-none placeholder:text-ink/35 disabled:opacity-60"
           />
 
           <button
             type="button"
-            onClick={() =>
-              void submitMessage()
-            }
+            onClick={() => void submitMessage()}
             disabled={!canSend}
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-forest text-cream transition hover:bg-forest-light disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] bg-forest text-cream shadow-sm transition hover:-translate-y-0.5 hover:bg-forest-light hover:shadow-md disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-35"
             aria-label="Send message"
           >
             {isSending ? (
@@ -1087,15 +1308,25 @@ export default function ConversationThread({
                 className="animate-spin"
               />
             ) : (
-              <Send size={18} />
+              <Send
+                size={18}
+                strokeWidth={1.8}
+                className="translate-x-[1px]"
+              />
             )}
           </button>
         </div>
 
-        <p className="mx-auto mt-2 max-w-4xl text-[10px] text-ink/35">
-          Press Enter to send · Shift + Enter for a new line
-        </p>
+        <div className="mt-2 flex items-center justify-between px-2">
+          <p className="text-[10px] text-ink/30">
+            Press Enter to send · Shift + Enter for a new line
+          </p>
+
+          <p className="text-[10px] text-ink/25">
+            {input.length}/5000
+          </p>
+        </div>
       </div>
     </div>
-  );
-}
+  </div>
+);

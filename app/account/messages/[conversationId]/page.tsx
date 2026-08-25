@@ -60,21 +60,9 @@ export default async function ConversationPage({
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect(
-      `/login?redirect=/account/messages/${conversationId}`
-    );
+    redirect(`/login?redirect=/account/messages/${conversationId}`);
   }
 
-  /*
-   * Security boundary:
-   *
-   * Do not trust the conversation ID from the URL.
-   *
-   * Explicitly verify that this conversation belongs to the
-   * authenticated customer.
-   *
-   * RLS provides an additional database-level protection layer.
-   */
   const {
     data: conversation,
     error: conversationError,
@@ -103,15 +91,8 @@ export default async function ConversationPage({
     notFound();
   }
 
-  const typedConversation =
-    conversation as ConversationRow;
+  const typedConversation = conversation as ConversationRow;
 
-  /*
-   * Load compact puppy context separately.
-   *
-   * The conversation thread only needs enough information to
-   * remind the customer which puppy they are discussing.
-   */
   const {
     data: puppy,
     error: puppyError,
@@ -167,12 +148,6 @@ export default async function ConversationPage({
       )[0]?.url ??
     null;
 
-  /*
-   * Initial message history.
-   *
-   * getCustomerMessages independently verifies ownership and
-   * then relies on RLS for another layer of protection.
-   */
   const page = await getCustomerMessages(
     conversationId,
     {
@@ -191,44 +166,54 @@ export default async function ConversationPage({
     page.nextCursor;
 
   return (
-    <main className="min-h-screen bg-cream">
+    <main className="min-h-screen bg-[#f7f5ef]">
       <Navbar />
 
-      <section className="border-b border-sage/10 bg-cream">
-        <div className="max-w-4xl mx-auto px-5 sm:px-6 lg:px-8 py-4">
-          <p className="eyebrow">
-            Your Account
-          </p>
+      {/* PAGE INTRO */}
+      <section className="border-b border-sage/10 bg-white">
+        <div className="mx-auto max-w-6xl px-5 py-6 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sage">
+              Your Account
+            </span>
 
-          <h1 className="font-display text-2xl sm:text-3xl text-forest mt-1">
-            Messages
+            <span className="h-1 w-1 rounded-full bg-sage/40" />
+
+            <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-ink/35">
+              Messages
+            </span>
+          </div>
+
+          <h1 className="mt-2 font-display text-2xl tracking-tight text-forest sm:text-3xl">
+            Conversation
           </h1>
         </div>
       </section>
 
-      <section className="max-w-4xl mx-auto px-0 sm:px-6 lg:px-8 py-0 sm:py-8">
-        <ConversationThread
-          conversationId={
-            typedConversation.id
-          }
-          puppy={{
-            id: typedPuppy.id,
-            name: typedPuppy.name,
-            image: coverImage,
-            breed: typedPuppy.breed?.[0]?.name ?? null,
-            breederName: typedPuppy.breeder?.[0]?.name ?? null,
-            breederPhotoUrl: typedPuppy.breeder?.[0]?.photo_url ?? null,
-          }}
-          initialMessages={
-            initialMessages
-          }
-          initialNextCursor={
-            nextCursor
-          }
-          initialHasMore={
-            page.hasMore
-          }
-        />
+      {/* CHAT */}
+      <section className="mx-auto max-w-6xl px-0 py-0 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+        <div className="overflow-hidden bg-white sm:rounded-[32px] sm:border sm:border-sage/10 sm:shadow-[0_20px_70px_rgba(39,63,48,0.07)]">
+          <ConversationThread
+            conversationId={typedConversation.id}
+            puppy={{
+              id: typedPuppy.id,
+              name: typedPuppy.name,
+              image: coverImage,
+              breed:
+                typedPuppy.breed?.[0]?.name ??
+                null,
+              breederName:
+                typedPuppy.breeder?.[0]?.name ??
+                null,
+              breederPhotoUrl:
+                typedPuppy.breeder?.[0]?.photo_url ??
+                null,
+            }}
+            initialMessages={initialMessages}
+            initialNextCursor={nextCursor}
+            initialHasMore={page.hasMore}
+          />
+        </div>
       </section>
 
       <Footer />
