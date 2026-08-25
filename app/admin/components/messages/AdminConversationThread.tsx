@@ -313,114 +313,154 @@ export default function AdminConversationThread({
     []
   );
 
-  /*
+/*
    * Admin joins the same Presence channel as the customer.
    *
-   * This lets the admin see:
-   * - whether the customer is currently online
-   * - whether the customer is typing
-   *
-   * The customer simultaneously sees the admin typing.
+   * This connection self-heals: mobile browsers (especially split-screen
+   * or pop-up multitasking) throttle backgrounded windows and can silently
+   * drop the realtime socket. Without explicit handling, the channel just
+   * dies and presence never recovers — messages still work because they
+   * ride on Postgres replication, not this socket's heartbeat.
    */
   useEffect(() => {
     if (!currentUserId) return;
 
-    const channel = supabase.channel(
-      `conversation-presence:${conversationId}`,
-      {
-        config: {
-          presence: {
-            key: currentUserId,
-          },
-        },
-      }
-    );
+    let isMounted = true;
+    let retryTimeout: ReturnType<typeof setTimeout> | null = null;
+    let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
-    presenceChannelRef.current = channel;
+    function trackPresence(typing: boolean) {
+      if (!channel) return;
+
+      void channel.track({
+        userId: currentUserId,
+        role: "admin",
+        typing,
+        lastActiveAt: new Date().toISOString(),
+      } satisfies PresenceUser);
+
+      lastActivityRef.current = Date.now();
+    }
 
     function updateRemotePresence() {
-      const state = channel.presenceState<
-        PresenceUser
-      >();
+      if (!channel) return;
 
-      const remoteStates =
-        Object.values(state)
-          .flat()
-          .filter(
-            (presence) =>
-              presence.userId !== currentUserId
-          );
+      const state = channel.presenceState<PresenceUser>();
 
-      const customerStates =
-        remoteStates.filter(
-          (presence) =>
-            presence.role === "customer"
-        );
+      const remoteStates = Object.values(state)
+        .flat()
+        .filter((presence) => presence.userId !== currentUserId);
 
-      setCustomerOnline(
-        customerStates.length > 0
+      const customerStates = remoteStates.filter(
+        (presence) => presence.role === "customer"
       );
 
+      setCustomerOnline(customerStates.length > 0);
+
       setCustomerTyping(
-        customerStates.some(
-          (presence) => presence.typing
-        )
+        customerStates.some((presence) => presence.typing)
       );
     }
 
-    channel
-      .on(
-        "presence",
+    function setupChannel() {
+      channel = supabase.channel(
+        `conversation-presence:${conversationId}`,
         {
-          event: "sync",
-        },
-        updateRemotePresence
-      )
-      .on(
-        "presence",
-        {
-          event: "join",
-        },
-        updateRemotePresence
-      )
-      .on(
-        "presence",
-        {
-          event: "leave",
-        },
-        updateRemotePresence
-      )
-      .subscribe(async (status) => {
-        if (status !== "SUBSCRIBED") {
-          return;
+          config: {
+            presence: {
+              key: currentUserId!,
+            },
+          },
         }
+      );
 
-        await channel.track({
-          userId: currentUserId,
-          role: "admin",
-          typing: false,
-          lastActiveAt:
-            new Date().toISOString(),
-        } satisfies PresenceUser);
+      presenceChannelRef.current = channel;
 
-        lastActivityRef.current = Date.now();
-      });
+      channel
+        .on("presence", { event: "sync" }, updateRemotePresence)
+        .on("presence", { event: "join" }, updateRemotePresence)
+        .on("presence", { event: "leave" }, updateRemotePresence)
+        .subscribe((status, err) => {
+          if (!isMounted) return;
+
+          if (status === "SUBSCRIBED") {
+            trackPresence(false);
+            return;
+          }
+
+          if (
+            status === "CHANNEL_ERROR" ||
+            status === "TIMED_OUT" ||
+            status === "CLOSED"
+          ) {
+            console.error(
+              "Presence channel disrupted, retrying:",
+              status,
+              err
+            );
+
+            setCustomerOnline(false);
+            setCustomerTyping(false);
+
+            if (retryTimeout) clearTimeout(retryTimeout);
+
+            retryTimeout = setTimeout(() => {
+              if (!isMounted) return;
+
+              if (channel) {
+                void supabase.removeChannel(channel);
+              }
+
+              setupChannel();
+            }, 2000);
+          }
+        });
+    }
+
+    setupChannel();
+
+    // Re-assert presence whenever this window regains focus/visibility —
+    // covers the exact case of a backgrounded pop-up window resuming.
+    function handleVisibilityOrFocus() {
+      if (document.visibilityState === "visible") {
+        trackPresence(false);
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+    window.addEventListener("focus", handleVisibilityOrFocus);
+
+    // Periodic heartbeat so presence doesn't go stale on an idle-but-open tab.
+    heartbeatInterval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        trackPresence(false);
+      }
+    }, ACTIVITY_HEARTBEAT_MS);
 
     return () => {
+      isMounted = false;
+
       if (typingTimeoutRef.current) {
-        clearTimeout(
-          typingTimeoutRef.current
-        );
+        clearTimeout(typingTimeoutRef.current);
       }
+
+      if (retryTimeout) clearTimeout(retryTimeout);
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityOrFocus
+      );
+      window.removeEventListener("focus", handleVisibilityOrFocus);
 
       presenceChannelRef.current = null;
 
-      void supabase.removeChannel(channel);
+      if (channel) {
+        void supabase.removeChannel(channel);
+      }
     };
-  }, [
-    conversationId,
-    currentUserId,
-  ]);
+  }, [conversationId, currentUserId]);
 
   useEffect(() => {
     if (!currentUserId) return;

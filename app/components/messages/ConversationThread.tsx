@@ -310,95 +310,132 @@ export default function ConversationThread({
   useEffect(() => {
     if (!currentUserId) return;
 
-    const channelName =
-      `conversation-presence:${conversationId}`;
+    let isMounted = true;
+    let retryTimeout: ReturnType<typeof setTimeout> | null = null;
+    let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
-    const channel = supabase.channel(
-      channelName,
-      {
-        config: {
-          presence: {
-            key: currentUserId,
-          },
-        },
-      }
-    );
+    function trackPresence(typing: boolean) {
+      if (!channel) return;
 
-    presenceChannelRef.current = channel;
+      void channel.track({
+        userId: currentUserId,
+        role,
+        typing,
+        lastActiveAt: new Date().toISOString(),
+      } satisfies PresenceUser);
+
+      lastActivityRef.current = Date.now();
+    }
 
     function updateRemotePresence() {
-      const state = channel.presenceState<
-        PresenceUser
-      >();
+      if (!channel) return;
 
-      const remoteStates =
-        Object.values(state)
-          .flat()
-          .filter(
-            (presence) =>
-              presence.userId !== currentUserId
-          );
+      const state = channel.presenceState<PresenceUser>();
+
+      const remoteStates = Object.values(state)
+        .flat()
+        .filter((presence) => presence.userId !== currentUserId);
 
       setOtherParticipantTyping(
-        remoteStates.some(
-          (presence) => presence.typing
-        )
+        remoteStates.some((presence) => presence.typing)
       );
     }
 
-    channel
-      .on(
-        "presence",
+    function setupChannel() {
+      channel = supabase.channel(
+        `conversation-presence:${conversationId}`,
         {
-          event: "sync",
-        },
-        updateRemotePresence
-      )
-      .on(
-        "presence",
-        {
-          event: "join",
-        },
-        updateRemotePresence
-      )
-      .on(
-        "presence",
-        {
-          event: "leave",
-        },
-        updateRemotePresence
-      )
-      .subscribe(async (status) => {
-        if (status !== "SUBSCRIBED") {
-          return;
+          config: {
+            presence: {
+              key: currentUserId!,
+            },
+          },
         }
+      );
 
-        await channel.track({
-          userId: currentUserId,
-          role,
-          typing: false,
-          lastActiveAt: new Date().toISOString(),
-        } satisfies PresenceUser);
+      presenceChannelRef.current = channel;
 
-        lastActivityRef.current = Date.now();
-      });
+      channel
+        .on("presence", { event: "sync" }, updateRemotePresence)
+        .on("presence", { event: "join" }, updateRemotePresence)
+        .on("presence", { event: "leave" }, updateRemotePresence)
+        .subscribe((status, err) => {
+          if (!isMounted) return;
+
+          if (status === "SUBSCRIBED") {
+            trackPresence(false);
+            return;
+          }
+
+          if (
+            status === "CHANNEL_ERROR" ||
+            status === "TIMED_OUT" ||
+            status === "CLOSED"
+          ) {
+            console.error(
+              "Presence channel disrupted, retrying:",
+              status,
+              err
+            );
+
+            setOtherParticipantTyping(false);
+
+            if (retryTimeout) clearTimeout(retryTimeout);
+
+            retryTimeout = setTimeout(() => {
+              if (!isMounted) return;
+
+              if (channel) {
+                void supabase.removeChannel(channel);
+              }
+
+              setupChannel();
+            }, 2000);
+          }
+        });
+    }
+
+    setupChannel();
+
+    function handleVisibilityOrFocus() {
+      if (document.visibilityState === "visible") {
+        trackPresence(false);
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+    window.addEventListener("focus", handleVisibilityOrFocus);
+
+    heartbeatInterval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        trackPresence(false);
+      }
+    }, ACTIVITY_HEARTBEAT_MS);
 
     return () => {
+      isMounted = false;
+
       if (typingTimeoutRef.current) {
-        clearTimeout(
-          typingTimeoutRef.current
-        );
+        clearTimeout(typingTimeoutRef.current);
       }
+
+      if (retryTimeout) clearTimeout(retryTimeout);
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityOrFocus
+      );
+      window.removeEventListener("focus", handleVisibilityOrFocus);
 
       presenceChannelRef.current = null;
 
-      void supabase.removeChannel(channel);
+      if (channel) {
+        void supabase.removeChannel(channel);
+      }
     };
-  }, [
-    conversationId,
-    currentUserId,
-    role,
-  ]);
+  }, [conversationId, currentUserId, role]);
 
   useEffect(() => {
     if (!currentUserId) return;
