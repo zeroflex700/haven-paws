@@ -30,11 +30,11 @@ const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
           {...props}
           className={`peer w-full h-14 rounded-2xl border border-white/20 bg-white/[0.06] px-5 ${
             endAdornment ? "pr-14" : ""
-          } text-[15px] text-white placeholder:text-white/45 backdrop-blur-sm outline-none transition-all duration-300 focus:border-[#d7a94b]/70 focus:bg-white/[0.09] focus:ring-2 focus:ring-[#d7a94b]/25 ${className}`}
+          } text-[15px] text-white placeholder:text-white/45 backdrop-blur-sm outline-none transition-all duration-300 focus:border-gold/70 focus:bg-white/[0.09] focus-visible:ring-2 focus-visible:ring-gold/40 ${className}`}
         />
         <span
           aria-hidden="true"
-          className="auth-input-underline pointer-events-none absolute left-5 right-5 bottom-0 h-px origin-left scale-x-0 bg-[#d7a94b] transition-transform duration-300 peer-focus:scale-x-100"
+          className="auth-input-underline pointer-events-none absolute left-5 right-5 bottom-0 h-px origin-left scale-x-0 bg-gold transition-transform duration-300 peer-focus:scale-x-100"
         />
         {endAdornment && (
           <div className="absolute right-4 top-1/2 -translate-y-1/2">

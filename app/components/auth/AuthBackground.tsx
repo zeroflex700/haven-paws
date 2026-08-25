@@ -29,14 +29,14 @@ export default function AuthBackground({
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 overflow-hidden"
     >
-      {/* Base gradient wash — warm cream into deep forest, never cold */}
+      {/* Base gradient wash — the site's own forest tones, never a made-up green */}
       <div
         className="absolute inset-0"
         style={{
           background:
             variant === "login"
-              ? "radial-gradient(120% 100% at 78% 12%, #2a4f46 0%, #193b35 46%, #12281f 100%)"
-              : "radial-gradient(120% 100% at 22% 90%, #2a4f46 0%, #193b35 46%, #12281f 100%)",
+              ? "radial-gradient(120% 100% at 78% 12%, var(--color-forest-light) 0%, var(--color-forest) 46%, color-mix(in srgb, var(--color-forest) 65%, black) 100%)"
+              : "radial-gradient(120% 100% at 22% 90%, var(--color-forest-light) 0%, var(--color-forest) 46%, color-mix(in srgb, var(--color-forest) 65%, black) 100%)",
         }}
       />
 
@@ -45,7 +45,7 @@ export default function AuthBackground({
         className="auth-blob absolute w-[36rem] h-[36rem] rounded-full opacity-40 blur-3xl"
         style={{
           background:
-            "radial-gradient(circle, rgba(215,169,75,0.55) 0%, rgba(215,169,75,0) 70%)",
+            "radial-gradient(circle, color-mix(in srgb, var(--color-gold) 55%, transparent) 0%, transparent 70%)",
           top: variant === "login" ? "-8rem" : "auto",
           bottom: variant === "signup" ? "-10rem" : "auto",
           right: "-6rem",
@@ -58,7 +58,7 @@ export default function AuthBackground({
         className="auth-blob-slow absolute w-[28rem] h-[28rem] rounded-full opacity-30 blur-3xl"
         style={{
           background:
-            "radial-gradient(circle, rgba(142,165,143,0.5) 0%, rgba(142,165,143,0) 70%)",
+            "radial-gradient(circle, color-mix(in srgb, var(--color-sage) 50%, transparent) 0%, transparent 70%)",
           bottom: variant === "login" ? "-6rem" : "auto",
           top: variant === "signup" ? "-4rem" : "auto",
           left: "-6rem",
@@ -80,7 +80,7 @@ export default function AuthBackground({
         <path
           d={trailPath}
           fill="none"
-          stroke="#d7a94b"
+          stroke="var(--color-gold)"
           strokeWidth="1.5"
           strokeLinecap="round"
           className="auth-trail-path"
@@ -96,7 +96,7 @@ export default function AuthBackground({
               cx={x}
               cy={y}
               r={i === 3 ? 3.5 : 2.5}
-              fill="#f4e3b8"
+              fill="var(--color-gold-light)"
               className="auth-trail-dot"
               style={{ animationDelay: `${0.4 + i * 0.18}s` }}
             />
@@ -110,7 +110,7 @@ export default function AuthBackground({
           className="absolute inset-0 mix-blend-soft-light"
           style={{
             background:
-              "radial-gradient(480px circle at calc(var(--pointer-x, 0.5) * 100%) calc(var(--pointer-y, 0.5) * 100%), rgba(244,227,184,0.35), transparent 60%)",
+              "radial-gradient(480px circle at calc(var(--pointer-x, 0.5) * 100%) calc(var(--pointer-y, 0.5) * 100%), color-mix(in srgb, var(--color-gold-light) 35%, transparent), transparent 60%)",
           }}
         />
       )}
@@ -157,20 +157,12 @@ export default function AuthBackground({
           }
         }
 
-        @media (prefers-reduced-motion: reduce) {
-          .auth-blob,
-          .auth-blob-slow {
-            animation: none;
-          }
-          .auth-trail-path {
-            stroke-dashoffset: 0;
-            animation: none;
-          }
-          .auth-trail-dot {
-            opacity: 1;
-            animation: none;
-          }
-        }
+        /*
+         * No local prefers-reduced-motion override needed here — the
+         * site's global globals.css already forces every animation
+         * and transition duration to 0.01ms for reduced-motion users,
+         * which effectively snaps these straight to their end state.
+         */
       `}</style>
     </div>
   );

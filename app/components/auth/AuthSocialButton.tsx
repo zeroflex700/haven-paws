@@ -18,7 +18,7 @@ export default function AuthSocialButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="auth-social-btn group relative w-full h-14 overflow-hidden rounded-full border border-white/20 bg-white/[0.05] flex items-center justify-center gap-3 text-[15px] font-medium text-white transition-colors duration-300 hover:border-[#d7a94b]/60 hover:bg-white/[0.09] disabled:opacity-50 disabled:cursor-not-allowed"
+      className="auth-social-btn group relative w-full h-14 overflow-hidden rounded-full border border-white/20 bg-white/[0.05] flex items-center justify-center gap-3 text-[15px] font-medium text-white transition-colors duration-300 hover:border-gold/60 hover:bg-white/[0.09] disabled:opacity-50 disabled:cursor-not-allowed"
     >
       <span className="auth-social-sweep" aria-hidden="true" />
       <span className="relative z-10 flex items-center justify-center w-5 h-5">
@@ -39,7 +39,7 @@ export default function AuthSocialButton({
           background: linear-gradient(
             100deg,
             transparent 30%,
-            rgba(244, 227, 184, 0.16) 50%,
+            color-mix(in srgb, var(--color-gold-light) 16%, transparent) 50%,
             transparent 70%
           );
           transform: translateX(-120%);
@@ -48,11 +48,10 @@ export default function AuthSocialButton({
           transform: translateX(120%);
           transition: transform 0.7s ease;
         }
-        @media (prefers-reduced-motion: reduce) {
-          .auth-social-btn:active {
-            transform: none;
-          }
-        }
+        /*
+         * No local prefers-reduced-motion override needed — globals.css
+         * already forces transition durations to 0.01ms site-wide.
+         */
       `}</style>
     </button>
   );

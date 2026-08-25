@@ -20,7 +20,7 @@ export default function AuthHeading({
   return (
     <div className="mb-1">
       {eyebrow && (
-        <p className="auth-eyebrow text-[11px] uppercase tracking-[0.22em] text-[#d7a94b] mb-2">
+        <p className="auth-eyebrow text-[11px] uppercase tracking-[0.22em] text-gold-light mb-2">
           {eyebrow}
         </p>
       )}
@@ -59,15 +59,10 @@ export default function AuthHeading({
             transform: translateY(0);
           }
         }
-        @media (prefers-reduced-motion: reduce) {
-          .auth-word,
-          .auth-eyebrow {
-            animation: none;
-            opacity: 1;
-            filter: none;
-            transform: none;
-          }
-        }
+        /*
+         * No local prefers-reduced-motion override needed — globals.css
+         * already forces animation durations to 0.01ms site-wide.
+         */
       `}</style>
     </div>
   );
