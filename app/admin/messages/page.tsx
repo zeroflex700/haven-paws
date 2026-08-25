@@ -327,15 +327,7 @@ export default async function AdminMessagesPage() {
       );
     }
   }
-return (
-    <main className="min-h-screen pb-28">
-      <AdminInboxRealtime />
 
-      {/* ===================================================== */}
-      {/* HEADER                                                */}
-      {/* ===================================================== */}
-      
-      
   return (
     <main className="min-h-screen pb-28">
       {/* ===================================================== */}
