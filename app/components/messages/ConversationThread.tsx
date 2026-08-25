@@ -46,6 +46,8 @@ type Puppy = {
   id: string;
   name: string;
   image: string | null;
+  breed: string | null;
+  breederName: string | null;
 };
 
 type ConversationRole =
@@ -879,6 +881,18 @@ export default function ConversationThread({
               <p className="text-sm font-semibold text-forest transition group-hover:text-forest-light">
                 {puppy.name}
               </p>
+
+              {puppy.breed && (
+                <p className="text-xs text-sage truncate">
+                  {puppy.breed}
+                </p>
+              )}
+
+              {puppy.breederName && (
+                <p className="text-[11px] text-ink/40 truncate">
+                  Breeder: {puppy.breederName}
+                </p>
+              )}
             </div>
 
             <span className="ml-auto text-xs font-medium text-forest/50">

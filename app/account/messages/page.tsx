@@ -179,6 +179,12 @@ export default async function MessagesPage() {
                                   .breed
                               }
                             </p>
+
+                            {conversation.puppy.breederName && (
+                              <p className="text-[11px] sm:text-xs text-ink/40 mt-0.5 truncate">
+                                Breeder: {conversation.puppy.breederName}
+                              </p>
+                            )}
                           </div>
 
                           <div className="shrink-0 flex items-center gap-2">

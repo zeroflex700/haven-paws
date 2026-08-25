@@ -8,6 +8,7 @@ export type ConversationListItem = {
     id: string;
     name: string;
     breed: string;
+    breederName: string | null;
     imageUrl: string | null;
   };
 
@@ -33,6 +34,9 @@ type RawConversation = {
     id: string;
     name: string;
     breed: {
+      name: string;
+    } | null;
+    breeder: {
       name: string;
     } | null;
   } | null;
@@ -86,6 +90,9 @@ export async function getCustomerConversations(): Promise<
           id,
           name,
           breed:breeds (
+            name
+          ),
+          breeder:breeders (
             name
           )
         )
@@ -330,6 +337,8 @@ export async function getCustomerConversations(): Promise<
           breed:
             puppy.breed?.name ??
             "Unknown breed",
+          breederName:
+            puppy.breeder?.name ?? null,
           imageUrl:
             coverImageByPuppy.get(
               puppy.id

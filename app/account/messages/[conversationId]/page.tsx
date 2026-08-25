@@ -31,6 +31,16 @@ type PuppyRow = {
         sort_order: number;
       }[]
     | null;
+  breed:
+    | {
+        name: string;
+      }
+    | null;
+  breeder:
+    | {
+        name: string;
+      }
+    | null;
 };
 
 export default async function ConversationPage({
@@ -113,6 +123,12 @@ export default async function ConversationPage({
         url,
         is_cover,
         sort_order
+      ),
+      breed:breeds (
+        name
+      ),
+      breeder:breeders (
+        name
       )
     `)
     .eq("id", typedConversation.puppy_id)
@@ -197,6 +213,8 @@ export default async function ConversationPage({
             id: typedPuppy.id,
             name: typedPuppy.name,
             image: coverImage,
+            breed: typedPuppy.breed?.name ?? null,
+            breederName: typedPuppy.breeder?.name ?? null,
           }}
           initialMessages={
             initialMessages
