@@ -21,6 +21,8 @@ import FavoriteButton from "../../components/FavoriteButton";
 import RelatedBreedsSection from "../../components/RelatedBreedsSection";
 import BreederAttributionCard from "../../components/BreederAttributionCard";
 import BreedGuideCard from "../../components/BreedGuideCard";
+import PuppyBookingWidget from "../../components/PuppyBookingWidget";
+import PuppyBioSection from "../../components/PuppyBioSection";
 import Testimonials from "../../components/Testimonials";
 import DeliveryInfo from "../../components/DeliveryInfo";
 import PuppyBookingWidget from "../../components/PuppyBookingWidget";
@@ -612,6 +614,33 @@ export default async function PuppyDetailPage({
         </div>
       </section>
 
+{/* ================================================================ */}
+      {/* PUPPY BIO                                                         */}
+      {/* ================================================================ */}
+
+      <section className="bg-white border-t border-sage/10">
+        <div className="max-w-4xl mx-auto px-5 sm:px-6 lg:px-10 py-14 lg:py-20">
+
+          <div className="max-w-2xl mb-8">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-sage font-medium mb-3">
+              Details
+            </p>
+
+            <h2 className="font-display text-3xl sm:text-4xl text-forest tracking-tight">
+              About {puppy.name}
+            </h2>
+          </div>
+
+          <PuppyBioSection
+            puppyName={puppy.name}
+            color={puppy.color}
+            markings={puppy.markings}
+            size={puppy.size}
+            generation={puppy.generation}
+          />
+
+        </div>
+      </section>
       {/* ================================================================ */}
       {/* FAMILY                                                            */}
       {/* ================================================================ */}

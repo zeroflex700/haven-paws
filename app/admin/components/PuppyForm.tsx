@@ -33,6 +33,9 @@ type PuppyData = {
   vet_checked?: boolean;
   vaccinated?: boolean;
   is_published?: boolean;
+  markings?: string;
+  size?: string;
+  generation?: string;
 };
 
 export default function PuppyForm({
@@ -187,12 +190,36 @@ export default function PuppyForm({
         className={inputClass}
       />
 
-      <label className={labelClass}>Weight Estimate (lbs)</label>
+     <label className={labelClass}>Weight Estimate (lbs)</label>
       <input
         name="weight_estimate"
         type="number"
         step="0.1"
         defaultValue={puppy?.weight_estimate}
+        className={inputClass}
+      />
+
+      <label className={labelClass}>Markings</label>
+      <input
+        name="markings"
+        defaultValue={puppy?.markings}
+        placeholder="e.g. White markings"
+        className={inputClass}
+      />
+
+      <label className={labelClass}>Size</label>
+      <input
+        name="size"
+        defaultValue={puppy?.size}
+        placeholder="e.g. Miniature, Standard"
+        className={inputClass}
+      />
+
+      <label className={labelClass}>Generation</label>
+      <input
+        name="generation"
+        defaultValue={puppy?.generation}
+        placeholder="e.g. F1, F1B, F2"
         className={inputClass}
       />
 

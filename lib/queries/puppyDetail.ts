@@ -27,6 +27,9 @@ export type PuppyDetail = {
   microchipId: string | null;
   birthDate: string | null;
   ageWeeks: number | null;
+  markings: string | null;
+  size: string | null;
+  generation: string | null;
   includedItems: IncludedItemKey[];
   media: {
     url: string;
@@ -59,6 +62,7 @@ export async function getPuppyDetail(
     .select(
       `id, name, sex, price, deposit_amount, status, description, color, weight_estimate,
        vet_checked, vaccinated, microchip_id, birth_date, breed_id, litter_id, included_items,
+       markings, size, generation,
        mom_name, mom_breed, mom_weight, mom_registration, mom_photo_url,
        dad_name, dad_breed, dad_weight, dad_registration, dad_photo_url,
        breeds ( name ),
@@ -88,6 +92,9 @@ export async function getPuppyDetail(
     breed_id: string;
     litter_id: string | null;
     included_items: IncludedItemKey[] | null;
+    markings: string | null;
+    size: string | null;
+    generation: string | null;
 
     mom_name: string | null;
     mom_breed: string | null;
@@ -139,6 +146,9 @@ export async function getPuppyDetail(
     microchipId: raw.microchip_id,
     birthDate: raw.birth_date,
     ageWeeks: calcAgeWeeks(raw.birth_date),
+    markings: raw.markings,
+    size: raw.size,
+    generation: raw.generation,
     includedItems: raw.included_items ?? [],
 
     media: (raw.puppy_media ?? [])
