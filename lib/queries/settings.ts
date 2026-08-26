@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export type AppSettings = {
   breederName: string;
+  breederPhotoUrl: string | null;
   yearsExperience: string;
   specialties: string;
   bio: string;
@@ -28,6 +29,7 @@ export type AppSettings = {
 
 const defaults: AppSettings = {
   breederName: "Haven Paws",
+  breederPhotoUrl: null,
   yearsExperience: "",
   specialties: "",
   bio: "",
@@ -54,6 +56,7 @@ const defaults: AppSettings = {
 
 type RawSettingsRow = {
   breeder_name: string | null;
+  breeder_photo_url: string | null;
   years_experience: string | null;
   specialties: string | null;
   bio: string | null;
@@ -80,6 +83,7 @@ type RawSettingsRow = {
 function mapRow(data: RawSettingsRow): AppSettings {
   return {
     breederName: data.breeder_name ?? defaults.breederName,
+    breederPhotoUrl: data.breeder_photo_url ?? null,
     yearsExperience: data.years_experience ?? "",
     specialties: data.specialties ?? "",
     bio: data.bio ?? "",
@@ -105,7 +109,7 @@ function mapRow(data: RawSettingsRow): AppSettings {
 }
 
 const SELECT_FIELDS =
-  "breeder_name, years_experience, specialties, bio, badge_text, delivery_fee, starter_kit_price, health_guarantee_price, support_phone, support_hours, tagline, promise_text, facebook_url, instagram_url, youtube_url, twitter_url, breeder_email, breeder_hours, delivery_home_price, delivery_meet_price, delivery_express_price, delivery_pickup_price_label";
+  "breeder_name, breeder_photo_url, years_experience, specialties, bio, badge_text, delivery_fee, starter_kit_price, health_guarantee_price, support_phone, support_hours, tagline, promise_text, facebook_url, instagram_url, youtube_url, twitter_url, breeder_email, breeder_hours, delivery_home_price, delivery_meet_price, delivery_express_price, delivery_pickup_price_label";
 
 export async function getSettings(): Promise<AppSettings> {
   const { data } = await supabase.from("app_settings").select(SELECT_FIELDS).eq("id", "main").single();
