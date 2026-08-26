@@ -3,26 +3,15 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import HomeHero from "./components/HomeHero";
 import VerificationBadges from "./components/VerificationBadges";
-import BreedDiscoveryRow from "./components/BreedDiscoveryRow";
 import ContinueBrowsingBanner from "./components/ContinueBrowsingBanner";
 import RecentlyViewedStrip from "./components/RecentlyViewedStrip";
 import RecommendedPuppies from "./components/RecommendedPuppies";
 import TrustBanner from "./components/TrustBanner";
 import HowItWorksAccordion from "./components/HowItWorksAccordion";
 import VideoStoryCarousel from "./components/VideoStoryCarousel";
-import LocationCardsRow from "./components/LocationCardsRow";
-import FamilyStoriesCarousel from "./components/FamilyStoriesCarousel";
-import KeepExploringGrid from "./components/KeepExploringGrid";
-import DualCtaCards from "./components/DualCtaCards";
-import ClosingBanner from "./components/ClosingBanner";
 import { getPageImages } from "@/lib/queries/pageContent";
-import { getReviewStats, getReviews } from "@/lib/queries/testimonials";
-import {
-  getVideoStories,
-  getLocationCards,
-  getExploringCards,
-} from "@/lib/queries/homepageCollections";
-import { supabase } from "@/lib/supabase/client";
+import { getReviewStats } from "@/lib/queries/testimonials";
+import { getVideoStories } from "@/lib/queries/homepageCollections";
 
 export const metadata: Metadata = {
   title: "Haven Paws — A Curated Home for Every Puppy",
@@ -36,15 +25,7 @@ export default async function Home() {
     await getPageImages("homepage");
 
   const { count, avgRating } = await getReviewStats();
-  const reviews = await getReviews(6);
   const videoStories = await getVideoStories();
-  const locationCards = await getLocationCards();
-  const exploringCards = await getExploringCards();
-
-  const { data: breeds } = await supabase
-    .from("breeds")
-    .select("id, name, image_url")
-    .order("name");
 
   return (
     <main className="homepage">
@@ -65,13 +46,6 @@ export default async function Home() {
       <section className="hp-section hp-browsing-section">
         <div className="hp-content">
           <ContinueBrowsingBanner />
-        </div>
-      </section>
-
-      {/* BREEDS — white editorial catalogue */}
-      <section className="hp-section hp-breeds-section">
-        <div className="hp-content hp-content-wide">
-          <BreedDiscoveryRow breeds={breeds ?? []} />
         </div>
       </section>
 
@@ -121,44 +95,6 @@ export default async function Home() {
         <div className="hp-content hp-content-wide">
           <VideoStoryCarousel stories={videoStories} />
         </div>
-      </section>
-
-      {/* LOCATIONS — warm yellow */}
-      <section className="hp-section hp-location-section">
-        <div className="hp-content hp-content-wide">
-          <LocationCardsRow cards={locationCards} />
-        </div>
-      </section>
-
-      {/* FAMILY STORIES — soft blush/cream */}
-      <section className="hp-section hp-family-section">
-        <div className="hp-content hp-content-wide">
-          <FamilyStoriesCarousel reviews={reviews} />
-        </div>
-      </section>
-
-      {/* EXPLORE — white catalogue */}
-      <section className="hp-section hp-explore-section">
-        <div className="hp-content hp-content-wide">
-          <KeepExploringGrid
-            cards={exploringCards}
-            breeds={breeds ?? []}
-          />
-        </div>
-      </section>
-
-      {/* BREEDER / SHELTER CTA — intentionally contrasting cards */}
-      <section className="hp-section hp-dual-cta-section">
-        <div className="hp-content hp-content-wide">
-          <DualCtaCards />
-        </div>
-      </section>
-
-      {/* CLOSING — strong visual ending */}
-      <section className="hp-section hp-closing-section">
-        <ClosingBanner
-          image={extraImages.closing_banner ?? null}
-        />
       </section>
 
       <Footer />
