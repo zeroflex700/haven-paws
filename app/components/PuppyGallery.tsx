@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, Play, Pause, Images } from "lucide-react";
 import OptimizedImage from "./OptimizedImage";
 
 export default function PuppyGallery({
@@ -12,6 +12,8 @@ export default function PuppyGallery({
   name: string;
 }) {
   const [active, setActive] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   if (media.length === 0) {
     return (
@@ -24,19 +26,62 @@ export default function PuppyGallery({
   const current = media[active];
 
   function goPrev() {
+    setIsPlaying(false);
     setActive((i) => (i === 0 ? media.length - 1 : i - 1));
   }
+
   function goNext() {
+    setIsPlaying(false);
     setActive((i) => (i === media.length - 1 ? 0 : i + 1));
+  }
+
+  function selectThumbnail(i: number) {
+    setIsPlaying(false);
+    setActive(i);
+  }
+
+  function togglePlayback() {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (video.paused) {
+      void video.play();
+      setIsPlaying(true);
+    } else {
+      video.pause();
+      setIsPlaying(false);
+    }
   }
 
   return (
     <div>
       <div className="relative aspect-square rounded-lg overflow-hidden bg-cream-alt">
         {current.mediaType === "image" ? (
-          <OptimizedImage src={current.url} alt={name} priority sizes="(max-width: 768px) 100vw, 50vw" />
+          <OptimizedImage
+            src={current.url}
+            alt={name}
+            priority
+            sizes="(max-width: 768px) 100vw, 50vw"
+          />
         ) : (
-          <video src={current.url} controls className="w-full h-full object-cover" />
+          <div className="relative w-full h-full" onClick={togglePlayback}>
+            <video
+              ref={videoRef}
+              src={current.url}
+              controls
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+              className="w-full h-full object-cover"
+            />
+
+            {!isPlaying && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
+                <span className="w-16 h-16 rounded-full bg-white/85 flex items-center justify-center">
+                  <Play size={28} className="text-forest fill-forest ml-1" />
+                </span>
+              </div>
+            )}
+          </div>
         )}
 
         {media.length > 1 && (
@@ -55,8 +100,10 @@ export default function PuppyGallery({
             >
               <ChevronRight size={20} className="text-forest" />
             </button>
-            <span className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2.5 py-1 rounded-full">
-              {active + 1} / {media.length}
+
+            <span className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 bg-white text-forest text-xs font-medium px-3 py-2 rounded-full shadow-sm">
+              <Images size={14} strokeWidth={2} />
+              View {media.length} photos
             </span>
           </>
         )}
@@ -67,7 +114,7 @@ export default function PuppyGallery({
           {media.map((m, i) => (
             <button
               key={i}
-              onClick={() => setActive(i)}
+              onClick={() => selectThumbnail(i)}
               className={`relative w-16 h-16 rounded-md overflow-hidden shrink-0 border-2 ${
                 i === active ? "border-gold" : "border-transparent"
               }`}
@@ -75,8 +122,16 @@ export default function PuppyGallery({
               {m.mediaType === "image" ? (
                 <OptimizedImage src={m.url} alt="" sizes="64px" />
               ) : (
-                <div className="w-full h-full bg-forest flex items-center justify-center">
-                  <Play size={18} className="text-cream fill-cream" />
+                <div className="relative w-full h-full bg-forest flex items-center justify-center">
+                  <video
+                    src={m.url}
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover opacity-60"
+                  />
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <Play size={18} className="text-cream fill-cream" />
+                  </span>
                 </div>
               )}
             </button>
