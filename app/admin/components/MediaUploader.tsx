@@ -3,10 +3,9 @@
 import { useState } from "react";
 import { addMedia } from "../puppies/media-actions";
 
-const CHUNK_SIZE = 6 * 1024 * 1024; // 6MB per chunk
-
-function uploadImage(
+function uploadToCloudinary(
   file: File,
+  mediaType: "image" | "video",
   onProgress: (pct: number) => void
 ): Promise<{ secure_url: string; public_id: string }> {
   return new Promise((resolve, reject) => {
@@ -38,92 +37,16 @@ function uploadImage(
       }
     });
 
-    xhr.addEventListener("error", () => reject(new Error("Network error during upload")));
+    xhr.addEventListener("error", () =>
+      reject(new Error("Network error during upload"))
+    );
 
     xhr.open(
       "POST",
-      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`
+      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/${mediaType}/upload`
     );
     xhr.send(formData);
   });
-}
-
-async function uploadVideoChunked(
-  file: File,
-  onProgress: (pct: number) => void
-): Promise<{ secure_url: string; public_id: string }> {
-  const uniqueUploadId = `haven-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-
-  let lastResult: { secure_url: string; public_id: string } | null = null;
-
-  for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
-    const start = chunkIndex * CHUNK_SIZE;
-    const end = Math.min(start + CHUNK_SIZE, file.size);
-    const chunk = file.slice(start, end);
-
-    const formData = new FormData();
-    formData.append("file", chunk);
-    formData.append(
-      "upload_preset",
-      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
-    );
-
-    const result = await new Promise<{ secure_url: string; public_id: string }>(
-      (resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-
-        xhr.upload.addEventListener("progress", (event) => {
-          if (event.lengthComputable) {
-            const chunkFraction = event.loaded / event.total;
-            const overallFraction = (chunkIndex + chunkFraction) / totalChunks;
-            onProgress(Math.round(overallFraction * 100));
-          }
-        });
-
-        xhr.addEventListener("load", () => {
-          try {
-            const data = JSON.parse(xhr.responseText);
-            if (xhr.status >= 200 && xhr.status < 300) {
-              resolve(data);
-            } else {
-              reject(new Error(data.error?.message || "Upload failed"));
-            }
-          } catch {
-            reject(new Error("Upload failed"));
-          }
-        });
-
-        xhr.addEventListener("error", () =>
-          reject(new Error("Network error during upload"))
-        );
-
-        xhr.open(
-          "POST",
-          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload`
-        );
-
-        xhr.setRequestHeader(
-          "X-Unique-Upload-Id",
-          uniqueUploadId
-        );
-        xhr.setRequestHeader(
-          "Content-Range",
-          `bytes ${start}-${end - 1}/${file.size}`
-        );
-
-        xhr.send(formData);
-      }
-    );
-
-    lastResult = result;
-  }
-
-  if (!lastResult) {
-    throw new Error("Upload failed: no chunks processed");
-  }
-
-  return lastResult;
 }
 
 export default function MediaUploader({ puppyId }: { puppyId: string }) {
@@ -146,11 +69,7 @@ export default function MediaUploader({ puppyId }: { puppyId: string }) {
       setProgress(0);
 
       try {
-        const data =
-          mediaType === "video"
-            ? await uploadVideoChunked(file, setProgress)
-            : await uploadImage(file, setProgress);
-
+        const data = await uploadToCloudinary(file, mediaType, setProgress);
         await addMedia(puppyId, data.secure_url, data.public_id, mediaType);
       } catch (err) {
         setError(
