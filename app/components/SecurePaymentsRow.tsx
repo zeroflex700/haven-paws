@@ -38,14 +38,14 @@ export default function SecurePaymentsRow() {
 
   return (
     <div className="border-t border-white/10 border-b border-white/10">
-      <div className="max-w-7xl mx-auto px-6 lg:px-10 py-5">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+      <div className="max-w-7xl mx-auto px-6 lg:px-10 py-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 
           {/* Security message */}
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-white/10 border border-white/10 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-full bg-white/10 border border-white/10 flex items-center justify-center shrink-0">
               <ShieldCheck
-                size={17}
+                size={15}
                 className="text-gold"
                 strokeWidth={1.7}
               />
@@ -69,10 +69,10 @@ export default function SecurePaymentsRow() {
                 key={name}
                 title={name}
                 aria-label={name}
-                className="h-9 min-w-11 px-2.5 rounded-lg bg-white/[0.07] border border-white/10 flex items-center justify-center text-white/80 hover:bg-white/[0.12] hover:border-white/20 hover:text-white transition-all duration-200"
+                className="h-8 min-w-10 px-2.5 rounded-lg bg-white/[0.07] border border-white/10 flex items-center justify-center text-white/80 hover:bg-white/[0.12] hover:border-white/20 hover:text-white transition-all duration-200"
               >
                 <Icon
-                  size={22}
+                  size={20}
                   aria-hidden="true"
                 />
               </div>

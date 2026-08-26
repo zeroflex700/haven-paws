@@ -42,15 +42,15 @@ export default function FooterAccordion() {
                   setOpen(isOpen ? null : section.title)
                 }
                 aria-expanded={isOpen}
-                className="w-full flex items-center justify-between py-4 text-left group"
+                className="w-full flex items-center justify-between py-2.5 text-left group"
               >
                 <span className="font-display text-[15px] text-white/85 group-hover:text-white transition-colors">
                   {section.title}
                 </span>
 
-                <span className="w-7 h-7 rounded-full border border-white/10 bg-white/5 flex items-center justify-center">
+                <span className="w-6 h-6 rounded-full border border-white/10 bg-white/5 flex items-center justify-center">
                   <ChevronDown
-                    size={14}
+                    size={13}
                     className={`text-white/50 transition-transform duration-300 ${
                       isOpen ? "rotate-180 text-gold" : ""
                     }`}
@@ -65,7 +65,7 @@ export default function FooterAccordion() {
                 }}
               >
                 <div className="overflow-hidden">
-                  <div className="pb-5 pl-0 space-y-3">
+                  <div className="pb-3 pl-0 space-y-2">
                     {section.links.map((link) => (
                       <Link
                         key={`${section.title}-${link.href}`}
