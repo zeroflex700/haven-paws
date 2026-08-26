@@ -1,16 +1,12 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowUpRight,
   ChevronLeft,
   ChevronRight,
-  MapPin,
-  Search,
   SlidersHorizontal,
-  Sparkles,
-  X,
 } from "lucide-react";
 import OptimizedImage from "./OptimizedImage";
 
@@ -29,8 +25,6 @@ const FILTERS = [
 ];
 
 export default function BreedDiscoveryRow({ breeds }: { breeds: Breed[] }) {
-  const [breedSearch, setBreedSearch] = useState("");
-  const [location, setLocation] = useState("");
   const [activeFilter, setActiveFilter] = useState("popular");
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -41,15 +35,7 @@ export default function BreedDiscoveryRow({ breeds }: { breeds: Breed[] }) {
     });
   }
 
-  const filtered = useMemo(() => {
-    return breeds.filter((breed) =>
-      breed.name.toLowerCase().includes(breedSearch.toLowerCase())
-    );
-  }, [breeds, breedSearch]);
-
-  const searchHref = `/puppies?search=${encodeURIComponent(
-    breedSearch
-  )}${location.trim() ? `&location=${encodeURIComponent(location.trim())}` : ""}`;
+  const filtered = breeds;
 
   return (
     <section className="relative overflow-hidden bg-white py-14 sm:py-16 lg:py-20">
@@ -58,85 +44,8 @@ export default function BreedDiscoveryRow({ breeds }: { breeds: Breed[] }) {
       <div className="pointer-events-none absolute right-[8%] top-12 h-56 w-56 rounded-full bg-gold/10 blur-[90px]" />
 
       <div className="relative hp-container">
-        {/* Compact editorial header */}
-        <div className="grid gap-8 border-b border-forest/10 pb-8 lg:grid-cols-[1fr_0.8fr] lg:items-end">
-          <div>
-            <div className="mb-3 flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-gold" />
-              <p className="eyebrow">Find Your Match</p>
-            </div>
-
-            <h2 className="max-w-xl font-display text-3xl leading-[1.02] tracking-[-0.035em] text-forest sm:text-4xl lg:text-5xl">
-              Start with the dog that fits
-              <span className="text-forest/55"> your life.</span>
-            </h2>
-          </div>
-
-          <div className="lg:pb-1">
-            <p className="max-w-md text-sm leading-relaxed text-ink/65 sm:text-[15px]">
-              Explore breeds by personality, lifestyle, size, and the qualities
-              that matter most to your family.
-            </p>
-
-            <div className="mt-4 flex items-center gap-2 text-xs text-sage">
-              <Sparkles size={14} className="text-gold" />
-              <span>{breeds.length} breeds to explore</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Discovery controls */}
-        <div className="mt-6 grid gap-3 lg:grid-cols-[1.35fr_1fr_auto]">
-          <div className="group relative">
-            <Search
-              size={17}
-              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sage transition-colors group-focus-within:text-forest"
-            />
-
-            <input
-              value={breedSearch}
-              onChange={(e) => setBreedSearch(e.target.value)}
-              placeholder="Search a breed"
-              className="h-14 w-full rounded-2xl border border-forest/10 bg-cream-alt/60 pl-11 pr-11 text-sm text-ink outline-none transition-all placeholder:text-sage focus:border-gold focus:bg-white focus:shadow-[0_10px_35px_rgba(23,63,58,0.06)]"
-            />
-
-            {breedSearch && (
-              <button
-                type="button"
-                onClick={() => setBreedSearch("")}
-                aria-label="Clear breed search"
-                className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-sage transition-colors hover:bg-forest/5 hover:text-forest"
-              >
-                <X size={15} />
-              </button>
-            )}
-          </div>
-
-          <div className="group relative">
-            <MapPin
-              size={17}
-              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sage transition-colors group-focus-within:text-forest"
-            />
-
-            <input
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Enter your location"
-              className="h-14 w-full rounded-2xl border border-forest/10 bg-cream-alt/60 pl-11 pr-4 text-sm text-ink outline-none transition-all placeholder:text-sage focus:border-gold focus:bg-white focus:shadow-[0_10px_35px_rgba(23,63,58,0.06)]"
-            />
-          </div>
-
-          <Link
-            href={searchHref}
-            className="inline-flex h-14 items-center justify-center gap-2 rounded-2xl bg-forest px-6 text-sm font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-forest-light hover:shadow-lg active:translate-y-0 active:scale-[0.98]"
-          >
-            Explore matches
-            <ArrowUpRight size={16} />
-          </Link>
-        </div>
-
         {/* Lifestyle filters */}
-        <div className="mt-5 flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <div className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-forest/10 bg-white text-forest sm:flex">
             <SlidersHorizontal size={16} />
           </div>
@@ -262,14 +171,6 @@ export default function BreedDiscoveryRow({ breeds }: { breeds: Breed[] }) {
                 <p className="mt-2 text-sm text-sage">
                   Try another breed name or clear your search.
                 </p>
-
-                <button
-                  type="button"
-                  onClick={() => setBreedSearch("")}
-                  className="mt-4 text-sm font-medium text-forest underline decoration-gold underline-offset-4"
-                >
-                  Clear search
-                </button>
               </div>
             </div>
           )}
