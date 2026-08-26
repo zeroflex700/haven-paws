@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import HomeHero from "./components/HomeHero";
 import VerificationBadges from "./components/VerificationBadges";
+import BreedDiscoveryRow from "./components/BreedDiscoveryRow";
 import ContinueBrowsingBanner from "./components/ContinueBrowsingBanner";
 import RecentlyViewedStrip from "./components/RecentlyViewedStrip";
 import RecommendedPuppies from "./components/RecommendedPuppies";
@@ -12,6 +13,7 @@ import VideoStoryCarousel from "./components/VideoStoryCarousel";
 import { getPageImages } from "@/lib/queries/pageContent";
 import { getReviewStats } from "@/lib/queries/testimonials";
 import { getVideoStories } from "@/lib/queries/homepageCollections";
+import { supabase } from "@/lib/supabase/client";
 
 export const metadata: Metadata = {
   title: "Haven Paws — A Curated Home for Every Puppy",
@@ -26,6 +28,11 @@ export default async function Home() {
 
   const { count, avgRating } = await getReviewStats();
   const videoStories = await getVideoStories();
+
+  const { data: breeds } = await supabase
+    .from("breeds")
+    .select("id, name, image_url")
+    .order("name");
 
   return (
     <main className="homepage">
@@ -46,6 +53,13 @@ export default async function Home() {
       <section className="hp-section hp-browsing-section">
         <div className="hp-content">
           <ContinueBrowsingBanner />
+        </div>
+      </section>
+
+      {/* BREEDS — white editorial catalogue */}
+      <section className="hp-section hp-breeds-section">
+        <div className="hp-content hp-content-wide">
+          <BreedDiscoveryRow breeds={breeds ?? []} />
         </div>
       </section>
 
