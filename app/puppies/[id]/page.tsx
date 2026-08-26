@@ -25,7 +25,6 @@ import PuppyBookingWidget from "../../components/PuppyBookingWidget";
 import PuppyBioSection from "../../components/PuppyBioSection";
 import Testimonials from "../../components/Testimonials";
 import DeliveryInfo from "../../components/DeliveryInfo";
-import PuppyBookingWidget from "../../components/PuppyBookingWidget";
 import TrustBadgeRow from "../../components/TrustBadgeRow";
 import PaymentExplainer from "../../components/PaymentExplainer";
 import PurchaseTimeline from "../../components/PurchaseTimeline";
