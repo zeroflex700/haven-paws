@@ -381,7 +381,7 @@ export default async function BreedGuidePage({
               )}
 
               {guide.historyImage2Url && (
-                <div className="group relative mt-8 aspect-[16/8] overflow-hidden rounded-[1.5rem]">
+                <div className="group relative mt-8 aspect-[3/4] overflow-hidden rounded-[1.5rem]">
                   <OptimizedImage
                     src={guide.historyImage2Url}
                     alt={`${guide.breedName} history`}

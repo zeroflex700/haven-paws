@@ -18,7 +18,7 @@ export default function BreedGuideArticleSection({
         <p className="text-ink/80 leading-relaxed whitespace-pre-line">{body}</p>
         {image && (
           <div className="mt-4">
-            <div className="aspect-video rounded-lg overflow-hidden">
+            <div className="aspect-[3/4] rounded-lg overflow-hidden">
               <ProtectedImage src={image} alt={summary} />
             </div>
             {credit && <p className="text-xs text-sage mt-1">{credit}</p>}
