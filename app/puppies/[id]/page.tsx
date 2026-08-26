@@ -21,10 +21,10 @@ import FavoriteButton from "../../components/FavoriteButton";
 import RelatedBreedsSection from "../../components/RelatedBreedsSection";
 import BreederAttributionCard from "../../components/BreederAttributionCard";
 import BreedGuideCard from "../../components/BreedGuideCard";
-import PuppyBookingWidget from "../../components/PuppyBookingWidget";
-import PuppyBioSection from "../../components/PuppyBioSection";
 import Testimonials from "../../components/Testimonials";
 import DeliveryInfo from "../../components/DeliveryInfo";
+import PuppyBookingWidget from "../../components/PuppyBookingWidget";
+import PuppyBioSection from "../../components/PuppyBioSection";
 import TrustBadgeRow from "../../components/TrustBadgeRow";
 import PaymentExplainer from "../../components/PaymentExplainer";
 import PurchaseTimeline from "../../components/PurchaseTimeline";
@@ -457,7 +457,7 @@ export default async function PuppyDetailPage({
             {/* Main editorial column */}
             <div className="min-w-0 space-y-10">
 
-              {/* About */}
+              {/* 1. About */}
               {puppy.description && (
                 <section>
                   <div className="max-w-3xl">
@@ -478,7 +478,7 @@ export default async function PuppyDetailPage({
                 </section>
               )}
 
-              {/* Breeder */}
+              {/* Breeder attribution — kept near the top */}
               <section className="rounded-[24px] border border-sage/10 bg-cream-alt/35 p-5 sm:p-7">
 
                 <BreederAttributionCard
@@ -492,7 +492,7 @@ export default async function PuppyDetailPage({
 
               </section>
 
-              {/* Breed guide */}
+              {/* 2. Breed guide */}
               <section className="rounded-[24px] border border-sage/10 bg-white">
 
                 <BreedGuideCard
@@ -501,7 +501,56 @@ export default async function PuppyDetailPage({
 
               </section>
 
-              {/* Included */}
+              {/* 3. Puppy profile (Breed / Sex / Status) */}
+              <section className="rounded-[24px] border border-sage/10 bg-white p-5 sm:p-6">
+
+                <p className="text-[10px] uppercase tracking-[0.18em] text-sage font-medium mb-4">
+                  Puppy profile
+                </p>
+
+                <div className="space-y-3">
+
+                  <MiniFact
+                    label="Breed"
+                    value={puppy.breed}
+                  />
+
+                  <MiniFact
+                    label="Sex"
+                    value={puppy.sex}
+                  />
+
+                  <MiniFact
+                    label="Status"
+                    value={puppy.status}
+                  />
+
+                </div>
+
+              </section>
+
+              {/* 4. About {name} (Health, Appearance) */}
+              <section>
+                <div className="max-w-2xl mb-6">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-sage font-medium mb-3">
+                    Details
+                  </p>
+
+                  <h2 className="font-display text-3xl sm:text-4xl text-forest tracking-tight">
+                    About {puppy.name}
+                  </h2>
+                </div>
+
+                <PuppyBioSection
+                  puppyName={puppy.name}
+                  color={puppy.color}
+                  markings={puppy.markings}
+                  size={puppy.size}
+                  generation={puppy.generation}
+                />
+              </section>
+
+              {/* 5. Included */}
               <section className="rounded-[24px] border border-sage/10 bg-white overflow-hidden">
 
                 <PuppyIncluded
@@ -510,7 +559,7 @@ export default async function PuppyDetailPage({
 
               </section>
 
-              {/* Timeline */}
+              {/* What happens next (unmentioned in reorder — kept in flow) */}
               <section className="rounded-[24px] border border-sage/10 bg-cream-alt/35 p-5 sm:p-7">
 
                 <div className="mb-6">
@@ -529,7 +578,7 @@ export default async function PuppyDetailPage({
 
               </section>
 
-              {/* Inquiry */}
+              {/* 6. Inquire About {name} */}
               <section
                 id="inquiry-form"
                 className="scroll-mt-28 rounded-[24px] border border-sage/10 bg-white overflow-hidden"
@@ -542,7 +591,7 @@ export default async function PuppyDetailPage({
 
             </div>
 
-            {/* Side reassurance panel */}
+            {/* Side reassurance panel (Puppy profile mini facts removed) */}
             <aside className="lg:sticky lg:top-24 space-y-4">
 
               <div className="rounded-[24px] border border-sage/10 bg-cream-alt/45 p-5 sm:p-6">
@@ -573,75 +622,14 @@ export default async function PuppyDetailPage({
 
               </div>
 
-              <div className="rounded-[24px] border border-sage/10 bg-white p-5 sm:p-6">
-
-                <p className="text-[10px] uppercase tracking-[0.18em] text-sage font-medium mb-3">
-                  Puppy profile
-                </p>
-
-                <div className="space-y-3">
-
-                  <MiniFact
-                    label="Breed"
-                    value={puppy.breed}
-                  />
-
-                  <MiniFact
-                    label="Sex"
-                    value={puppy.sex}
-                  />
-
-                  {puppy.ageWeeks !== null && (
-                    <MiniFact
-                      label="Age"
-                      value={`${puppy.ageWeeks} weeks old`}
-                    />
-                  )}
-
-                  <MiniFact
-                    label="Status"
-                    value={puppy.status}
-                  />
-
-                </div>
-
-              </div>
-
             </aside>
 
           </div>
         </div>
       </section>
 
-{/* ================================================================ */}
-      {/* PUPPY BIO                                                         */}
       {/* ================================================================ */}
-
-      <section className="bg-white border-t border-sage/10">
-        <div className="max-w-4xl mx-auto px-5 sm:px-6 lg:px-10 py-14 lg:py-20">
-
-          <div className="max-w-2xl mb-8">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-sage font-medium mb-3">
-              Details
-            </p>
-
-            <h2 className="font-display text-3xl sm:text-4xl text-forest tracking-tight">
-              About {puppy.name}
-            </h2>
-          </div>
-
-          <PuppyBioSection
-            puppyName={puppy.name}
-            color={puppy.color}
-            markings={puppy.markings}
-            size={puppy.size}
-            generation={puppy.generation}
-          />
-
-        </div>
-      </section>
-      {/* ================================================================ */}
-      {/* FAMILY                                                            */}
+      {/* 7. FAMILY                                                         */}
       {/* ================================================================ */}
 
       <section className="bg-cream border-t border-sage/10">
@@ -679,7 +667,7 @@ export default async function PuppyDetailPage({
       </section>
 
       {/* ================================================================ */}
-      {/* DELIVERY                                                          */}
+      {/* 8. DELIVERY (Bringing your puppy home)                            */}
       {/* ================================================================ */}
 
       <section className="bg-white border-t border-sage/10">
@@ -693,7 +681,7 @@ export default async function PuppyDetailPage({
       </section>
 
       {/* ================================================================ */}
-      {/* RELATED PUPPIES                                                   */}
+      {/* 9. RELATED PUPPIES + RELATED BREEDS                               */}
       {/* ================================================================ */}
 
       <section className="bg-cream border-t border-sage/10">
@@ -721,7 +709,7 @@ export default async function PuppyDetailPage({
       </section>
 
       {/* ================================================================ */}
-      {/* SOCIAL PROOF                                                      */}
+      {/* 10. SOCIAL PROOF (What families are saying)                       */}
       {/* ================================================================ */}
 
       <section className="bg-white border-t border-sage/10">
@@ -737,7 +725,7 @@ export default async function PuppyDetailPage({
       </section>
 
       {/* ================================================================ */}
-      {/* BREEDER                                                           */}
+      {/* 11. ABOUT THE BREEDER (Raised by Haven Paws)                      */}
       {/* ================================================================ */}
 
       <section className="bg-cream border-t border-sage/10">
