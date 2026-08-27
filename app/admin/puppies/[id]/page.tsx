@@ -29,6 +29,20 @@ export default async function EditPuppyPage({
 
   if (!puppy) notFound();
 
+  const { data: litterRows } = await supabase
+    .from("puppies")
+    .select("litter_id")
+    .not("litter_id", "is", null)
+    .neq("id", id);
+
+  const litterIds = Array.from(
+    new Set(
+      (litterRows ?? [])
+        .map((row) => row.litter_id as string)
+        .filter(Boolean)
+    )
+  ).sort();
+
   const updatePuppyWithId = updatePuppy.bind(null, id);
 
   return (
@@ -59,6 +73,7 @@ export default async function EditPuppyPage({
         breeds={breeds}
         breeders={breeders ?? []}
         puppy={puppy}
+        litterIds={litterIds}
         action={updatePuppyWithId}
       />
     </main>

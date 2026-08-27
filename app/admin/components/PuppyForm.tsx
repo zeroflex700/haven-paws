@@ -36,6 +36,7 @@ type PuppyData = {
   markings?: string;
   size?: string;
   generation?: string;
+  age_weeks?: number;
 };
 
 export default function PuppyForm({
@@ -43,11 +44,13 @@ export default function PuppyForm({
   breeders,
   puppy,
   action,
+  litterIds = [],
 }: {
   breeds: Breed[];
   breeders: BreederOption[];
   puppy?: PuppyData;
   action: (formData: FormData) => void;
+  litterIds?: string[];
 }) {
   const inputClass =
     "w-full border border-sage/30 rounded-md px-3 py-2 focus:outline-none focus:border-gold";
@@ -190,7 +193,7 @@ export default function PuppyForm({
         className={inputClass}
       />
 
-     <label className={labelClass}>Weight Estimate (lbs)</label>
+      <label className={labelClass}>Weight Estimate (lbs)</label>
       <input
         name="weight_estimate"
         type="number"
@@ -198,6 +201,21 @@ export default function PuppyForm({
         defaultValue={puppy?.weight_estimate}
         className={inputClass}
       />
+
+      <label className={labelClass}>Age (weeks)</label>
+      <input
+        name="age_weeks"
+        type="number"
+        step="1"
+        min="0"
+        defaultValue={puppy?.age_weeks}
+        placeholder="e.g. 11"
+        className={inputClass}
+      />
+      <p className="text-xs text-sage mt-1">
+        Enter the puppy&apos;s current age in weeks. This is a fixed number —
+        remember to update it periodically as the puppy gets older.
+      </p>
 
       <label className={labelClass}>Markings</label>
       <input
@@ -235,9 +253,20 @@ export default function PuppyForm({
       <input
         name="litter_id"
         defaultValue={puppy?.litter_id}
-        placeholder="e.g. litter-2026-golden-01"
+        placeholder="e.g. havanese-petunia-2026-06"
+        list="litter-id-suggestions"
         className={inputClass}
       />
+      <datalist id="litter-id-suggestions">
+        {litterIds.map((id) => (
+          <option key={id} value={id} />
+        ))}
+      </datalist>
+      <p className="text-xs text-sage mt-1">
+        Use the exact same Litter ID on every puppy from the same litter so
+        they show up as siblings on each other&apos;s pages. Start typing to
+        see existing litter IDs.
+      </p>
 
       <label className={labelClass}>Description</label>
       <textarea
