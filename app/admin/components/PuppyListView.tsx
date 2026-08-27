@@ -11,6 +11,7 @@ type AdminPuppy = {
   price: number;
   status: "available" | "reserved" | "sold" | "hidden";
   is_published: boolean;
+  litter_id: string | null;
   breeds: { name: string } | null;
 };
 
@@ -58,9 +59,14 @@ export default function PuppyListView({ puppies }: { puppies: AdminPuppy[] }) {
               href={`/admin/puppies/${p.id}`}
               className="flex items-center justify-between bg-white border border-sage/20 rounded-lg px-4 py-3"
             >
-              <div>
+              <div className="min-w-0">
                 <p className="text-forest font-medium">{p.name}</p>
                 <p className="text-xs text-sage">{p.breeds?.name ?? "No breed"}</p>
+                {p.litter_id && (
+                  <p className="text-[10px] text-ink/40 mt-0.5 truncate max-w-[160px]">
+                    Litter: {p.litter_id}
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-3">
                 <div className="text-right">
