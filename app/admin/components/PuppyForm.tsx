@@ -1,8 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import IncludedItemsPicker from "./IncludedItemsPicker";
 import type { IncludedItemKey } from "@/lib/includedItems";
+import { supabase } from "@/lib/supabase/client";
 
 type Breed = {
   id: string;
@@ -37,7 +43,43 @@ type PuppyData = {
   size?: string;
   generation?: string;
   age_weeks?: number;
+  mom_name?: string;
+  mom_breed?: string;
+  mom_weight?: string;
+  mom_registration?: string;
+  mom_photo_url?: string;
+  dad_name?: string;
+  dad_breed?: string;
+  dad_weight?: string;
+  dad_registration?: string;
+  dad_photo_url?: string;
 };
+
+type SiblingRow = {
+  name: string;
+  breed_id: string | null;
+  breeder_id: string | null;
+  price: number | null;
+  deposit_amount: number | null;
+  age_weeks: number | null;
+  size: string | null;
+  status: string | null;
+  vet_checked: boolean | null;
+  vaccinated: boolean | null;
+  is_published: boolean | null;
+  mom_name: string | null;
+  mom_breed: string | null;
+  mom_weight: string | null;
+  mom_registration: string | null;
+  mom_photo_url: string | null;
+  dad_name: string | null;
+  dad_breed: string | null;
+  dad_weight: string | null;
+  dad_registration: string | null;
+  dad_photo_url: string | null;
+};
+
+const LITTER_LOOKUP_DEBOUNCE_MS = 500;
 
 export default function PuppyForm({
   breeds,
@@ -64,6 +106,16 @@ export default function PuppyForm({
   const [selectedBreederId, setSelectedBreederId] = useState(
     puppy?.breeder_id ?? ""
   );
+
+  const [litterId, setLitterId] = useState(
+    puppy?.litter_id ?? ""
+  );
+
+  const [autofillStatus, setAutofillStatus] = useState<
+    | { type: "found"; siblingName: string }
+    | { type: "none" }
+    | null
+  >(null);
 
   const filteredBreeders = useMemo(() => {
     if (!selectedBreedId) return [];
@@ -98,6 +150,209 @@ export default function PuppyForm({
     setSelectedBreederId("");
   }
 
+  /* ============================================================= */
+  /* LITTER AUTO-FILL                                               */
+  /*                                                                 */
+  /* Refs for the fields we programmatically fill in when a sibling  */
+  /* is found. These stay uncontrolled inputs (matching the rest of  */
+  /* this form's pattern of using defaultValue + FormData), we just  */
+  /* set .value directly via the ref when auto-filling.              */
+  /* ============================================================= */
+
+  const priceRef = useRef<HTMLInputElement>(null);
+  const depositRef = useRef<HTMLInputElement>(null);
+  const ageWeeksRef = useRef<HTMLInputElement>(null);
+  const sizeRef = useRef<HTMLInputElement>(null);
+  const statusRef = useRef<HTMLSelectElement>(null);
+  const vetCheckedRef = useRef<HTMLInputElement>(null);
+  const vaccinatedRef = useRef<HTMLInputElement>(null);
+  const isPublishedRef = useRef<HTMLInputElement>(null);
+
+  const momNameRef = useRef<HTMLInputElement>(null);
+  const momBreedRef = useRef<HTMLInputElement>(null);
+  const momWeightRef = useRef<HTMLInputElement>(null);
+  const momRegistrationRef = useRef<HTMLInputElement>(null);
+  const momPhotoUrlRef = useRef<HTMLInputElement>(null);
+  const dadNameRef = useRef<HTMLInputElement>(null);
+  const dadBreedRef = useRef<HTMLInputElement>(null);
+  const dadWeightRef = useRef<HTMLInputElement>(null);
+  const dadRegistrationRef = useRef<HTMLInputElement>(null);
+  const dadPhotoUrlRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const trimmed = litterId.trim();
+
+    if (!trimmed) {
+      setAutofillStatus(null);
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      const { data, error } = await supabase
+        .from("puppies")
+        .select(
+          `
+            name,
+            breed_id,
+            breeder_id,
+            price,
+            deposit_amount,
+            age_weeks,
+            size,
+            status,
+            vet_checked,
+            vaccinated,
+            is_published,
+            mom_name,
+            mom_breed,
+            mom_weight,
+            mom_registration,
+            mom_photo_url,
+            dad_name,
+            dad_breed,
+            dad_weight,
+            dad_registration,
+            dad_photo_url
+          `
+        )
+        .eq("litter_id", trimmed)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.error(
+          "Failed to look up litter siblings:",
+          error
+        );
+        return;
+      }
+
+      if (!data) {
+        setAutofillStatus({ type: "none" });
+        return;
+      }
+
+      const sibling = data as SiblingRow;
+
+      // Shared-across-litter fields.
+      if (sibling.breed_id) {
+        setSelectedBreedId(sibling.breed_id);
+      }
+
+      if (sibling.breeder_id) {
+        setSelectedBreederId(sibling.breeder_id);
+      }
+
+      if (priceRef.current && sibling.price !== null) {
+        priceRef.current.value = String(sibling.price);
+      }
+
+      if (
+        depositRef.current &&
+        sibling.deposit_amount !== null
+      ) {
+        depositRef.current.value = String(
+          sibling.deposit_amount
+        );
+      }
+
+      if (
+        ageWeeksRef.current &&
+        sibling.age_weeks !== null
+      ) {
+        ageWeeksRef.current.value = String(
+          sibling.age_weeks
+        );
+      }
+
+      if (sizeRef.current && sibling.size) {
+        sizeRef.current.value = sibling.size;
+      }
+
+      if (statusRef.current && sibling.status) {
+        statusRef.current.value = sibling.status;
+      }
+
+      if (vetCheckedRef.current) {
+        vetCheckedRef.current.checked = !!sibling.vet_checked;
+      }
+
+      if (vaccinatedRef.current) {
+        vaccinatedRef.current.checked = !!sibling.vaccinated;
+      }
+
+      if (isPublishedRef.current) {
+        isPublishedRef.current.checked =
+          !!sibling.is_published;
+      }
+
+      // Parent info.
+      if (momNameRef.current && sibling.mom_name) {
+        momNameRef.current.value = sibling.mom_name;
+      }
+
+      if (momBreedRef.current && sibling.mom_breed) {
+        momBreedRef.current.value = sibling.mom_breed;
+      }
+
+      if (momWeightRef.current && sibling.mom_weight) {
+        momWeightRef.current.value = sibling.mom_weight;
+      }
+
+      if (
+        momRegistrationRef.current &&
+        sibling.mom_registration
+      ) {
+        momRegistrationRef.current.value =
+          sibling.mom_registration;
+      }
+
+      if (
+        momPhotoUrlRef.current &&
+        sibling.mom_photo_url
+      ) {
+        momPhotoUrlRef.current.value =
+          sibling.mom_photo_url;
+      }
+
+      if (dadNameRef.current && sibling.dad_name) {
+        dadNameRef.current.value = sibling.dad_name;
+      }
+
+      if (dadBreedRef.current && sibling.dad_breed) {
+        dadBreedRef.current.value = sibling.dad_breed;
+      }
+
+      if (dadWeightRef.current && sibling.dad_weight) {
+        dadWeightRef.current.value = sibling.dad_weight;
+      }
+
+      if (
+        dadRegistrationRef.current &&
+        sibling.dad_registration
+      ) {
+        dadRegistrationRef.current.value =
+          sibling.dad_registration;
+      }
+
+      if (
+        dadPhotoUrlRef.current &&
+        sibling.dad_photo_url
+      ) {
+        dadPhotoUrlRef.current.value =
+          sibling.dad_photo_url;
+      }
+
+      setAutofillStatus({
+        type: "found",
+        siblingName: sibling.name,
+      });
+    }, LITTER_LOOKUP_DEBOUNCE_MS);
+
+    return () => clearTimeout(timeout);
+  }, [litterId]);
+
   return (
     <form action={action} className="pb-10">
       <label className={labelClass}>Name</label>
@@ -130,7 +385,9 @@ export default function PuppyForm({
       <select
         name="breeder_id"
         value={selectedBreederId}
-        onChange={(event) => setSelectedBreederId(event.target.value)}
+        onChange={(event) =>
+          setSelectedBreederId(event.target.value)
+        }
         className={inputClass}
         disabled={!selectedBreedId}
       >
@@ -169,6 +426,7 @@ export default function PuppyForm({
 
       <label className={labelClass}>Price ($)</label>
       <input
+        ref={priceRef}
         name="price"
         type="number"
         step="0.01"
@@ -179,6 +437,7 @@ export default function PuppyForm({
 
       <label className={labelClass}>Deposit Amount ($)</label>
       <input
+        ref={depositRef}
         name="deposit_amount"
         type="number"
         step="0.01"
@@ -204,6 +463,7 @@ export default function PuppyForm({
 
       <label className={labelClass}>Age (weeks)</label>
       <input
+        ref={ageWeeksRef}
         name="age_weeks"
         type="number"
         step="1"
@@ -227,6 +487,7 @@ export default function PuppyForm({
 
       <label className={labelClass}>Size</label>
       <input
+        ref={sizeRef}
         name="size"
         defaultValue={puppy?.size}
         placeholder="e.g. Miniature, Standard"
@@ -252,7 +513,8 @@ export default function PuppyForm({
       <label className={labelClass}>Litter ID</label>
       <input
         name="litter_id"
-        defaultValue={puppy?.litter_id}
+        value={litterId}
+        onChange={(event) => setLitterId(event.target.value)}
         placeholder="e.g. havanese-petunia-2026-06"
         list="litter-id-suggestions"
         className={inputClass}
@@ -268,6 +530,23 @@ export default function PuppyForm({
         see existing litter IDs.
       </p>
 
+      {autofillStatus?.type === "found" && (
+        <p className="text-xs text-forest bg-sage/10 border border-sage/20 rounded-md px-3 py-2 mt-2">
+          ✓ Auto-filled breed, breeder, price, deposit, age, size, status,
+          and parent info from <strong>{autofillStatus.siblingName}</strong>,
+          an existing puppy in this litter. Review before saving —
+          fields specific to this puppy (name, sex, color, weight,
+          markings, photos) still need to be entered.
+        </p>
+      )}
+
+      {autofillStatus?.type === "none" && (
+        <p className="text-xs text-sage mt-2">
+          No existing puppy found with this Litter ID yet — this will be
+          the first puppy in the litter.
+        </p>
+      )}
+
       <label className={labelClass}>Description</label>
       <textarea
         name="description"
@@ -278,6 +557,7 @@ export default function PuppyForm({
 
       <label className={labelClass}>Status</label>
       <select
+        ref={statusRef}
         name="status"
         defaultValue={puppy?.status ?? "available"}
         required
@@ -291,6 +571,7 @@ export default function PuppyForm({
 
       <div className="flex items-center gap-2 mt-4">
         <input
+          ref={vetCheckedRef}
           type="checkbox"
           name="vet_checked"
           id="vet_checked"
@@ -304,6 +585,7 @@ export default function PuppyForm({
 
       <div className="flex items-center gap-2 mt-3">
         <input
+          ref={vaccinatedRef}
           type="checkbox"
           name="vaccinated"
           id="vaccinated"
@@ -317,6 +599,7 @@ export default function PuppyForm({
 
       <div className="flex items-center gap-2 mt-3">
         <input
+          ref={isPublishedRef}
           type="checkbox"
           name="is_published"
           id="is_published"
@@ -337,6 +620,107 @@ export default function PuppyForm({
       <IncludedItemsPicker
         selected={puppy?.included_items ?? []}
       />
+
+      {/* ============================================================= */}
+      {/* PARENT INFORMATION                                             */}
+      {/*                                                                 */}
+      {/* Newly added — these columns already existed on the puppies      */}
+      {/* table but had no form fields, so they could never be entered    */}
+      {/* or saved before now. Auto-filled from a sibling when a Litter   */}
+      {/* ID match is found, above.                                      */}
+      {/* ============================================================= */}
+
+      <div className="mt-8 pt-6 border-t border-sage/20">
+        <h2 className="font-display text-lg text-forest">
+          Parent Information
+        </h2>
+        <p className="text-xs text-sage mt-1">
+          Auto-filled from a litter sibling when available. Applies once
+          per litter — usually the same for every puppy in it.
+        </p>
+
+        <label className={labelClass}>Mom&apos;s Name</label>
+        <input
+          ref={momNameRef}
+          name="mom_name"
+          defaultValue={puppy?.mom_name}
+          className={inputClass}
+        />
+
+        <label className={labelClass}>Mom&apos;s Breed</label>
+        <input
+          ref={momBreedRef}
+          name="mom_breed"
+          defaultValue={puppy?.mom_breed}
+          className={inputClass}
+        />
+
+        <label className={labelClass}>Mom&apos;s Weight</label>
+        <input
+          ref={momWeightRef}
+          name="mom_weight"
+          defaultValue={puppy?.mom_weight}
+          placeholder="e.g. 45 lbs"
+          className={inputClass}
+        />
+
+        <label className={labelClass}>Mom&apos;s Registration</label>
+        <input
+          ref={momRegistrationRef}
+          name="mom_registration"
+          defaultValue={puppy?.mom_registration}
+          className={inputClass}
+        />
+
+        <label className={labelClass}>Mom&apos;s Photo URL</label>
+        <input
+          ref={momPhotoUrlRef}
+          name="mom_photo_url"
+          defaultValue={puppy?.mom_photo_url}
+          className={inputClass}
+        />
+
+        <label className={labelClass}>Dad&apos;s Name</label>
+        <input
+          ref={dadNameRef}
+          name="dad_name"
+          defaultValue={puppy?.dad_name}
+          className={inputClass}
+        />
+
+        <label className={labelClass}>Dad&apos;s Breed</label>
+        <input
+          ref={dadBreedRef}
+          name="dad_breed"
+          defaultValue={puppy?.dad_breed}
+          className={inputClass}
+        />
+
+        <label className={labelClass}>Dad&apos;s Weight</label>
+        <input
+          ref={dadWeightRef}
+          name="dad_weight"
+          defaultValue={puppy?.dad_weight}
+          placeholder="e.g. 50 lbs"
+          className={inputClass}
+        />
+
+        <label className={labelClass}>Dad&apos;s Registration</label>
+        <input
+          ref={dadRegistrationRef}
+          name="dad_registration"
+          defaultValue={puppy?.dad_registration}
+          className={inputClass}
+        />
+
+        <label className={labelClass}>Dad&apos;s Photo URL</label>
+        <input
+          ref={dadPhotoUrlRef}
+          name="dad_photo_url"
+          defaultValue={puppy?.dad_photo_url}
+          className={inputClass}
+        />
+      </div>
 
       <button
         type="submit"
