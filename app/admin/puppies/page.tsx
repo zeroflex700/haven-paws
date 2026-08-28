@@ -1,13 +1,24 @@
 import Link from "next/link";
 import { getAllPuppiesAdmin } from "@/lib/queries/adminPuppies";
+import { getBreeds } from "@/lib/queries/breeds";
+import { createClient } from "@/lib/supabase/server";
 import PuppyListView from "../components/PuppyListView";
 import PuppyUrlImporter from "../components/PuppyUrlImporter";
 
 export default async function AdminPuppiesPage() {
   const puppies = await getAllPuppiesAdmin();
 
+  const breeds = await getBreeds();
+
+  const supabase = await createClient();
+
+  const { data: breeders } = await supabase
+    .from("breeders")
+    .select("id, name, breed_id")
+    .order("name");
+
   return (
-    <main className="px-5 pt-6 pb-10">
+    <main className="px-5 pt-6">
       <div className="flex justify-between items-center mb-2">
         <div>
           <p className="eyebrow mb-1">
@@ -34,7 +45,10 @@ export default async function AdminPuppiesPage() {
         Manage Breed Info →
       </Link>
 
-      <PuppyUrlImporter />
+      <PuppyUrlImporter
+        breeds={breeds}
+        breeders={breeders ?? []}
+      />
 
       <PuppyListView puppies={puppies} />
     </main>
