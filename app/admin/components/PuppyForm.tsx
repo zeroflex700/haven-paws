@@ -32,7 +32,6 @@ type PuppyData = {
   deposit_amount?: number;
   description?: string;
   status?: string;
-  color?: string;
   weight_estimate?: number;
   litter_id?: string;
   ready_date?: string;
