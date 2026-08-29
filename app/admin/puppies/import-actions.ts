@@ -3,45 +3,50 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
+type ImportedPuppyDetails = {
+  sourceUrl: string;
+  name: string;
+  breedName: string | null;
+  sex: string | null;
+  price: number | null;
+  depositAmount: number | null;
+  description: string | null;
+  status: string | null;
+  color: string | null;
+  weightEstimate: number | null;
+  markings: string | null;
+  size: string | null;
+  generation: string | null;
+  ageWeeks: number | null;
+  litterId: string | null;
+  readyDate: string | null;
+  momName: string | null;
+  momBreed: string | null;
+  momWeight: string | null;
+  momRegistration: string | null;
+  dadName: string | null;
+  dadBreed: string | null;
+  dadWeight: string | null;
+  dadRegistration: string | null;
+  includedItems: string[];
+};
+
 type ImportResult = {
   id: string;
   name: string;
 };
 
-export type PuppyImportDraft = {
-  sourceUrl: string;
-  name: string;
-  breedName: string;
-  sex: string;
-  price: string;
-  depositAmount: string;
-  description: string;
-  status: string;
-  color: string;
-  weightEstimate: string;
-  markings: string;
-  size: string;
-  generation: string;
-  ageWeeks: string;
-  litterId: string;
-  readyDate: string;
+function cleanText(
+  value: string | null | undefined
+): string | null {
+  if (!value) return null;
 
-  breederName: string;
+  const cleaned = value
+    .replace(/\s+/g, " ")
+    .trim();
 
-  momName: string;
-  momBreed: string;
-  momWeight: string;
-  momRegistration: string;
-
-  dadName: string;
-  dadBreed: string;
-  dadWeight: string;
-  dadRegistration: string;
-
-  vetChecked: boolean;
-  vaccinated: boolean;
-  isPublished: boolean;
-};
+  return cleaned || null;
+}
 
 function textValue(
   formData: FormData,
@@ -53,9 +58,7 @@ function textValue(
     return null;
   }
 
-  const cleaned = value.trim();
-
-  return cleaned || null;
+  return cleanText(value);
 }
 
 function numberValue(
@@ -64,525 +67,1254 @@ function numberValue(
 ): number | null {
   const value = textValue(formData, field);
 
-  if (!value) {
-    return null;
-  }
+  if (!value) return null;
 
-  const number = Number(value);
+  const number = Number(
+    value.replace(/[$,]/g, "")
+  );
 
-  if (!Number.isFinite(number)) {
-    return null;
-  }
-
-  return number;
+  return Number.isFinite(number)
+    ? number
+    : null;
 }
 
-function cleanText(value: string): string {
-  return value
-    .replace(/\r/g, "")
-    .replace(/[ \t]+/g, " ")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
+function firstNumber(
+  values: unknown[]
+): number | null {
+  for (const value of values) {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
 
-function firstMatch(
-  text: string,
-  patterns: RegExp[]
-): string {
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
+    if (typeof value === "string") {
+      const match = value.match(
+        /(?:[$£€]\s*)?([\d,]+(?:\.\d+)?)/ 
+      );
 
-    if (match?.[1]) {
-      return cleanText(match[1]);
+      if (match) {
+        const number = Number(
+          match[1].replace(/,/g, "")
+        );
+
+        if (Number.isFinite(number)) {
+          return number;
+        }
+      }
     }
   }
 
-  return "";
+  return null;
 }
 
-function normalizeBreedName(value: string): string {
+function absoluteUrl(
+  value: string,
+  sourceUrl: string
+): string | null {
+  try {
+    return new URL(value, sourceUrl).toString();
+  } catch {
+    return null;
+  }
+}
+
+function decodeHtml(value: string): string {
   return value
-    .replace(/\s+/g, " ")
-    .trim();
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&#x27;/gi, "'")
+    .replace(/&#x2F;/gi, "/");
 }
 
-function parseMoney(value: string): string {
-  const match = value.match(
-    /\$?\s*([\d,]+(?:\.\d{1,2})?)/
+function extractMeta(
+  html: string,
+  property: string
+): string | null {
+  const escaped = property.replace(
+    /[.*+?^${}()|[\]\\]/g,
+    "\\$&"
   );
 
-  if (!match?.[1]) {
-    return "";
+  const patterns = [
+    new RegExp(
+      `<meta[^>]+property=["']${escaped}["'][^>]+content=["']([^"']+)["'][^>]*>`,
+      "i"
+    ),
+    new RegExp(
+      `<meta[^>]+content=["']([^"']+)["'][^>]+property=["']${escaped}["'][^>]*>`,
+      "i"
+    ),
+    new RegExp(
+      `<meta[^>]+name=["']${escaped}["'][^>]+content=["']([^"']+)["'][^>]*>`,
+      "i"
+    ),
+    new RegExp(
+      `<meta[^>]+content=["']([^"']+)["'][^>]+name=["']${escaped}["'][^>]*>`,
+      "i"
+    ),
+  ];
+
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+
+    if (match?.[1]) {
+      return cleanText(
+        decodeHtml(match[1])
+      );
+    }
   }
 
-  return match[1].replace(/,/g, "");
+  return null;
 }
 
-function parseReadyDate(
-  value: string
-): string {
-  if (!value || /go home/i.test(value)) {
-    return "";
-  }
-
-  const currentYear = new Date().getFullYear();
-
-  const parsed = new Date(
-    `${value} ${currentYear}`
+function extractTitle(
+  html: string
+): string | null {
+  const match = html.match(
+    /<title[^>]*>([\s\S]*?)<\/title>/i
   );
 
-  if (Number.isNaN(parsed.getTime())) {
-    return "";
-  }
-
-  const month = String(
-    parsed.getMonth() + 1
-  ).padStart(2, "0");
-
-  const day = String(
-    parsed.getDate()
-  ).padStart(2, "0");
-
-  return `${currentYear}-${month}-${day}`;
+  return match?.[1]
+    ? cleanText(
+        decodeHtml(match[1])
+      )
+    : null;
 }
 
-function extractDescription(
-  markdown: string,
-  name: string
+function extractJsonLdObjects(
+  html: string
+): unknown[] {
+  const objects: unknown[] = [];
+
+  const matches = html.matchAll(
+    /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
+  );
+
+  for (const match of matches) {
+    try {
+      const parsed = JSON.parse(
+        match[1]
+      );
+
+      if (Array.isArray(parsed)) {
+        objects.push(...parsed);
+      } else {
+        objects.push(parsed);
+      }
+    } catch {
+      // Ignore invalid JSON-LD.
+    }
+  }
+
+  return objects;
+}
+
+function flattenJsonLd(
+  objects: unknown[]
+): Record<string, unknown>[] {
+  const records: Record<string, unknown>[] = [];
+
+  function visit(value: unknown) {
+    if (!value) return;
+
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        visit(item);
+      }
+
+      return;
+    }
+
+    if (
+      typeof value !== "object"
+    ) {
+      return;
+    }
+
+    const record =
+      value as Record<string, unknown>;
+
+    records.push(record);
+
+    for (const child of Object.values(record)) {
+      visit(child);
+    }
+  }
+
+  for (const object of objects) {
+    visit(object);
+  }
+
+  return records;
+}
+
+function findJsonValue(
+  records: Record<string, unknown>[],
+  keys: string[]
+): unknown {
+  const wanted = keys.map((key) =>
+    key.toLowerCase()
+  );
+
+  for (const record of records) {
+    for (const [key, value] of Object.entries(
+      record
+    )) {
+      if (
+        wanted.includes(
+          key.toLowerCase()
+        )
+      ) {
+        if (
+          value !== null &&
+          value !== undefined &&
+          value !== ""
+        ) {
+          return value;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+function valueToText(
+  value: unknown
+): string | null {
+  if (typeof value === "string") {
+    return cleanText(value);
+  }
+
+  if (
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    return String(value);
+  }
+
+  if (
+    value &&
+    typeof value === "object"
+  ) {
+    const record =
+      value as Record<string, unknown>;
+
+    if (
+      typeof record.name === "string"
+    ) {
+      return cleanText(
+        record.name
+      );
+    }
+
+    if (
+      typeof record.value === "string"
+    ) {
+      return cleanText(
+        record.value
+      );
+    }
+  }
+
+  return null;
+}
+
+function getPuppyName(
+  html: string,
+  records: Record<string, unknown>[],
+  sourceUrl: string
 ): string {
-  const escapedName =
-    name.replace(
-      /[.*+?^${}()|[\]\\]/g,
-      "\\$&"
+  const jsonName =
+    valueToText(
+      findJsonValue(
+        records,
+        ["name"]
+      )
     );
 
-  const pattern = new RegExp(
-    `###\\s+Hi,?\\s+I'm\\s+${escapedName}\\s*\\n+([\\s\\S]*?)(?=\\n#{2,4}\\s|$)`,
-    "i"
-  );
+  if (jsonName) {
+    return jsonName;
+  }
 
-  const match = markdown.match(pattern);
-
-  if (match?.[1]) {
-    const description = cleanText(
-      match[1]
+  const metaName =
+    extractMeta(
+      html,
+      "og:title"
+    ) ??
+    extractMeta(
+      html,
+      "twitter:title"
     );
 
-    return description
+  if (metaName) {
+    return metaName
       .replace(
-        /^Hi,?\s+I'm\s+[^!]+!\s*/i,
+        /\s*[|–—-]\s*(PuppySpot|Haven Paws).*$/i,
         ""
       )
       .trim();
   }
 
-  const genericPattern =
-    /###\s+Hi,\s*I'm[^\n]*\n+([\s\S]*?)(?=\n#{2,4}\s|$)/i;
+  const title =
+    extractTitle(html);
 
-  const genericMatch =
-    markdown.match(genericPattern);
+  if (title) {
+    return title
+      .replace(
+        /\s*[|–—-]\s*(PuppySpot|Haven Paws).*$/i,
+        ""
+      )
+      .trim();
+  }
 
-  if (genericMatch?.[1]) {
-    return cleanText(
-      genericMatch[1]
+  try {
+    const pathname =
+      new URL(sourceUrl).pathname;
+
+    const match =
+      pathname.match(
+        /\/puppy\/([^/]+)/i
+      );
+
+    if (match?.[1]) {
+      return decodeURIComponent(
+        match[1]
+      ).replace(
+        /[-_]+/g,
+        " "
+      );
+    }
+  } catch {
+    // Ignore.
+  }
+
+  return "Imported Puppy";
+}
+
+function getBreedName(
+  records: Record<string, unknown>[]
+): string | null {
+  const value =
+    findJsonValue(
+      records,
+      ["breed", "breedName"]
+    );
+
+  return valueToText(value);
+}
+
+function getSex(
+  html: string,
+  records: Record<string, unknown>[]
+): string | null {
+  const value =
+    valueToText(
+      findJsonValue(
+        records,
+        [
+          "gender",
+          "sex",
+        ]
+      )
+    );
+
+  if (value) {
+    const lower =
+      value.toLowerCase();
+
+    if (
+      lower.includes("female") ||
+      lower === "girl"
+    ) {
+      return "female";
+    }
+
+    if (
+      lower.includes("male") ||
+      lower === "boy"
+    ) {
+      return "male";
+    }
+  }
+
+  const text =
+    stripHtml(html);
+
+  if (
+    /\b(female|girl)\b/i.test(
+      text
     )
-      .replace(
-        /^Hi,?\s+I'm\s+[^!]+!\s*/i,
-        ""
-      )
-      .trim();
+  ) {
+    return "female";
   }
 
-  return "";
+  if (
+    /\b(male|boy)\b/i.test(
+      text
+    )
+  ) {
+    return "male";
+  }
+
+  return null;
+}
+
+function getAgeWeeks(
+  html: string,
+  records: Record<string, unknown>[]
+): number | null {
+  const value =
+    firstNumber([
+      findJsonValue(
+        records,
+        [
+          "age_weeks",
+          "ageWeeks",
+          "ageInWeeks",
+        ]
+      ),
+    ]);
+
+  if (
+    value !== null &&
+    value >= 0 &&
+    value <= 200
+  ) {
+    return Math.round(value);
+  }
+
+  const text =
+    stripHtml(html);
+
+  const patterns = [
+    /(\d+)\s*(?:week|weeks)\s*old/i,
+    /age\s*[:\-]?\s*(\d+)\s*(?:week|weeks)/i,
+    /(\d+)\s*weeks/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match =
+      text.match(pattern);
+
+    if (match?.[1]) {
+      const age =
+        Number(match[1]);
+
+      if (
+        Number.isFinite(age) &&
+        age >= 0 &&
+        age <= 200
+      ) {
+        return age;
+      }
+    }
+  }
+
+  return null;
+}
+
+function getPrice(
+  html: string,
+  records: Record<string, unknown>[]
+): number | null {
+  const value =
+    firstNumber([
+      findJsonValue(
+        records,
+        [
+          "price",
+          "priceAmount",
+          "lowPrice",
+        ]
+      ),
+      extractMeta(
+        html,
+        "product:price:amount"
+      ),
+    ]);
+
+  return value;
+}
+
+function getDescription(
+  html: string,
+  records: Record<string, unknown>[]
+): string | null {
+  const jsonDescription =
+    valueToText(
+      findJsonValue(
+        records,
+        [
+          "description",
+        ]
+      )
+    );
+
+  if (jsonDescription) {
+    return jsonDescription;
+  }
+
+  return extractMeta(
+    html,
+    "og:description"
+  );
+}
+
+function findParentObject(
+  records: Record<string, unknown>[],
+  names: string[]
+): Record<string, unknown> | null {
+  const wanted =
+    names.map((name) =>
+      name.toLowerCase()
+    );
+
+  for (const record of records) {
+    for (const [
+      key,
+      value,
+    ] of Object.entries(record)) {
+      if (
+        !wanted.includes(
+          key.toLowerCase()
+        )
+      ) {
+        continue;
+      }
+
+      if (
+        value &&
+        typeof value === "object" &&
+        !Array.isArray(value)
+      ) {
+        return value as Record<
+          string,
+          unknown
+        >;
+      }
+    }
+  }
+
+  return null;
 }
 
 function extractParent(
-  markdown: string,
+  html: string,
+  records: Record<string, unknown>[],
   parent: "mom" | "dad"
 ) {
-  const sectionMatch =
-    markdown.match(
-      /###\s+[^\n]*'s parents\s*([\s\S]*?)(?=\n#{2,4}\s|$)/i
-    );
+  const object =
+    parent === "mom"
+      ? findParentObject(
+          records,
+          [
+            "mother",
+            "motherAnimal",
+            "dam",
+            "mom",
+          ]
+        )
+      : findParentObject(
+          records,
+          [
+            "father",
+            "fatherAnimal",
+            "sire",
+            "dad",
+          ]
+        );
 
-  const section =
-    sectionMatch?.[1] ?? markdown;
-
-  const label =
+  const prefix =
     parent === "mom"
       ? "mom"
       : "dad";
 
-  const name = firstMatch(
-    section,
-    [
-      new RegExp(
-        `${label}:\\s*([^\\n]+)`,
-        "i"
-      ),
-    ]
-  );
-
-  const parentBlockMatch =
-    section.match(
-      new RegExp(
-        `${label}:\\s*([^\\n]+)([\\s\\S]{0,250})`,
-        "i"
-      )
+  const name =
+    valueToText(
+      object?.name ??
+        findJsonValue(
+          records,
+          [
+            `${prefix}_name`,
+            `${prefix}Name`,
+          ]
+        )
     );
 
-  const block =
-    parentBlockMatch
-      ? `${parentBlockMatch[1]}\n${parentBlockMatch[2]}`
-      : "";
+  const breed =
+    valueToText(
+      object?.breed ??
+        findJsonValue(
+          records,
+          [
+            `${prefix}_breed`,
+            `${prefix}Breed`,
+          ]
+        )
+    );
 
-  const breed = firstMatch(
-    block,
-    [
-      /Breed\s+([^\n]+)/i,
-    ]
-  );
+  const weight =
+    valueToText(
+      object?.weight ??
+        object?.weightValue ??
+        findJsonValue(
+          records,
+          [
+            `${prefix}_weight`,
+            `${prefix}Weight`,
+          ]
+        )
+    );
 
-  const weight = firstMatch(
-    block,
-    [
-      /Weight\s+([^\n]+)/i,
-    ]
-  );
+  const registration =
+    valueToText(
+      object?.registration ??
+        object?.registrationNumber ??
+        findJsonValue(
+          records,
+          [
+            `${prefix}_registration`,
+            `${prefix}Registration`,
+          ]
+        )
+    );
 
-  const registration = firstMatch(
-    block,
-    [
-      /Registration(?:\s*&\s*certifications)?\s*[:\-]?\s*([^\n]+)/i,
-    ]
-  );
+  const text =
+    stripHtml(html);
+
+  const fallbackName =
+    extractLabeledValue(
+      text,
+      parent === "mom"
+        ? [
+            "Mother",
+            "Mom",
+            "Dam",
+          ]
+        : [
+            "Father",
+            "Dad",
+            "Sire",
+          ]
+    );
 
   return {
-    name,
+    name:
+      name ??
+      fallbackName,
     breed,
     weight,
     registration,
   };
 }
 
-function parsePuppySpotPage(
-  markdown: string,
-  sourceUrl: string
-): PuppyImportDraft {
-  const text = cleanText(markdown);
+function extractLabeledValue(
+  text: string,
+  labels: string[]
+): string | null {
+  for (const label of labels) {
+    const regex =
+      new RegExp(
+        `${label}\\s*[:\\-]?\\s*([^\\n|]{2,100})`,
+        "i"
+      );
 
-  const name = firstMatch(
-    text,
-    [
-      /^#\s+([^\n]+)/m,
-      /^Title:\s*(.+)$/im,
-    ]
-  ).replace(
-    /\s*[|–-]\s*PuppySpot.*$/i,
-    ""
-  ).trim();
+    const match =
+      text.match(regex);
 
-  if (!name) {
-    throw new Error(
-      "I could not find the puppy name on the source page."
-    );
+    if (match?.[1]) {
+      const value =
+        cleanText(
+          match[1]
+        );
+
+      if (
+        value &&
+        !/^(name|breed|weight|registration)$/i.test(
+          value
+        )
+      ) {
+        return value;
+      }
+    }
   }
 
-  const priceText = firstMatch(
-    text,
+  return null;
+}
+
+function stripHtml(
+  html: string
+): string {
+  return decodeHtml(
+    html
+      .replace(
+        /<script[\s\S]*?<\/script>/gi,
+        " "
+      )
+      .replace(
+        /<style[\s\S]*?<\/style>/gi,
+        " "
+      )
+      .replace(
+        /<[^>]+>/g,
+        "\n"
+      )
+      .replace(
+        /\r/g,
+        ""
+      )
+  )
+    .replace(
+      /[ \t]+/g,
+      " "
+    )
+    .replace(
+      /\n\s*\n+/g,
+      "\n"
+    )
+    .trim();
+}
+
+/**
+ * These are the internal values used by Haven Paws.
+ *
+ * Keep these values aligned with lib/includedItems.ts.
+ */
+const INCLUDED_ITEM_PATTERNS: Array<{
+  key: string;
+  patterns: RegExp[];
+}> = [
+  {
+    key: "health_commitment",
+    patterns: [
+      /10[- ]year health commitment/i,
+    ],
+  },
+  {
+    key: "microchip",
+    patterns: [
+      /\bmicrochip\b/i,
+    ],
+  },
+  {
+    key: "fully_vetted_breeder",
+    patterns: [
+      /fully vetted breeder/i,
+    ],
+  },
+  {
+    key: "nose_to_tail_vet_check",
+    patterns: [
+      /nose[- ]to[- ]tail veterinarian health check/i,
+      /nose[- ]to[- ]tail.*health check/i,
+    ],
+  },
+  {
+    key: "vaccinations_deworming",
+    patterns: [
+      /vaccinations?\s*&?\s*deworming/i,
+      /vaccinations?.*deworming/i,
+    ],
+  },
+  {
+    key: "vet_records",
+    patterns: [
+      /\bvet records?\b/i,
+      /\bveterinary records?\b/i,
+    ],
+  },
+  {
+    key: "white_glove_delivery",
+    patterns: [
+      /white glove delivery options?/i,
+    ],
+  },
+  {
+    key: "pet_insurance_discount",
+    patterns: [
+      /10% discounted rate for pet insurance/i,
+      /discounted rate for pet insurance/i,
+    ],
+  },
+  {
+    key: "registration",
+    patterns: [
+      /\bregistration\b/i,
+    ],
+  },
+  {
+    key: "haven_paws_breeder_screening",
+    patterns: [
+      /haven paws breeder screening/i,
+    ],
+  },
+  {
+    key: "secure_traceable_payments",
+    patterns: [
+      /secure,?\s*traceable payments/i,
+      /secure.*traceable payments/i,
+    ],
+  },
+];
+
+function extractIncludedItems(
+  html: string,
+  records: Record<string, unknown>[]
+): string[] {
+  const text =
+    stripHtml(html);
+
+  const includedValues: string[] = [];
+
+  const jsonIncluded =
+    findJsonValue(
+      records,
+      [
+        "included_items",
+        "includedItems",
+        "features",
+        "benefits",
+        "whatsIncluded",
+        "whatIsIncluded",
+      ]
+    );
+
+  if (
+    Array.isArray(
+      jsonIncluded
+    )
+  ) {
+    for (
+      const item of jsonIncluded
+    ) {
+      const value =
+        valueToText(item);
+
+      if (value) {
+        includedValues.push(
+          value
+        );
+      }
+    }
+  }
+
+  const combined =
     [
-      /It is\s+\$?([\d,]+(?:\.\d{1,2})?)\s+to bring home/i,
-      /bring home fee[\s\S]{0,120}?\$?([\d,]+(?:\.\d{1,2})?)/i,
-      /bring home[\s\S]{0,120}?\$?([\d,]+(?:\.\d{1,2})?)/i,
-    ]
+      text,
+      ...includedValues,
+    ].join("\n");
+
+  const found: string[] = [];
+
+  for (
+    const item of INCLUDED_ITEM_PATTERNS
+  ) {
+    if (
+      item.patterns.some(
+        (pattern) =>
+          pattern.test(combined)
+      )
+    ) {
+      found.push(item.key);
+    }
+  }
+
+  return Array.from(
+    new Set(found)
   );
+}
 
-  const price =
-    parseMoney(priceText);
+function getWeight(
+  html: string,
+  records: Record<string, unknown>[]
+): number | null {
+  return firstNumber([
+    findJsonValue(
+      records,
+      [
+        "weight_estimate",
+        "weightEstimate",
+        "weight",
+      ]
+    ),
+  ]);
+}
 
-  const detailsMatch =
-    text.match(
-      /(?:^|\n)([A-Za-z][A-Za-z .'-]+?)\s+(Male|Female)\s+•\s+(\d+)\s+weeks?\s+old\s+•\s+Ready(?:\s+by)?\s+([A-Z][a-z]+\s+\d{1,2}|to go home)/i
-    );
+function getColor(
+  records: Record<string, unknown>[]
+): string | null {
+  return valueToText(
+    findJsonValue(
+      records,
+      [
+        "color",
+        "colour",
+      ]
+    )
+  );
+}
 
-  let breedName = "";
-  let sex = "";
-  let ageWeeks = "";
-  let readyDate = "";
+function getMarkings(
+  records: Record<string, unknown>[]
+): string | null {
+  return valueToText(
+    findJsonValue(
+      records,
+      [
+        "markings",
+        "marking",
+      ]
+    )
+  );
+}
 
-  if (detailsMatch) {
-    breedName =
-      normalizeBreedName(
-        detailsMatch[1]
-      );
+function getSize(
+  records: Record<string, unknown>[]
+): string | null {
+  return valueToText(
+    findJsonValue(
+      records,
+      [
+        "size",
+      ]
+    )
+  );
+}
 
-    sex =
-      detailsMatch[2].toLowerCase();
+function getGeneration(
+  records: Record<string, unknown>[]
+): string | null {
+  return valueToText(
+    findJsonValue(
+      records,
+      [
+        "generation",
+      ]
+    )
+  );
+}
 
-    ageWeeks =
-      detailsMatch[3];
+function getLitterId(
+  records: Record<string, unknown>[]
+): string | null {
+  return valueToText(
+    findJsonValue(
+      records,
+      [
+        "litter_id",
+        "litterId",
+      ]
+    )
+  );
+}
 
-    readyDate =
-      parseReadyDate(
-        detailsMatch[4]
-      );
-  }
-
-  if (!breedName) {
-    const breedFromHeading =
-      firstMatch(
-        text,
+function getReadyDate(
+  records: Record<string, unknown>[]
+): string | null {
+  const value =
+    valueToText(
+      findJsonValue(
+        records,
         [
-          /Quick facts about\s+([^\n]+)/i,
+          "ready_date",
+          "readyDate",
+          "availableDate",
         ]
-      );
+      )
+    );
 
-    breedName =
-      normalizeBreedName(
-        breedFromHeading
-      );
+  if (!value) return null;
+
+  const date =
+    new Date(value);
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return null;
   }
 
-  const color =
-    firstMatch(
-      text,
-      [
-        /####\s*Color\s*\n+([^\n]+)/i,
-        /###\s*Color\s*\n+([^\n]+)/i,
-      ]
+  return date
+    .toISOString()
+    .slice(0, 10);
+}
+
+function getStatus(
+  records: Record<string, unknown>[]
+): string | null {
+  const value =
+    valueToText(
+      findJsonValue(
+        records,
+        [
+          "availability",
+          "availabilityStatus",
+          "status",
+        ]
+      )
     );
 
-  const markings =
-    firstMatch(
-      text,
-      [
-        /####\s*Markings\s*\n+([^\n]+)/i,
-        /###\s*Markings\s*\n+([^\n]+)/i,
-      ]
+  if (!value) return null;
+
+  const lower =
+    value.toLowerCase();
+
+  if (
+    lower.includes("sold")
+  ) {
+    return "sold";
+  }
+
+  if (
+    lower.includes("reserved")
+  ) {
+    return "reserved";
+  }
+
+  if (
+    lower.includes("available")
+  ) {
+    return "available";
+  }
+
+  return null;
+}
+
+async function fetchSourcePage(
+  url: string
+): Promise<string> {
+  const response =
+    await fetch(url, {
+      method: "GET",
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (compatible; HavenPawsImporter/1.0)",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      },
+
+      /*
+       * Cache the source page.
+       *
+       * This makes the second operation extremely quick and
+       * prevents us from downloading the same listing twice.
+       */
+      next: {
+        revalidate: 300,
+      },
+    });
+
+  if (!response.ok) {
+    throw new Error(
+      `The source website returned HTTP ${response.status}.`
+    );
+  }
+
+  const html =
+    await response.text();
+
+  if (!html.trim()) {
+    throw new Error(
+      "The source website returned an empty page."
+    );
+  }
+
+  return html;
+}
+
+async function scrapePuppy(
+  sourceUrl: string
+): Promise<ImportedPuppyDetails> {
+  const html =
+    await fetchSourcePage(
+      sourceUrl
     );
 
-  const size =
-    firstMatch(
-      text,
-      [
-        /####\s*Size\s*\n+([^\n]+)/i,
-        /###\s*Size\s*\n+([^\n]+)/i,
-      ]
-    );
-
-  const generation =
-    firstMatch(
-      text,
-      [
-        /####\s*Generation\s*\n+([^\n]+)/i,
-        /###\s*Generation\s*\n+([^\n]+)/i,
-      ]
-    );
-
-  const description =
-    extractDescription(
-      text,
-      name
+  const records =
+    flattenJsonLd(
+      extractJsonLdObjects(html)
     );
 
   const mom =
     extractParent(
-      text,
+      html,
+      records,
       "mom"
     );
 
   const dad =
     extractParent(
-      text,
+      html,
+      records,
       "dad"
     );
-
-  const breederName =
-    firstMatch(
-      text,
-      [
-        /About [^\n]*breeder[\s\S]{0,250}?Raised by\s+([^\n]+)/i,
-        /Raised by\s+([^\n]+)/i,
-      ]
-    );
-
-  const vetChecked =
-    /nose-to-tail veterinarian health check/i.test(
-      text
-    );
-
-  const vaccinated =
-    /vaccinations?\s*(?:&|and)\s*deworming/i.test(
-      text
-    );
-
-  const status =
-    /•\s*Available/i.test(text)
-      ? "available"
-      : "available";
 
   return {
     sourceUrl,
 
-    name,
+    name:
+      getPuppyName(
+        html,
+        records,
+        sourceUrl
+      ),
 
-    breedName,
+    breedName:
+      getBreedName(
+        records
+      ),
 
-    sex,
+    sex:
+      getSex(
+        html,
+        records
+      ),
 
-    price,
+    price:
+      getPrice(
+        html,
+        records
+      ),
 
-    depositAmount: "",
+    depositAmount:
+      firstNumber([
+        findJsonValue(
+          records,
+          [
+            "deposit_amount",
+            "depositAmount",
+            "deposit",
+          ]
+        ),
+      ]),
 
-    description,
+    description:
+      getDescription(
+        html,
+        records
+      ),
 
-    status,
+    status:
+      getStatus(
+        records
+      ),
 
-    color,
+    color:
+      getColor(
+        records
+      ),
 
-    weightEstimate: "",
+    weightEstimate:
+      getWeight(
+        html,
+        records
+      ),
 
-    markings,
+    markings:
+      getMarkings(
+        records
+      ),
 
-    size,
+    size:
+      getSize(
+        records
+      ),
 
-    generation,
+    generation:
+      getGeneration(
+        records
+      ),
 
-    ageWeeks,
+    ageWeeks:
+      getAgeWeeks(
+        html,
+        records
+      ),
 
-    litterId: "",
+    litterId:
+      getLitterId(
+        records
+      ),
 
-    readyDate,
+    readyDate:
+      getReadyDate(
+        records
+      ),
 
-    breederName,
+    momName:
+      mom.name,
 
-    momName: mom.name,
-    momBreed: mom.breed,
-    momWeight: mom.weight,
+    momBreed:
+      mom.breed,
+
+    momWeight:
+      mom.weight,
+
     momRegistration:
       mom.registration,
 
-    dadName: dad.name,
-    dadBreed: dad.breed,
-    dadWeight: dad.weight,
+    dadName:
+      dad.name,
+
+    dadBreed:
+      dad.breed,
+
+    dadWeight:
+      dad.weight,
+
     dadRegistration:
       dad.registration,
 
-    vetChecked,
-
-    vaccinated,
-
-    isPublished: false,
+    includedItems:
+      extractIncludedItems(
+        html,
+        records
+      ),
   };
-}
-
-async function fetchWithJina(
-  sourceUrl: string
-): Promise<string> {
-  const jinaUrl =
-    `https://r.jina.ai/${sourceUrl}`;
-
-  const headers: HeadersInit = {
-    Accept: "text/markdown",
-    "X-Engine": "browser",
-    "X-Timeout": "30",
-  };
-
-  const jinaKey =
-    process.env.JINA_API_KEY;
-
-  if (jinaKey) {
-    headers.Authorization =
-      `Bearer ${jinaKey}`;
-  }
-
-  const response = await fetch(
-    jinaUrl,
-    {
-      method: "GET",
-      headers,
-      cache: "no-store",
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error(
-      `The page reader returned HTTP ${response.status}.`
-    );
-  }
-
-  const content =
-    await response.text();
-
-  if (!content.trim()) {
-    throw new Error(
-      "The page reader returned an empty page."
-    );
-  }
-
-  return content;
-}
-
-function validateSourceUrl(
-  sourceUrl: string
-): URL {
-  try {
-    const parsed =
-      new URL(sourceUrl);
-
-    if (
-      parsed.protocol !== "http:" &&
-      parsed.protocol !== "https:"
-    ) {
-      throw new Error();
-    }
-
-    return parsed;
-  } catch {
-    throw new Error(
-      "Please enter a valid HTTP or HTTPS puppy listing URL."
-    );
-  }
 }
 
 /**
- * Called automatically when the admin pastes a URL.
- *
- * IMPORTANT:
- * This does NOT create the puppy.
- * It only retrieves the listing and returns
- * the information needed to fill the form.
+ * Called automatically when the URL is pasted.
  */
-export async function lookupPuppyFromUrl(
+export async function previewPuppyFromUrl(
   sourceUrl: string
-): Promise<PuppyImportDraft> {
-  const parsed =
-    validateSourceUrl(
-      sourceUrl.trim()
-    );
+): Promise<ImportedPuppyDetails> {
+  const trimmed =
+    sourceUrl.trim();
 
-  const hostname =
-    parsed.hostname
-      .toLowerCase()
-      .replace(/^www\./, "");
-
-  if (
-    hostname !== "puppyspot.com" &&
-    !hostname.endsWith(".puppyspot.com")
-  ) {
+  if (!trimmed) {
     throw new Error(
-      "Automatic import is currently configured for PuppySpot URLs."
+      "Please enter a puppy listing URL."
     );
   }
 
-  const markdown =
-    await fetchWithJina(
-      parsed.toString()
-    );
+  let parsedUrl: URL;
 
-  return parsePuppySpotPage(
-    markdown,
-    parsed.toString()
+  try {
+    parsedUrl =
+      new URL(trimmed);
+  } catch {
+    throw new Error(
+      "Please enter a valid puppy listing URL."
+    );
+  }
+
+  if (
+    parsedUrl.protocol !== "http:" &&
+    parsedUrl.protocol !== "https:"
+  ) {
+    throw new Error(
+      "Only HTTP and HTTPS URLs are supported."
+    );
+  }
+
+  return scrapePuppy(
+    parsedUrl.toString()
   );
 }
 
@@ -602,11 +1334,19 @@ async function validateBreederForBreed(
     error,
   } = await supabase
     .from("breeders")
-    .select("id, breed_id")
-    .eq("id", breederId)
+    .select(
+      "id, breed_id"
+    )
+    .eq(
+      "id",
+      breederId
+    )
     .single();
 
-  if (error || !breeder) {
+  if (
+    error ||
+    !breeder
+  ) {
     throw new Error(
       "The selected breeder was not found."
     );
@@ -620,6 +1360,46 @@ async function validateBreederForBreed(
       "The selected breeder does not belong to the selected breed."
     );
   }
+}
+
+function parseIncludedItems(
+  formData: FormData
+): string[] {
+  const raw =
+    formData.get(
+      "included_items"
+    );
+
+  if (
+    typeof raw !== "string" ||
+    !raw.trim()
+  ) {
+    return [];
+  }
+
+  try {
+    const parsed =
+      JSON.parse(raw);
+
+    if (
+      Array.isArray(
+        parsed
+      )
+    ) {
+      return Array.from(
+        new Set(
+          parsed.filter(
+            (item): item is string =>
+              typeof item === "string"
+          )
+        )
+      );
+    }
+  } catch {
+    // Ignore invalid JSON.
+  }
+
+  return [];
 }
 
 export async function createPuppyFromImport(
@@ -658,9 +1438,23 @@ export async function createPuppyFromImport(
     );
   }
 
-  validateSourceUrl(
-    sourceUrl
-  );
+  try {
+    const parsed =
+      new URL(sourceUrl);
+
+    if (
+      parsed.protocol !==
+        "http:" &&
+      parsed.protocol !==
+        "https:"
+    ) {
+      throw new Error();
+    }
+  } catch {
+    throw new Error(
+      "Please enter a valid HTTP or HTTPS source URL."
+    );
+  }
 
   if (!name) {
     throw new Error(
@@ -703,10 +1497,17 @@ export async function createPuppyFromImport(
       ? `${description}\n\nSource listing:\n${sourceUrl}`
       : `Source listing:\n${sourceUrl}`;
 
+  const ageRaw =
+    numberValue(
+      formData,
+      "age_weeks"
+    );
+
   const puppyData = {
     name,
 
-    breed_id: breedId,
+    breed_id:
+      breedId,
 
     breeder_id:
       breederId,
@@ -765,17 +1566,11 @@ export async function createPuppyFromImport(
       ),
 
     age_weeks:
-      numberValue(
-        formData,
-        "age_weeks"
-      ) !== null
-        ? Math.round(
-            numberValue(
-              formData,
-              "age_weeks"
-            ) as number
-          )
-        : null,
+      ageRaw === null
+        ? null
+        : Math.round(
+            ageRaw
+          ),
 
     litter_id:
       textValue(
@@ -851,6 +1646,11 @@ export async function createPuppyFromImport(
         formData,
         "dad_registration"
       ),
+
+    included_items:
+      parseIncludedItems(
+        formData
+      ),
   };
 
   const {
@@ -861,7 +1661,9 @@ export async function createPuppyFromImport(
     .insert(
       puppyData
     )
-    .select("id, name")
+    .select(
+      "id, name"
+    )
     .single();
 
   if (

@@ -2,14 +2,12 @@
 
 import {
   useEffect,
-  useRef,
   useState,
 } from "react";
 
 import {
   createPuppyFromImport,
-  lookupPuppyFromUrl,
-  type PuppyImportDraft,
+  previewPuppyFromUrl,
 } from "../puppies/import-actions";
 
 type Breed = {
@@ -28,18 +26,44 @@ type PuppyUrlImporterProps = {
   breeders?: Breeder[];
 };
 
-type FormState = Omit<
-  PuppyImportDraft,
-  "breedName" | "breederName"
-> & {
-  breedId: string;
+type FormState = {
+  sourceUrl: string;
+  name: string;
+  sex: string;
+  price: string;
+  depositAmount: string;
+  description: string;
+  status: string;
+  color: string;
+  weightEstimate: string;
+  markings: string;
+  size: string;
+  generation: string;
+  ageWeeks: string;
+  litterId: string;
+  readyDate: string;
   breederId: string;
+
+  momName: string;
+  momBreed: string;
+  momWeight: string;
+  momRegistration: string;
+
+  dadName: string;
+  dadBreed: string;
+  dadWeight: string;
+  dadRegistration: string;
+
+  includedItems: string[];
+
+  isPublished: boolean;
+  vetChecked: boolean;
+  vaccinated: boolean;
 };
 
-const emptyForm: FormState = {
+const EMPTY_FORM: FormState = {
   sourceUrl: "",
   name: "",
-  breedId: "",
   sex: "",
   price: "",
   depositAmount: "",
@@ -53,7 +77,6 @@ const emptyForm: FormState = {
   ageWeeks: "",
   litterId: "",
   readyDate: "",
-
   breederId: "",
 
   momName: "",
@@ -66,23 +89,87 @@ const emptyForm: FormState = {
   dadWeight: "",
   dadRegistration: "",
 
+  includedItems: [],
+
+  isPublished: false,
   vetChecked: false,
   vaccinated: false,
-  isPublished: false,
 };
+
+const INCLUDED_OPTIONS = [
+  {
+    key: "health_commitment",
+    label: "10-Year Health Commitment",
+  },
+  {
+    key: "microchip",
+    label: "Microchip",
+  },
+  {
+    key: "fully_vetted_breeder",
+    label: "Fully Vetted Breeder",
+  },
+  {
+    key: "nose_to_tail_vet_check",
+    label:
+      "Nose-to-Tail Veterinarian Health Check",
+  },
+  {
+    key: "vaccinations_deworming",
+    label:
+      "Vaccinations & Deworming",
+  },
+  {
+    key: "vet_records",
+    label: "Vet Records",
+  },
+  {
+    key: "white_glove_delivery",
+    label:
+      "White Glove Delivery Options",
+  },
+  {
+    key: "pet_insurance_discount",
+    label:
+      "10% Discounted Rate for Pet Insurance",
+  },
+  {
+    key: "registration",
+    label: "Registration",
+  },
+  {
+    key:
+      "haven_paws_breeder_screening",
+    label:
+      "Haven Paws Breeder Screening",
+  },
+  {
+    key:
+      "secure_traceable_payments",
+    label:
+      "Secure, Traceable Payments",
+  },
+];
 
 export default function PuppyUrlImporter({
   breeds = [],
   breeders = [],
 }: PuppyUrlImporterProps) {
-  const [form, setForm] =
-    useState<FormState>(
-      emptyForm
-    );
+  const [
+    form,
+    setForm,
+  ] = useState<FormState>(
+    EMPTY_FORM
+  );
 
   const [
-    isLookingUp,
-    setIsLookingUp,
+    breedId,
+    setBreedId,
+  ] = useState("");
+
+  const [
+    isFetching,
+    setIsFetching,
   ] = useState(false);
 
   const [
@@ -100,239 +187,58 @@ export default function PuppyUrlImporter({
     setError,
   ] = useState("");
 
-  const lookupTimer =
-    useRef<ReturnType<
-      typeof setTimeout
-    > | null>(null);
+  const [
+    imported,
+    setImported,
+  ] = useState(false);
 
-  const lastLookupUrl =
-    useRef("");
-
-  function updateField<
-    K extends keyof FormState
-  >(
-    field: K,
-    value: FormState[K]
+  function updateField(
+    field: keyof FormState,
+    value:
+      | string
+      | boolean
+      | string[]
   ) {
-    setForm((current) => ({
-      ...current,
-      [field]: value,
-    }));
-  }
-
-  function findBreedId(
-    breedName: string
-  ) {
-    const wanted =
-      breedName
-        .toLowerCase()
-        .replace(
-          /[^a-z0-9]+/g,
-          ""
-        );
-
-    const match =
-      breeds.find(
-        (breed) => {
-          const existing =
-            breed.name
-              .toLowerCase()
-              .replace(
-                /[^a-z0-9]+/g,
-                ""
-              );
-
-          return (
-            existing === wanted ||
-            existing.includes(
-              wanted
-            ) ||
-            wanted.includes(
-              existing
-            )
-          );
-        }
-      );
-
-    return match?.id ?? "";
-  }
-
-  function findBreederId(
-    breederName: string,
-    breedId: string
-  ) {
-    if (!breederName) {
-      return "";
-    }
-
-    const wanted =
-      breederName
-        .toLowerCase()
-        .trim();
-
-    const match =
-      breeders.find(
-        (breeder) => {
-          const sameName =
-            breeder.name
-              .toLowerCase()
-              .trim() ===
-            wanted;
-
-          const sameBreed =
-            !breedId ||
-            breeder.breed_id ===
-              breedId;
-
-          return (
-            sameName &&
-            sameBreed
-          );
-        }
-      );
-
-    return match?.id ?? "";
-  }
-
-  function applyDraft(
-    draft: PuppyImportDraft
-  ) {
-    const matchedBreedId =
-      findBreedId(
-        draft.breedName
-      );
-
-    const matchedBreederId =
-      findBreederId(
-        draft.breederName,
-        matchedBreedId
-      );
-
-    setForm({
-      sourceUrl:
-        draft.sourceUrl,
-
-      name:
-        draft.name,
-
-      breedId:
-        matchedBreedId,
-
-      sex:
-        draft.sex,
-
-      price:
-        draft.price,
-
-      depositAmount:
-        draft.depositAmount,
-
-      description:
-        draft.description,
-
-      status:
-        draft.status,
-
-      color:
-        draft.color,
-
-      weightEstimate:
-        draft.weightEstimate,
-
-      markings:
-        draft.markings,
-
-      size:
-        draft.size,
-
-      generation:
-        draft.generation,
-
-      ageWeeks:
-        draft.ageWeeks,
-
-      litterId:
-        draft.litterId,
-
-      readyDate:
-        draft.readyDate,
-
-      breederId:
-        matchedBreederId,
-
-      momName:
-        draft.momName,
-
-      momBreed:
-        draft.momBreed,
-
-      momWeight:
-        draft.momWeight,
-
-      momRegistration:
-        draft.momRegistration,
-
-      dadName:
-        draft.dadName,
-
-      dadBreed:
-        draft.dadBreed,
-
-      dadWeight:
-        draft.dadWeight,
-
-      dadRegistration:
-        draft.dadRegistration,
-
-      vetChecked:
-        draft.vetChecked,
-
-      vaccinated:
-        draft.vaccinated,
-
-      isPublished:
-        false,
-    });
-
-    if (
-      draft.breedName &&
-      !matchedBreedId
-    ) {
-      setError(
-        `The puppy was imported, but "${draft.breedName}" does not yet exist in your Haven Paws breed list.`
-      );
-    } else if (
-      draft.breederName &&
-      !matchedBreederId
-    ) {
-      setError(
-        `Puppy details were imported. Breeder "${draft.breederName}" was found on the source page but was not matched to a Haven Paws breeder.`
-      );
-    } else {
-      setError("");
-    }
-
-    setMessage(
-      `✓ Puppy information found. Review the fields below and click "Save Puppy".`
+    setForm(
+      (current) => ({
+        ...current,
+        [field]: value,
+      })
     );
   }
 
-  async function lookupUrl(
-    url: string
-  ) {
-    const trimmed =
-      url.trim();
+  function getBreedersForBreed() {
+    if (!breedId) {
+      return breeders;
+    }
 
-    if (!trimmed) {
+    return breeders.filter(
+      (breeder) =>
+        breeder.breed_id ===
+        breedId
+    );
+  }
+
+  /*
+   * Automatically import when a URL is pasted.
+   *
+   * The small delay prevents a request for every keystroke.
+   */
+  useEffect(() => {
+    const source =
+      form.sourceUrl.trim();
+
+    if (!source) {
+      setImported(false);
       return;
     }
 
     let parsed: URL;
 
     try {
-      parsed =
-        new URL(trimmed);
+      parsed = new URL(source);
     } catch {
+      setImported(false);
       return;
     }
 
@@ -345,113 +251,241 @@ export default function PuppyUrlImporter({
       return;
     }
 
-    if (
-      lastLookupUrl.current ===
-      trimmed
-    ) {
-      return;
-    }
+    let cancelled = false;
 
-    lastLookupUrl.current =
-      trimmed;
+    const timer =
+      window.setTimeout(
+        async () => {
+          setIsFetching(true);
+          setError("");
+          setMessage("");
 
-    setIsLookingUp(true);
-    setMessage(
-      "Reading puppy listing..."
-    );
-    setError("");
+          try {
+            const details =
+              await previewPuppyFromUrl(
+                source
+              );
 
-    try {
-      const draft =
-        await lookupPuppyFromUrl(
-          trimmed
-        );
+            if (cancelled) {
+              return;
+            }
 
-      applyDraft(draft);
-    } catch (err) {
-      lastLookupUrl.current =
-        "";
+            setForm(
+              (current) => ({
+                ...current,
 
-      setMessage("");
+                sourceUrl:
+                  source,
 
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to read the puppy listing."
+                name:
+                  details.name ||
+                  current.name,
+
+                sex:
+                  details.sex ??
+                  current.sex,
+
+                price:
+                  details.price !==
+                  null
+                    ? String(
+                        details.price
+                      )
+                    : current.price,
+
+                depositAmount:
+                  details.depositAmount !==
+                  null
+                    ? String(
+                        details.depositAmount
+                      )
+                    : current.depositAmount,
+
+                description:
+                  details.description ??
+                  current.description,
+
+                status:
+                  details.status ??
+                  current.status,
+
+                color:
+                  details.color ??
+                  current.color,
+
+                weightEstimate:
+                  details.weightEstimate !==
+                  null
+                    ? String(
+                        details.weightEstimate
+                      )
+                    : current.weightEstimate,
+
+                markings:
+                  details.markings ??
+                  current.markings,
+
+                size:
+                  details.size ??
+                  current.size,
+
+                generation:
+                  details.generation ??
+                  current.generation,
+
+                ageWeeks:
+                  details.ageWeeks !==
+                  null
+                    ? String(
+                        details.ageWeeks
+                      )
+                    : current.ageWeeks,
+
+                litterId:
+                  details.litterId ??
+                  current.litterId,
+
+                readyDate:
+                  details.readyDate ??
+                  current.readyDate,
+
+                momName:
+                  details.momName ??
+                  current.momName,
+
+                momBreed:
+                  details.momBreed ??
+                  current.momBreed,
+
+                momWeight:
+                  details.momWeight ??
+                  current.momWeight,
+
+                momRegistration:
+                  details.momRegistration ??
+                  current.momRegistration,
+
+                dadName:
+                  details.dadName ??
+                  current.dadName,
+
+                dadBreed:
+                  details.dadBreed ??
+                  current.dadBreed,
+
+                dadWeight:
+                  details.dadWeight ??
+                  current.dadWeight,
+
+                dadRegistration:
+                  details.dadRegistration ??
+                  current.dadRegistration,
+
+                includedItems:
+                  details.includedItems,
+
+              })
+            );
+
+            const matchingBreed =
+              breeds.find(
+                (breed) =>
+                  normalize(
+                    breed.name
+                  ) ===
+                    normalize(
+                      details.breedName ??
+                        ""
+                    ) ||
+                  normalize(
+                    breed.name
+                  ).includes(
+                    normalize(
+                      details.breedName ??
+                        ""
+                    )
+                  ) ||
+                  normalize(
+                    details.breedName ??
+                      ""
+                  ).includes(
+                    normalize(
+                      breed.name
+                    )
+                  )
+              );
+
+            if (
+              matchingBreed
+            ) {
+              setBreedId(
+                matchingBreed.id
+              );
+            }
+
+            setImported(true);
+
+            setMessage(
+              "Puppy details imported automatically. Review them below, then save."
+            );
+          } catch (err) {
+            if (cancelled) {
+              return;
+            }
+
+            setImported(false);
+
+            setError(
+              err instanceof Error
+                ? err.message
+                : "Unable to import this puppy listing."
+            );
+          } finally {
+            if (!cancelled) {
+              setIsFetching(false);
+            }
+          }
+        },
+        450
       );
-    } finally {
-      setIsLookingUp(false);
-    }
-  }
 
-  function handleUrlChange(
-    value: string
-  ) {
-    updateField(
-      "sourceUrl",
-      value
-    );
-
-    setMessage("");
-    setError("");
-
-    lastLookupUrl.current =
-      "";
-
-    if (lookupTimer.current) {
-      clearTimeout(
-        lookupTimer.current
-      );
-    }
-
-    const trimmed =
-      value.trim();
-
-    if (!trimmed) {
-      return;
-    }
-
-    try {
-      const parsed =
-        new URL(trimmed);
-
-      if (
-        parsed.protocol !==
-          "http:" &&
-        parsed.protocol !==
-          "https:"
-      ) {
-        return;
-      }
-    } catch {
-      return;
-    }
-
-    /*
-     * This is what makes the URL the trigger.
-     *
-     * The user does not need to click
-     * "Import Puppy".
-     */
-    lookupTimer.current =
-      setTimeout(() => {
-        void lookupUrl(
-          trimmed
-        );
-      }, 700);
-  }
-
-  useEffect(() => {
     return () => {
-      if (
-        lookupTimer.current
-      ) {
-        clearTimeout(
-          lookupTimer.current
-        );
-      }
+      cancelled = true;
+      window.clearTimeout(
+        timer
+      );
     };
-  }, []);
+  }, [
+    form.sourceUrl,
+    breeds,
+  ]);
+
+  function toggleIncludedItem(
+    key: string
+  ) {
+    setForm(
+      (current) => {
+        const exists =
+          current.includedItems.includes(
+            key
+          );
+
+        return {
+          ...current,
+          includedItems:
+            exists
+              ? current.includedItems.filter(
+                  (item) =>
+                    item !== key
+                )
+              : [
+                  ...current.includedItems,
+                  key,
+                ],
+        };
+      }
+    );
+  }
 
   async function handleSubmit(
     event: React.FormEvent<HTMLFormElement>
@@ -470,23 +504,25 @@ export default function PuppyUrlImporter({
       return;
     }
 
-    if (!form.name.trim()) {
+    if (
+      !form.name.trim()
+    ) {
       setError(
-        "The puppy information has not been imported yet."
+        "The puppy name could not be imported. Please enter it."
       );
       return;
     }
 
-    if (!form.breedId) {
+    if (!breedId) {
       setError(
-        "Please select a matching Haven Paws breed."
+        "The breed could not be imported. Please select it."
       );
       return;
     }
 
     if (!form.price.trim()) {
       setError(
-        "The puppy price was not found. Please enter it."
+        "The puppy price could not be imported. Please enter it."
       );
       return;
     }
@@ -509,7 +545,7 @@ export default function PuppyUrlImporter({
 
       formData.set(
         "breed_id",
-        form.breedId
+        breedId
       );
 
       formData.set(
@@ -622,6 +658,13 @@ export default function PuppyUrlImporter({
         form.dadRegistration
       );
 
+      formData.set(
+        "included_items",
+        JSON.stringify(
+          form.includedItems
+        )
+      );
+
       if (
         form.isPublished
       ) {
@@ -655,20 +698,20 @@ export default function PuppyUrlImporter({
         );
 
       setMessage(
-        `✓ Puppy "${result.name}" was saved successfully.`
+        `Puppy "${result.name}" created successfully.`
       );
 
       setForm(
-        emptyForm
+        EMPTY_FORM
       );
 
-      lastLookupUrl.current =
-        "";
+      setBreedId("");
+      setImported(false);
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "Unable to save the puppy."
+          : "Unable to create the puppy."
       );
     } finally {
       setIsCreating(false);
@@ -676,13 +719,11 @@ export default function PuppyUrlImporter({
   }
 
   const availableBreeders =
-    form.breedId
-      ? breeders.filter(
-          (breeder) =>
-            breeder.breed_id ===
-            form.breedId
-        )
-      : breeders;
+    getBreedersForBreed();
+
+  const busy =
+    isFetching ||
+    isCreating;
 
   return (
     <section className="mb-8 rounded-xl border border-sage/20 bg-white p-5">
@@ -695,11 +736,11 @@ export default function PuppyUrlImporter({
       </h2>
 
       <p className="text-sm text-ink/70 mt-2 mb-6">
-        Paste a PuppySpot listing URL.
-        Haven Paws will automatically
-        read the listing and fill the
-        puppy details for you. Review
-        everything before saving.
+        Paste the original puppy listing URL.
+        Haven Paws will automatically import the
+        available puppy details. Review them, make
+        any corrections, then save.
+        Images and videos can be added later.
       </p>
 
       <form
@@ -716,38 +757,42 @@ export default function PuppyUrlImporter({
             Original Puppy Listing URL *
           </label>
 
-          <input
-            id="puppy-source-url"
-            type="url"
-            value={
-              form.sourceUrl
-            }
-            onChange={(event) =>
-              handleUrlChange(
-                event.target.value
-              )
-            }
-            placeholder="https://www.puppyspot.com/puppies-for-sale-by-breeders/breed/goldendoodle/puppy/826779"
-            disabled={
-              isCreating ||
-              isLookingUp
-            }
-            className="w-full border border-sage/30 rounded-md px-3 py-3 focus:outline-none focus:border-gold"
-          />
+          <div className="relative">
+            <input
+              id="puppy-source-url"
+              type="url"
+              value={
+                form.sourceUrl
+              }
+              onChange={(
+                event
+              ) =>
+                updateField(
+                  "sourceUrl",
+                  event.target.value
+                )
+              }
+              placeholder="https://www.puppyspot.com/..."
+              disabled={busy}
+              className="input-field pr-12"
+            />
+
+            {isFetching && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <span className="inline-block h-5 w-5 rounded-full border-2 border-sage/30 border-t-forest animate-spin" />
+              </div>
+            )}
+          </div>
 
           <p className="text-xs text-sage mt-1">
-            Paste the URL and wait a
-            moment. The details will
-            populate automatically.
+            Paste the URL and wait a moment.
+            The puppy details will fill in automatically.
           </p>
 
-          {isLookingUp && (
-            <div className="mt-3 rounded-md bg-gold/10 border border-gold/30 px-3 py-3">
-              <p className="text-sm text-forest">
-                Reading the puppy listing
-                and filling the form...
-              </p>
-            </div>
+          {imported && !isFetching && (
+            <p className="text-xs text-forest mt-2 font-medium">
+              ✓ Details imported. Review below before saving.
+            </p>
           )}
         </div>
 
@@ -759,39 +804,30 @@ export default function PuppyUrlImporter({
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm text-ink/80 mb-1">
-                Name *
-              </label>
-
-              <input
-                value={form.name}
-                onChange={(event) =>
-                  updateField(
-                    "name",
-                    event.target.value
-                  )
-                }
-                placeholder="e.g. Daisy"
-                disabled={
-                  isCreating
-                }
-                className="input-field"
-              />
-            </div>
+            <Field
+              label="Name *"
+              value={form.name}
+              onChange={(value) =>
+                updateField(
+                  "name",
+                  value
+                )
+              }
+              placeholder="e.g. Daisy"
+              disabled={busy}
+            />
 
             <div>
-              <label className="block text-sm text-ink/80 mb-1">
+              <label className="field-label">
                 Breed *
               </label>
 
               <select
-                value={
-                  form.breedId
-                }
-                onChange={(event) => {
-                  updateField(
-                    "breedId",
+                value={breedId}
+                onChange={(
+                  event
+                ) => {
+                  setBreedId(
                     event.target.value
                   );
 
@@ -800,9 +836,7 @@ export default function PuppyUrlImporter({
                     ""
                   );
                 }}
-                disabled={
-                  isCreating
-                }
+                disabled={busy}
                 className="input-field"
               >
                 <option value="">
@@ -819,7 +853,9 @@ export default function PuppyUrlImporter({
                         breed.id
                       }
                     >
-                      {breed.name}
+                      {
+                        breed.name
+                      }
                     </option>
                   )
                 )}
@@ -827,23 +863,21 @@ export default function PuppyUrlImporter({
             </div>
 
             <div>
-              <label className="block text-sm text-ink/80 mb-1">
+              <label className="field-label">
                 Sex
               </label>
 
               <select
-                value={
-                  form.sex
-                }
-                onChange={(event) =>
+                value={form.sex}
+                onChange={(
+                  event
+                ) =>
                   updateField(
                     "sex",
                     event.target.value
                   )
                 }
-                disabled={
-                  isCreating
-                }
+                disabled={busy}
                 className="input-field"
               >
                 <option value="">
@@ -860,60 +894,38 @@ export default function PuppyUrlImporter({
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm text-ink/80 mb-1">
-                Price *
-              </label>
+            <Field
+              label="Price *"
+              type="number"
+              value={form.price}
+              onChange={(value) =>
+                updateField(
+                  "price",
+                  value
+                )
+              }
+              placeholder="2500"
+              disabled={busy}
+            />
 
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={
-                  form.price
-                }
-                onChange={(event) =>
-                  updateField(
-                    "price",
-                    event.target.value
-                  )
-                }
-                placeholder="2500"
-                disabled={
-                  isCreating
-                }
-                className="input-field"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm text-ink/80 mb-1">
-                Deposit Amount
-              </label>
-
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={
-                  form.depositAmount
-                }
-                onChange={(event) =>
-                  updateField(
-                    "depositAmount",
-                    event.target.value
-                  )
-                }
-                placeholder="500"
-                disabled={
-                  isCreating
-                }
-                className="input-field"
-              />
-            </div>
+            <Field
+              label="Deposit Amount"
+              type="number"
+              value={
+                form.depositAmount
+              }
+              onChange={(value) =>
+                updateField(
+                  "depositAmount",
+                  value
+                )
+              }
+              placeholder="500"
+              disabled={busy}
+            />
 
             <div>
-              <label className="block text-sm text-ink/80 mb-1">
+              <label className="field-label">
                 Status
               </label>
 
@@ -921,15 +933,15 @@ export default function PuppyUrlImporter({
                 value={
                   form.status
                 }
-                onChange={(event) =>
+                onChange={(
+                  event
+                ) =>
                   updateField(
                     "status",
                     event.target.value
                   )
                 }
-                disabled={
-                  isCreating
-                }
+                disabled={busy}
                 className="input-field"
               >
                 <option value="available">
@@ -946,173 +958,111 @@ export default function PuppyUrlImporter({
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm text-ink/80 mb-1">
-                Color
-              </label>
+            <Field
+              label="Color"
+              value={form.color}
+              onChange={(value) =>
+                updateField(
+                  "color",
+                  value
+                )
+              }
+              placeholder="Golden"
+              disabled={busy}
+            />
 
-              <input
-                value={
-                  form.color
-                }
-                onChange={(event) =>
-                  updateField(
-                    "color",
-                    event.target.value
-                  )
-                }
-                placeholder="Golden"
-                disabled={
-                  isCreating
-                }
-                className="input-field"
-              />
-            </div>
+            <Field
+              label="Weight Estimate"
+              type="number"
+              value={
+                form.weightEstimate
+              }
+              onChange={(value) =>
+                updateField(
+                  "weightEstimate",
+                  value
+                )
+              }
+              placeholder="25"
+              disabled={busy}
+            />
 
-            <div>
-              <label className="block text-sm text-ink/80 mb-1">
-                Weight Estimate
-              </label>
+            <Field
+              label="Markings"
+              value={
+                form.markings
+              }
+              onChange={(value) =>
+                updateField(
+                  "markings",
+                  value
+                )
+              }
+              placeholder="White chest"
+              disabled={busy}
+            />
 
-              <input
-                type="number"
-                step="0.1"
-                value={
-                  form.weightEstimate
-                }
-                onChange={(event) =>
-                  updateField(
-                    "weightEstimate",
-                    event.target.value
-                  )
-                }
-                placeholder="25"
-                disabled={
-                  isCreating
-                }
-                className="input-field"
-              />
-            </div>
+            <Field
+              label="Size"
+              value={form.size}
+              onChange={(value) =>
+                updateField(
+                  "size",
+                  value
+                )
+              }
+              placeholder="Medium"
+              disabled={busy}
+            />
 
-            <div>
-              <label className="block text-sm text-ink/80 mb-1">
-                Markings
-              </label>
+            <Field
+              label="Generation"
+              value={
+                form.generation
+              }
+              onChange={(value) =>
+                updateField(
+                  "generation",
+                  value
+                )
+              }
+              placeholder="F1B"
+              disabled={busy}
+            />
 
-              <input
-                value={
-                  form.markings
-                }
-                onChange={(event) =>
-                  updateField(
-                    "markings",
-                    event.target.value
-                  )
-                }
-                placeholder="White chest"
-                disabled={
-                  isCreating
-                }
-                className="input-field"
-              />
-            </div>
+            <Field
+              label="Age (weeks)"
+              type="number"
+              value={
+                form.ageWeeks
+              }
+              onChange={(value) =>
+                updateField(
+                  "ageWeeks",
+                  value
+                )
+              }
+              placeholder="10"
+              disabled={busy}
+            />
 
-            <div>
-              <label className="block text-sm text-ink/80 mb-1">
-                Size
-              </label>
-
-              <input
-                value={
-                  form.size
-                }
-                onChange={(event) =>
-                  updateField(
-                    "size",
-                    event.target.value
-                  )
-                }
-                placeholder="Medium"
-                disabled={
-                  isCreating
-                }
-                className="input-field"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm text-ink/80 mb-1">
-                Generation
-              </label>
-
-              <input
-                value={
-                  form.generation
-                }
-                onChange={(event) =>
-                  updateField(
-                    "generation",
-                    event.target.value
-                  )
-                }
-                placeholder="F1B"
-                disabled={
-                  isCreating
-                }
-                className="input-field"
-              />
-            </div>
+            <Field
+              label="Litter ID"
+              value={
+                form.litterId
+              }
+              onChange={(value) =>
+                updateField(
+                  "litterId",
+                  value
+                )
+              }
+              placeholder="Optional"
+              disabled={busy}
+            />
 
             <div>
-              <label className="block text-sm text-ink/80 mb-1">
-                Age (weeks)
-              </label>
-
-              <input
-                type="number"
-                min="0"
-                value={
-                  form.ageWeeks
-                }
-                onChange={(event) =>
-                  updateField(
-                    "ageWeeks",
-                    event.target.value
-                  )
-                }
-                placeholder="10"
-                disabled={
-                  isCreating
-                }
-                className="input-field"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm text-ink/80 mb-1">
-                Litter ID
-              </label>
-
-              <input
-                value={
-                  form.litterId
-                }
-                onChange={(event) =>
-                  updateField(
-                    "litterId",
-                    event.target.value
-                  )
-                }
-                placeholder="Optional"
-                disabled={
-                  isCreating
-                }
-                className="input-field"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm text-ink/80 mb-1">
+              <label className="field-label">
                 Ready Date
               </label>
 
@@ -1121,21 +1071,21 @@ export default function PuppyUrlImporter({
                 value={
                   form.readyDate
                 }
-                onChange={(event) =>
+                onChange={(
+                  event
+                ) =>
                   updateField(
                     "readyDate",
                     event.target.value
                   )
                 }
-                disabled={
-                  isCreating
-                }
+                disabled={busy}
                 className="input-field"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-ink/80 mb-1">
+              <label className="field-label">
                 Breeder
               </label>
 
@@ -1143,15 +1093,15 @@ export default function PuppyUrlImporter({
                 value={
                   form.breederId
                 }
-                onChange={(event) =>
+                onChange={(
+                  event
+                ) =>
                   updateField(
                     "breederId",
                     event.target.value
                   )
                 }
-                disabled={
-                  isCreating
-                }
+                disabled={busy}
                 className="input-field"
               >
                 <option value="">
@@ -1159,7 +1109,9 @@ export default function PuppyUrlImporter({
                 </option>
 
                 {availableBreeders.map(
-                  (breeder) => (
+                  (
+                    breeder
+                  ) => (
                     <option
                       key={
                         breeder.id
@@ -1168,7 +1120,9 @@ export default function PuppyUrlImporter({
                         breeder.id
                       }
                     >
-                      {breeder.name}
+                      {
+                        breeder.name
+                      }
                     </option>
                   )
                 )}
@@ -1180,7 +1134,7 @@ export default function PuppyUrlImporter({
         {/* DESCRIPTION */}
 
         <div>
-          <label className="block text-sm text-ink/80 mb-1">
+          <label className="field-label">
             Description
           </label>
 
@@ -1188,17 +1142,17 @@ export default function PuppyUrlImporter({
             value={
               form.description
             }
-            onChange={(event) =>
+            onChange={(
+              event
+            ) =>
               updateField(
                 "description",
                 event.target.value
               )
             }
-            rows={6}
-            placeholder="The puppy description will appear here automatically."
-            disabled={
-              isCreating
-            }
+            rows={5}
+            placeholder="Imported automatically from the listing..."
+            disabled={busy}
             className="input-field"
           />
         </div>
@@ -1211,157 +1165,112 @@ export default function PuppyUrlImporter({
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="border border-sage/20 rounded-lg p-4">
-              <p className="font-medium text-forest mb-3">
-                Mother
-              </p>
+            <ParentCard
+              title="Mother"
+              values={[
+                [
+                  form.momName,
+                  "momName",
+                  "Mother's name",
+                ],
+                [
+                  form.momBreed,
+                  "momBreed",
+                  "Breed",
+                ],
+                [
+                  form.momWeight,
+                  "momWeight",
+                  "Weight",
+                ],
+                [
+                  form.momRegistration,
+                  "momRegistration",
+                  "Registration",
+                ],
+              ]}
+              disabled={busy}
+              updateField={
+                updateField
+              }
+            />
 
-              <div className="space-y-3">
-                <input
-                  value={
-                    form.momName
-                  }
-                  onChange={(event) =>
-                    updateField(
-                      "momName",
-                      event.target.value
-                    )
-                  }
-                  placeholder="Mother's name"
-                  disabled={
-                    isCreating
-                  }
-                  className="input-field"
-                />
+            <ParentCard
+              title="Father"
+              values={[
+                [
+                  form.dadName,
+                  "dadName",
+                  "Father's name",
+                ],
+                [
+                  form.dadBreed,
+                  "dadBreed",
+                  "Breed",
+                ],
+                [
+                  form.dadWeight,
+                  "dadWeight",
+                  "Weight",
+                ],
+                [
+                  form.dadRegistration,
+                  "dadRegistration",
+                  "Registration",
+                ],
+              ]}
+              disabled={busy}
+              updateField={
+                updateField
+              }
+            />
+          </div>
+        </div>
 
-                <input
-                  value={
-                    form.momBreed
-                  }
-                  onChange={(event) =>
-                    updateField(
-                      "momBreed",
-                      event.target.value
-                    )
-                  }
-                  placeholder="Breed"
-                  disabled={
-                    isCreating
-                  }
-                  className="input-field"
-                />
+        {/* WHAT'S INCLUDED */}
 
-                <input
-                  value={
-                    form.momWeight
-                  }
-                  onChange={(event) =>
-                    updateField(
-                      "momWeight",
-                      event.target.value
-                    )
-                  }
-                  placeholder="Weight"
-                  disabled={
-                    isCreating
-                  }
-                  className="input-field"
-                />
+        <div>
+          <h3 className="font-display text-lg text-forest mb-1">
+            What&apos;s Included
+          </h3>
 
-                <input
-                  value={
-                    form.momRegistration
-                  }
-                  onChange={(event) =>
-                    updateField(
-                      "momRegistration",
-                      event.target.value
-                    )
-                  }
-                  placeholder="Registration"
-                  disabled={
-                    isCreating
-                  }
-                  className="input-field"
-                />
-              </div>
-            </div>
+          <p className="text-sm text-ink/60 mb-4">
+            Imported automatically from the
+            puppy listing. Check or uncheck anything
+            that needs correction.
+          </p>
 
-            <div className="border border-sage/20 rounded-lg p-4">
-              <p className="font-medium text-forest mb-3">
-                Father
-              </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {INCLUDED_OPTIONS.map(
+              (item) => (
+                <label
+                  key={
+                    item.key
+                  }
+                  className="flex items-start gap-3 rounded-lg border border-sage/20 p-3 cursor-pointer hover:bg-sage/5"
+                >
+                  <input
+                    type="checkbox"
+                    checked={form.includedItems.includes(
+                      item.key
+                    )}
+                    onChange={() =>
+                      toggleIncludedItem(
+                        item.key
+                      )
+                    }
+                    disabled={busy}
+                    className="mt-1"
+                  />
 
-              <div className="space-y-3">
-                <input
-                  value={
-                    form.dadName
-                  }
-                  onChange={(event) =>
-                    updateField(
-                      "dadName",
-                      event.target.value
-                    )
-                  }
-                  placeholder="Father's name"
-                  disabled={
-                    isCreating
-                  }
-                  className="input-field"
-                />
-
-                <input
-                  value={
-                    form.dadBreed
-                  }
-                  onChange={(event) =>
-                    updateField(
-                      "dadBreed",
-                      event.target.value
-                    )
-                  }
-                  placeholder="Breed"
-                  disabled={
-                    isCreating
-                  }
-                  className="input-field"
-                />
-
-                <input
-                  value={
-                    form.dadWeight
-                  }
-                  onChange={(event) =>
-                    updateField(
-                      "dadWeight",
-                      event.target.value
-                    )
-                  }
-                  placeholder="Weight"
-                  disabled={
-                    isCreating
-                  }
-                  className="input-field"
-                />
-
-                <input
-                  value={
-                    form.dadRegistration
-                  }
-                  onChange={(event) =>
-                    updateField(
-                      "dadRegistration",
-                      event.target.value
-                    )
-                  }
-                  placeholder="Registration"
-                  disabled={
-                    isCreating
-                  }
-                  className="input-field"
-                />
-              </div>
-            </div>
+                  <span className="text-sm text-ink/80">
+                    {
+                      item.label
+                    }
+                  </span>
+                </label>
+              )
+            )}
           </div>
         </div>
 
@@ -1373,65 +1282,53 @@ export default function PuppyUrlImporter({
           </h3>
 
           <div className="space-y-3">
-            <label className="flex items-center gap-3 text-sm">
-              <input
-                type="checkbox"
-                checked={
-                  form.vetChecked
-                }
-                onChange={(event) =>
-                  updateField(
-                    "vetChecked",
-                    event.target.checked
-                  )
-                }
-                disabled={
-                  isCreating
-                }
-              />
+            <Check
+              label="Vet checked"
+              checked={
+                form.vetChecked
+              }
+              onChange={(
+                value
+              ) =>
+                updateField(
+                  "vetChecked",
+                  value
+                )
+              }
+              disabled={busy}
+            />
 
-              Vet checked
-            </label>
+            <Check
+              label="Vaccinated"
+              checked={
+                form.vaccinated
+              }
+              onChange={(
+                value
+              ) =>
+                updateField(
+                  "vaccinated",
+                  value
+                )
+              }
+              disabled={busy}
+            />
 
-            <label className="flex items-center gap-3 text-sm">
-              <input
-                type="checkbox"
-                checked={
-                  form.vaccinated
-                }
-                onChange={(event) =>
-                  updateField(
-                    "vaccinated",
-                    event.target.checked
-                  )
-                }
-                disabled={
-                  isCreating
-                }
-              />
-
-              Vaccinated
-            </label>
-
-            <label className="flex items-center gap-3 text-sm">
-              <input
-                type="checkbox"
-                checked={
-                  form.isPublished
-                }
-                onChange={(event) =>
-                  updateField(
-                    "isPublished",
-                    event.target.checked
-                  )
-                }
-                disabled={
-                  isCreating
-                }
-              />
-
-              Publish this puppy immediately
-            </label>
+            <Check
+              label="Publish this puppy immediately"
+              checked={
+                form.isPublished
+              }
+              onChange={(
+                value
+              ) =>
+                updateField(
+                  "isPublished",
+                  value
+                )
+              }
+              disabled={busy}
+            />
           </div>
         </div>
 
@@ -1440,14 +1337,16 @@ export default function PuppyUrlImporter({
         <button
           type="submit"
           disabled={
-            isCreating ||
-            isLookingUp
+            busy ||
+            !imported
           }
           className="w-full bg-forest text-cream py-3 rounded-full hover:bg-forest-light transition-colors disabled:opacity-50"
         >
           {isCreating
             ? "Saving Puppy..."
-            : "Save Puppy"}
+            : isFetching
+              ? "Importing Puppy Details..."
+              : "Save Puppy"}
         </button>
       </form>
 
@@ -1472,15 +1371,169 @@ export default function PuppyUrlImporter({
           width: 100%;
           border: 1px solid rgb(112 145 132 / 0.3);
           border-radius: 0.375rem;
-          padding: 0.5rem 0.75rem;
+          padding: 0.625rem 0.75rem;
           background: white;
+          color: #183f38;
         }
 
         .input-field:focus {
           outline: none;
           border-color: rgb(201 160 75);
+          box-shadow: 0 0 0 2px rgb(201 160 75 / 0.08);
+        }
+
+        .field-label {
+          display: block;
+          font-size: 0.875rem;
+          color: rgb(24 63 56 / 0.8);
+          margin-bottom: 0.25rem;
         }
       `}</style>
     </section>
+  );
+}
+
+function normalize(
+  value: string
+): string {
+  return value
+    .toLowerCase()
+    .replace(
+      /[^a-z0-9]+/g,
+      ""
+    );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  placeholder,
+  disabled,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange: (
+    value: string
+  ) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  type?: string;
+}) {
+  return (
+    <div>
+      <label className="field-label">
+        {label}
+      </label>
+
+      <input
+        type={type}
+        value={value}
+        onChange={(event) =>
+          onChange(
+            event.target.value
+          )
+        }
+        placeholder={
+          placeholder
+        }
+        disabled={disabled}
+        className="input-field"
+      />
+    </div>
+  );
+}
+
+function Check({
+  label,
+  checked,
+  onChange,
+  disabled,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (
+    value: boolean
+  ) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <label className="flex items-center gap-3 text-sm cursor-pointer">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) =>
+          onChange(
+            event.target.checked
+          )
+        }
+        disabled={disabled}
+      />
+
+      {label}
+    </label>
+  );
+}
+
+function ParentCard({
+  title,
+  values,
+  disabled,
+  updateField,
+}: {
+  title: string;
+  values: Array<
+    [
+      string,
+      keyof FormState,
+      string
+    ]
+  >;
+  disabled: boolean;
+  updateField: (
+    field: keyof FormState,
+    value:
+      | string
+      | boolean
+      | string[]
+  ) => void;
+}) {
+  return (
+    <div className="border border-sage/20 rounded-lg p-4">
+      <p className="font-medium text-forest mb-3">
+        {title}
+      </p>
+
+      <div className="space-y-3">
+        {values.map(
+          ([
+            value,
+            field,
+            placeholder,
+          ]) => (
+            <input
+              key={
+                String(field)
+              }
+              value={value}
+              onChange={(event) =>
+                updateField(
+                  field,
+                  event.target.value
+                )
+              }
+              placeholder={
+                placeholder
+              }
+              disabled={
+                disabled
+              }
+              className="input-field"
+            />
+          )
+        )}
+      </div>
+    </div>
   );
 }
