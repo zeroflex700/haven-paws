@@ -6,19 +6,27 @@ import PuppyListView from "../components/PuppyListView";
 import PuppyUrlImporter from "../components/PuppyUrlImporter";
 
 export default async function AdminPuppiesPage() {
-  const puppies = await getAllPuppiesAdmin();
+  const puppies =
+    await getAllPuppiesAdmin();
 
-  const breeds = await getBreeds();
+  const breeds =
+    await getBreeds();
 
-  const supabase = await createClient();
+  const supabase =
+    await createClient();
 
-  const { data: breeders } = await supabase
-    .from("breeders")
-    .select("id, name, breed_id")
-    .order("name");
+  const { data: breeders } =
+    await supabase
+      .from("breeders")
+      .select(
+        "id, name, breed_id"
+      )
+      .order("name");
 
   return (
     <main className="px-5 pt-6">
+      {/* PAGE HEADER */}
+
       <div className="flex justify-between items-center mb-2">
         <div>
           <p className="eyebrow mb-1">
@@ -38,6 +46,8 @@ export default async function AdminPuppiesPage() {
         </Link>
       </div>
 
+      {/* BREED MANAGEMENT */}
+
       <Link
         href="/admin/breeds"
         className="text-sm text-forest border-b border-gold pb-0.5 mb-6 inline-block"
@@ -45,12 +55,18 @@ export default async function AdminPuppiesPage() {
         Manage Breed Info →
       </Link>
 
+      {/* WEBSITE IMPORT */}
+
       <PuppyUrlImporter
         breeds={breeds}
         breeders={breeders ?? []}
       />
 
-      <PuppyListView puppies={puppies} />
+      {/* EXISTING PUPPIES */}
+
+      <PuppyListView
+        puppies={puppies}
+      />
     </main>
   );
 }

@@ -75,21 +75,15 @@ export async function createPuppyFromImport(
 ): Promise<ImportResult> {
   const supabase = await createClient();
 
+  /*
+   * SOURCE URL
+   *
+   * We intentionally DO NOT fetch this URL.
+   * This avoids PuppySpot's HTTP 403 problem.
+   */
   const sourceUrl = textValue(
     formData,
     "source_url"
-  );
-
-  const name = textValue(formData, "name");
-
-  const breedId = textValue(
-    formData,
-    "breed_id"
-  );
-
-  const breederId = textValue(
-    formData,
-    "breeder_id"
   );
 
   if (!sourceUrl) {
@@ -112,6 +106,24 @@ export async function createPuppyFromImport(
       "Please enter a valid HTTP or HTTPS source URL."
     );
   }
+
+  /*
+   * BASIC DETAILS
+   */
+  const name = textValue(
+    formData,
+    "name"
+  );
+
+  const breedId = textValue(
+    formData,
+    "breed_id"
+  );
+
+  const breederId = textValue(
+    formData,
+    "breeder_id"
+  );
 
   if (!name) {
     throw new Error(
@@ -136,28 +148,68 @@ export async function createPuppyFromImport(
     );
   }
 
+  if (price < 0) {
+    throw new Error(
+      "Puppy price cannot be negative."
+    );
+  }
+
+  /*
+   * BREEDER VALIDATION
+   */
   await validateBreederForBreed(
     supabase,
     breederId,
     breedId
   );
 
+  /*
+   * DESCRIPTION
+   */
   const description =
     textValue(
       formData,
       "description"
     ) ?? "";
 
+  /*
+   * Keep the original source URL in the
+   * puppy description for now.
+   *
+   * We are NOT scraping the source website.
+   */
   const finalDescription = description
     ? `${description}\n\nSource listing:\n${sourceUrl}`
     : `Source listing:\n${sourceUrl}`;
 
+  /*
+   * AGE
+   */
+  const ageWeeksValue = numberValue(
+    formData,
+    "age_weeks"
+  );
+
+  const ageWeeks =
+    ageWeeksValue !== null
+      ? Math.round(ageWeeksValue)
+      : null;
+
+  /*
+   * PUPPY DATA
+   */
   const puppyData = {
     name,
+
     breed_id: breedId,
+
     breeder_id: breederId,
 
-    sex: textValue(formData, "sex"),
+    sex:
+      textValue(
+        formData,
+        "sex"
+      ),
 
     price,
 
@@ -171,11 +223,16 @@ export async function createPuppyFromImport(
       finalDescription,
 
     status:
-      textValue(formData, "status") ??
-      "available",
+      textValue(
+        formData,
+        "status"
+      ) ?? "available",
 
     color:
-      textValue(formData, "color"),
+      textValue(
+        formData,
+        "color"
+      ),
 
     weight_estimate:
       numberValue(
@@ -184,26 +241,25 @@ export async function createPuppyFromImport(
       ),
 
     markings:
-      textValue(formData, "markings"),
+      textValue(
+        formData,
+        "markings"
+      ),
 
     size:
-      textValue(formData, "size"),
+      textValue(
+        formData,
+        "size"
+      ),
 
     generation:
-      textValue(formData, "generation"),
+      textValue(
+        formData,
+        "generation"
+      ),
 
     age_weeks:
-      numberValue(
-        formData,
-        "age_weeks"
-      ) !== null
-        ? Math.round(
-            numberValue(
-              formData,
-              "age_weeks"
-            ) as number
-          )
-        : null,
+      ageWeeks,
 
     litter_id:
       textValue(
@@ -281,6 +337,9 @@ export async function createPuppyFromImport(
       ),
   };
 
+  /*
+   * CREATE PUPPY
+   */
   const {
     data: puppy,
     error,
@@ -293,10 +352,13 @@ export async function createPuppyFromImport(
   if (error || !puppy) {
     throw new Error(
       error?.message ??
-        "Failed to create the puppy."
+        "Failed to import the puppy."
     );
   }
 
+  /*
+   * REFRESH ADMIN + PUBLIC PAGES
+   */
   revalidatePath("/");
   revalidatePath("/puppies");
   revalidatePath("/admin");
