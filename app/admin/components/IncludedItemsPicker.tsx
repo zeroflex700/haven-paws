@@ -1,26 +1,37 @@
 "use client";
 
-import { ALL_INCLUDED_ITEMS, type IncludedItemKey } from "@/lib/includedItems";
+import type { IncludedItemKey } from "@/lib/includedItems";
+import { ALL_INCLUDED_ITEMS } from "@/lib/includedItems";
 
 export default function IncludedItemsPicker({
-  selected,
+  selected = [],
 }: {
-  selected: IncludedItemKey[];
+  selected?: IncludedItemKey[];
 }) {
   return (
-    <div className="mt-2">
-      {ALL_INCLUDED_ITEMS.map((item) => (
-        <label key={item.key} className="flex items-center gap-2 py-1.5">
-          <input
-            type="checkbox"
-            name="included_items"
-            value={item.key}
-            defaultChecked={selected.includes(item.key)}
-            className="w-4 h-4"
-          />
-          <span className="text-sm text-ink/80">{item.label}</span>
-        </label>
-      ))}
+    <div className="space-y-3 mt-3">
+      {ALL_INCLUDED_ITEMS.map((item) => {
+        const checked = selected.includes(item.key);
+
+        return (
+          <label
+            key={item.key}
+            className="flex items-center gap-3 rounded-md border border-sage/20 px-4 py-3 cursor-pointer hover:bg-sage/5"
+          >
+            <input
+              type="checkbox"
+              name="included_items"
+              value={item.key}
+              defaultChecked={checked}
+              className="w-4 h-4"
+            />
+
+            <span className="text-sm text-ink/80">
+              {item.label}
+            </span>
+          </label>
+        );
+      })}
     </div>
   );
 }

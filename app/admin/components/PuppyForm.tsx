@@ -25,6 +25,7 @@ type PuppyData = {
   id?: string;
   name?: string;
   breed_id?: string;
+  color?: string;
   breeder_id?: string | null;
   sex?: string;
   price?: number;
@@ -106,6 +107,10 @@ export default function PuppyForm({
   const [selectedBreederId, setSelectedBreederId] = useState(
     puppy?.breeder_id ?? ""
   );
+
+const [selectedSex, setSelectedSex] = useState(
+  puppy?.sex ?? ""
+);
 
   const [litterId, setLitterId] = useState(
     puppy?.litter_id ?? ""
@@ -414,11 +419,12 @@ export default function PuppyForm({
 
       <label className={labelClass}>Gender</label>
       <select
-        name="sex"
-        defaultValue={puppy?.sex}
-        required
-        className={inputClass}
-      >
+  name="sex"
+  value={selectedSex}
+  onChange={(event) => setSelectedSex(event.target.value)}
+  required
+  className={inputClass}
+>
         <option value="">Select gender</option>
         <option value="male">Male</option>
         <option value="female">Female</option>
