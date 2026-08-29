@@ -1,7 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { createPuppyFromImport } from "../puppies/import-actions";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
+import {
+  createPuppyFromImport,
+  lookupPuppyFromUrl,
+  type PuppyImportDraft,
+} from "../puppies/import-actions";
 
 type Breed = {
   id: string;
@@ -19,9 +28,18 @@ type PuppyUrlImporterProps = {
   breeders?: Breeder[];
 };
 
-const initialForm = {
+type FormState = Omit<
+  PuppyImportDraft,
+  "breedName" | "breederName"
+> & {
+  breedId: string;
+  breederId: string;
+};
+
+const emptyForm: FormState = {
   sourceUrl: "",
   name: "",
+  breedId: "",
   sex: "",
   price: "",
   depositAmount: "",
@@ -35,42 +53,66 @@ const initialForm = {
   ageWeeks: "",
   litterId: "",
   readyDate: "",
+
   breederId: "",
+
   momName: "",
   momBreed: "",
   momWeight: "",
   momRegistration: "",
+
   dadName: "",
   dadBreed: "",
   dadWeight: "",
   dadRegistration: "",
-  isPublished: false,
+
   vetChecked: false,
   vaccinated: false,
+  isPublished: false,
 };
 
 export default function PuppyUrlImporter({
   breeds = [],
   breeders = [],
 }: PuppyUrlImporterProps) {
-  const [isCreating, setIsCreating] =
-    useState(false);
-
-  const [message, setMessage] =
-    useState("");
-
-  const [error, setError] =
-    useState("");
-
-  const [breedId, setBreedId] =
-    useState("");
-
   const [form, setForm] =
-    useState(initialForm);
+    useState<FormState>(
+      emptyForm
+    );
 
-  function updateField(
-    field: keyof typeof form,
-    value: string | boolean
+  const [
+    isLookingUp,
+    setIsLookingUp,
+  ] = useState(false);
+
+  const [
+    isCreating,
+    setIsCreating,
+  ] = useState(false);
+
+  const [
+    message,
+    setMessage,
+  ] = useState("");
+
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+  const lookupTimer =
+    useRef<ReturnType<
+      typeof setTimeout
+    > | null>(null);
+
+  const lastLookupUrl =
+    useRef("");
+
+  function updateField<
+    K extends keyof FormState
+  >(
+    field: K,
+    value: FormState[K]
   ) {
     setForm((current) => ({
       ...current,
@@ -78,16 +120,338 @@ export default function PuppyUrlImporter({
     }));
   }
 
-  function getBreedersForBreed() {
-    if (!breedId) {
-      return breeders;
+  function findBreedId(
+    breedName: string
+  ) {
+    const wanted =
+      breedName
+        .toLowerCase()
+        .replace(
+          /[^a-z0-9]+/g,
+          ""
+        );
+
+    const match =
+      breeds.find(
+        (breed) => {
+          const existing =
+            breed.name
+              .toLowerCase()
+              .replace(
+                /[^a-z0-9]+/g,
+                ""
+              );
+
+          return (
+            existing === wanted ||
+            existing.includes(
+              wanted
+            ) ||
+            wanted.includes(
+              existing
+            )
+          );
+        }
+      );
+
+    return match?.id ?? "";
+  }
+
+  function findBreederId(
+    breederName: string,
+    breedId: string
+  ) {
+    if (!breederName) {
+      return "";
     }
 
-    return breeders.filter(
-      (breeder) =>
-        breeder.breed_id === breedId
+    const wanted =
+      breederName
+        .toLowerCase()
+        .trim();
+
+    const match =
+      breeders.find(
+        (breeder) => {
+          const sameName =
+            breeder.name
+              .toLowerCase()
+              .trim() ===
+            wanted;
+
+          const sameBreed =
+            !breedId ||
+            breeder.breed_id ===
+              breedId;
+
+          return (
+            sameName &&
+            sameBreed
+          );
+        }
+      );
+
+    return match?.id ?? "";
+  }
+
+  function applyDraft(
+    draft: PuppyImportDraft
+  ) {
+    const matchedBreedId =
+      findBreedId(
+        draft.breedName
+      );
+
+    const matchedBreederId =
+      findBreederId(
+        draft.breederName,
+        matchedBreedId
+      );
+
+    setForm({
+      sourceUrl:
+        draft.sourceUrl,
+
+      name:
+        draft.name,
+
+      breedId:
+        matchedBreedId,
+
+      sex:
+        draft.sex,
+
+      price:
+        draft.price,
+
+      depositAmount:
+        draft.depositAmount,
+
+      description:
+        draft.description,
+
+      status:
+        draft.status,
+
+      color:
+        draft.color,
+
+      weightEstimate:
+        draft.weightEstimate,
+
+      markings:
+        draft.markings,
+
+      size:
+        draft.size,
+
+      generation:
+        draft.generation,
+
+      ageWeeks:
+        draft.ageWeeks,
+
+      litterId:
+        draft.litterId,
+
+      readyDate:
+        draft.readyDate,
+
+      breederId:
+        matchedBreederId,
+
+      momName:
+        draft.momName,
+
+      momBreed:
+        draft.momBreed,
+
+      momWeight:
+        draft.momWeight,
+
+      momRegistration:
+        draft.momRegistration,
+
+      dadName:
+        draft.dadName,
+
+      dadBreed:
+        draft.dadBreed,
+
+      dadWeight:
+        draft.dadWeight,
+
+      dadRegistration:
+        draft.dadRegistration,
+
+      vetChecked:
+        draft.vetChecked,
+
+      vaccinated:
+        draft.vaccinated,
+
+      isPublished:
+        false,
+    });
+
+    if (
+      draft.breedName &&
+      !matchedBreedId
+    ) {
+      setError(
+        `The puppy was imported, but "${draft.breedName}" does not yet exist in your Haven Paws breed list.`
+      );
+    } else if (
+      draft.breederName &&
+      !matchedBreederId
+    ) {
+      setError(
+        `Puppy details were imported. Breeder "${draft.breederName}" was found on the source page but was not matched to a Haven Paws breeder.`
+      );
+    } else {
+      setError("");
+    }
+
+    setMessage(
+      `✓ Puppy information found. Review the fields below and click "Save Puppy".`
     );
   }
+
+  async function lookupUrl(
+    url: string
+  ) {
+    const trimmed =
+      url.trim();
+
+    if (!trimmed) {
+      return;
+    }
+
+    let parsed: URL;
+
+    try {
+      parsed =
+        new URL(trimmed);
+    } catch {
+      return;
+    }
+
+    if (
+      parsed.protocol !==
+        "http:" &&
+      parsed.protocol !==
+        "https:"
+    ) {
+      return;
+    }
+
+    if (
+      lastLookupUrl.current ===
+      trimmed
+    ) {
+      return;
+    }
+
+    lastLookupUrl.current =
+      trimmed;
+
+    setIsLookingUp(true);
+    setMessage(
+      "Reading puppy listing..."
+    );
+    setError("");
+
+    try {
+      const draft =
+        await lookupPuppyFromUrl(
+          trimmed
+        );
+
+      applyDraft(draft);
+    } catch (err) {
+      lastLookupUrl.current =
+        "";
+
+      setMessage("");
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to read the puppy listing."
+      );
+    } finally {
+      setIsLookingUp(false);
+    }
+  }
+
+  function handleUrlChange(
+    value: string
+  ) {
+    updateField(
+      "sourceUrl",
+      value
+    );
+
+    setMessage("");
+    setError("");
+
+    lastLookupUrl.current =
+      "";
+
+    if (lookupTimer.current) {
+      clearTimeout(
+        lookupTimer.current
+      );
+    }
+
+    const trimmed =
+      value.trim();
+
+    if (!trimmed) {
+      return;
+    }
+
+    try {
+      const parsed =
+        new URL(trimmed);
+
+      if (
+        parsed.protocol !==
+          "http:" &&
+        parsed.protocol !==
+          "https:"
+      ) {
+        return;
+      }
+    } catch {
+      return;
+    }
+
+    /*
+     * This is what makes the URL the trigger.
+     *
+     * The user does not need to click
+     * "Import Puppy".
+     */
+    lookupTimer.current =
+      setTimeout(() => {
+        void lookupUrl(
+          trimmed
+        );
+      }, 700);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (
+        lookupTimer.current
+      ) {
+        clearTimeout(
+          lookupTimer.current
+        );
+      }
+    };
+  }, []);
 
   async function handleSubmit(
     event: React.FormEvent<HTMLFormElement>
@@ -97,78 +461,32 @@ export default function PuppyUrlImporter({
     setMessage("");
     setError("");
 
-    /*
-     * SOURCE URL
-     */
-    const sourceUrl =
-      form.sourceUrl.trim();
-
-    if (!sourceUrl) {
-      setError(
-        "Please paste the original puppy listing URL."
-      );
-      return;
-    }
-
-    try {
-      const parsed =
-        new URL(sourceUrl);
-
-      if (
-        parsed.protocol !== "http:" &&
-        parsed.protocol !== "https:"
-      ) {
-        setError(
-          "Please enter a valid HTTP or HTTPS URL."
-        );
-        return;
-      }
-    } catch {
-      setError(
-        "Please enter a valid puppy listing URL."
-      );
-      return;
-    }
-
-    /*
-     * NAME
-     */
-    if (!form.name.trim()) {
-      setError(
-        "Please enter the puppy's name."
-      );
-      return;
-    }
-
-    /*
-     * BREED
-     */
-    if (!breedId) {
-      setError(
-        "Please select a breed."
-      );
-      return;
-    }
-
-    /*
-     * PRICE
-     */
-    if (!form.price.trim()) {
-      setError(
-        "Please enter the puppy's price."
-      );
-      return;
-    }
-
-    const price =
-      Number(form.price);
-
     if (
-      !Number.isFinite(price) ||
-      price < 0
+      !form.sourceUrl.trim()
     ) {
       setError(
-        "Please enter a valid puppy price."
+        "Please paste the puppy listing URL."
+      );
+      return;
+    }
+
+    if (!form.name.trim()) {
+      setError(
+        "The puppy information has not been imported yet."
+      );
+      return;
+    }
+
+    if (!form.breedId) {
+      setError(
+        "Please select a matching Haven Paws breed."
+      );
+      return;
+    }
+
+    if (!form.price.trim()) {
+      setError(
+        "The puppy price was not found. Please enter it."
       );
       return;
     }
@@ -179,17 +497,11 @@ export default function PuppyUrlImporter({
       const formData =
         new FormData();
 
-      /*
-       * SOURCE
-       */
       formData.set(
         "source_url",
-        sourceUrl
+        form.sourceUrl.trim()
       );
 
-      /*
-       * BASIC DETAILS
-       */
       formData.set(
         "name",
         form.name.trim()
@@ -197,7 +509,7 @@ export default function PuppyUrlImporter({
 
       formData.set(
         "breed_id",
-        breedId
+        form.breedId
       );
 
       formData.set(
@@ -270,9 +582,6 @@ export default function PuppyUrlImporter({
         form.readyDate
       );
 
-      /*
-       * MOTHER
-       */
       formData.set(
         "mom_name",
         form.momName
@@ -293,9 +602,6 @@ export default function PuppyUrlImporter({
         form.momRegistration
       );
 
-      /*
-       * FATHER
-       */
       formData.set(
         "dad_name",
         form.dadName
@@ -316,61 +622,53 @@ export default function PuppyUrlImporter({
         form.dadRegistration
       );
 
-      /*
-       * CHECKBOXES
-       */
-      if (form.isPublished) {
+      if (
+        form.isPublished
+      ) {
         formData.set(
           "is_published",
           "on"
         );
       }
 
-      if (form.vetChecked) {
+      if (
+        form.vetChecked
+      ) {
         formData.set(
           "vet_checked",
           "on"
         );
       }
 
-      if (form.vaccinated) {
+      if (
+        form.vaccinated
+      ) {
         formData.set(
           "vaccinated",
           "on"
         );
       }
 
-      /*
-       * CREATE / IMPORT
-       */
       const result =
         await createPuppyFromImport(
           formData
         );
 
       setMessage(
-        `Puppy "${result.name}" imported successfully.`
+        `✓ Puppy "${result.name}" was saved successfully.`
       );
 
-      /*
-       * RESET FORM
-       */
-      setForm(initialForm);
+      setForm(
+        emptyForm
+      );
 
-      setBreedId("");
-
-      /*
-       * Scroll back to top of importer
-       */
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
+      lastLookupUrl.current =
+        "";
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "Unable to import the puppy."
+          : "Unable to save the puppy."
       );
     } finally {
       setIsCreating(false);
@@ -378,12 +676,16 @@ export default function PuppyUrlImporter({
   }
 
   const availableBreeders =
-    getBreedersForBreed();
+    form.breedId
+      ? breeders.filter(
+          (breeder) =>
+            breeder.breed_id ===
+            form.breedId
+        )
+      : breeders;
 
   return (
     <section className="mb-8 rounded-xl border border-sage/20 bg-white p-5">
-      {/* HEADER */}
-
       <p className="eyebrow mb-1">
         Quick Import
       </p>
@@ -393,17 +695,18 @@ export default function PuppyUrlImporter({
       </h2>
 
       <p className="text-sm text-ink/70 mt-2 mb-6">
-        Paste the original puppy listing
-        URL, then enter the puppy details
-        below. The website is not scraped.
-        Images and videos can be added later.
+        Paste a PuppySpot listing URL.
+        Haven Paws will automatically
+        read the listing and fill the
+        puppy details for you. Review
+        everything before saving.
       </p>
 
       <form
         onSubmit={handleSubmit}
         className="space-y-6"
       >
-        {/* SOURCE URL */}
+        {/* URL */}
 
         <div>
           <label
@@ -416,24 +719,36 @@ export default function PuppyUrlImporter({
           <input
             id="puppy-source-url"
             type="url"
-            value={form.sourceUrl}
+            value={
+              form.sourceUrl
+            }
             onChange={(event) =>
-              updateField(
-                "sourceUrl",
+              handleUrlChange(
                 event.target.value
               )
             }
-            placeholder="https://www.puppyspot.com/puppies-for-sale-by-breeders/..."
-            disabled={isCreating}
-            className="input-field"
+            placeholder="https://www.puppyspot.com/puppies-for-sale-by-breeders/breed/goldendoodle/puppy/826779"
+            disabled={
+              isCreating ||
+              isLookingUp
+            }
+            className="w-full border border-sage/30 rounded-md px-3 py-3 focus:outline-none focus:border-gold"
           />
 
           <p className="text-xs text-sage mt-1">
-            This URL is saved as the source
-            reference. Haven Paws does not
-            attempt to open or scrape the
-            website.
+            Paste the URL and wait a
+            moment. The details will
+            populate automatically.
           </p>
+
+          {isLookingUp && (
+            <div className="mt-3 rounded-md bg-gold/10 border border-gold/30 px-3 py-3">
+              <p className="text-sm text-forest">
+                Reading the puppy listing
+                and filling the form...
+              </p>
+            </div>
+          )}
         </div>
 
         {/* BASIC DETAILS */}
@@ -444,8 +759,6 @@ export default function PuppyUrlImporter({
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* NAME */}
-
             <div>
               <label className="block text-sm text-ink/80 mb-1">
                 Name *
@@ -460,12 +773,12 @@ export default function PuppyUrlImporter({
                   )
                 }
                 placeholder="e.g. Daisy"
-                disabled={isCreating}
+                disabled={
+                  isCreating
+                }
                 className="input-field"
               />
             </div>
-
-            {/* BREED */}
 
             <div>
               <label className="block text-sm text-ink/80 mb-1">
@@ -473,9 +786,12 @@ export default function PuppyUrlImporter({
               </label>
 
               <select
-                value={breedId}
+                value={
+                  form.breedId
+                }
                 onChange={(event) => {
-                  setBreedId(
+                  updateField(
+                    "breedId",
                     event.target.value
                   );
 
@@ -484,25 +800,31 @@ export default function PuppyUrlImporter({
                     ""
                   );
                 }}
-                disabled={isCreating}
+                disabled={
+                  isCreating
+                }
                 className="input-field"
               >
                 <option value="">
                   Select breed
                 </option>
 
-                {breeds.map((breed) => (
-                  <option
-                    key={breed.id}
-                    value={breed.id}
-                  >
-                    {breed.name}
-                  </option>
-                ))}
+                {breeds.map(
+                  (breed) => (
+                    <option
+                      key={
+                        breed.id
+                      }
+                      value={
+                        breed.id
+                      }
+                    >
+                      {breed.name}
+                    </option>
+                  )
+                )}
               </select>
             </div>
-
-            {/* SEX */}
 
             <div>
               <label className="block text-sm text-ink/80 mb-1">
@@ -510,14 +832,18 @@ export default function PuppyUrlImporter({
               </label>
 
               <select
-                value={form.sex}
+                value={
+                  form.sex
+                }
                 onChange={(event) =>
                   updateField(
                     "sex",
                     event.target.value
                   )
                 }
-                disabled={isCreating}
+                disabled={
+                  isCreating
+                }
                 className="input-field"
               >
                 <option value="">
@@ -534,8 +860,6 @@ export default function PuppyUrlImporter({
               </select>
             </div>
 
-            {/* PRICE */}
-
             <div>
               <label className="block text-sm text-ink/80 mb-1">
                 Price *
@@ -545,7 +869,9 @@ export default function PuppyUrlImporter({
                 type="number"
                 min="0"
                 step="0.01"
-                value={form.price}
+                value={
+                  form.price
+                }
                 onChange={(event) =>
                   updateField(
                     "price",
@@ -553,12 +879,12 @@ export default function PuppyUrlImporter({
                   )
                 }
                 placeholder="2500"
-                disabled={isCreating}
+                disabled={
+                  isCreating
+                }
                 className="input-field"
               />
             </div>
-
-            {/* DEPOSIT */}
 
             <div>
               <label className="block text-sm text-ink/80 mb-1">
@@ -569,7 +895,9 @@ export default function PuppyUrlImporter({
                 type="number"
                 min="0"
                 step="0.01"
-                value={form.depositAmount}
+                value={
+                  form.depositAmount
+                }
                 onChange={(event) =>
                   updateField(
                     "depositAmount",
@@ -577,12 +905,12 @@ export default function PuppyUrlImporter({
                   )
                 }
                 placeholder="500"
-                disabled={isCreating}
+                disabled={
+                  isCreating
+                }
                 className="input-field"
               />
             </div>
-
-            {/* STATUS */}
 
             <div>
               <label className="block text-sm text-ink/80 mb-1">
@@ -590,14 +918,18 @@ export default function PuppyUrlImporter({
               </label>
 
               <select
-                value={form.status}
+                value={
+                  form.status
+                }
                 onChange={(event) =>
                   updateField(
                     "status",
                     event.target.value
                   )
                 }
-                disabled={isCreating}
+                disabled={
+                  isCreating
+                }
                 className="input-field"
               >
                 <option value="available">
@@ -614,15 +946,15 @@ export default function PuppyUrlImporter({
               </select>
             </div>
 
-            {/* COLOR */}
-
             <div>
               <label className="block text-sm text-ink/80 mb-1">
                 Color
               </label>
 
               <input
-                value={form.color}
+                value={
+                  form.color
+                }
                 onChange={(event) =>
                   updateField(
                     "color",
@@ -630,12 +962,12 @@ export default function PuppyUrlImporter({
                   )
                 }
                 placeholder="Golden"
-                disabled={isCreating}
+                disabled={
+                  isCreating
+                }
                 className="input-field"
               />
             </div>
-
-            {/* WEIGHT */}
 
             <div>
               <label className="block text-sm text-ink/80 mb-1">
@@ -645,8 +977,9 @@ export default function PuppyUrlImporter({
               <input
                 type="number"
                 step="0.1"
-                min="0"
-                value={form.weightEstimate}
+                value={
+                  form.weightEstimate
+                }
                 onChange={(event) =>
                   updateField(
                     "weightEstimate",
@@ -654,12 +987,12 @@ export default function PuppyUrlImporter({
                   )
                 }
                 placeholder="25"
-                disabled={isCreating}
+                disabled={
+                  isCreating
+                }
                 className="input-field"
               />
             </div>
-
-            {/* MARKINGS */}
 
             <div>
               <label className="block text-sm text-ink/80 mb-1">
@@ -667,7 +1000,9 @@ export default function PuppyUrlImporter({
               </label>
 
               <input
-                value={form.markings}
+                value={
+                  form.markings
+                }
                 onChange={(event) =>
                   updateField(
                     "markings",
@@ -675,12 +1010,12 @@ export default function PuppyUrlImporter({
                   )
                 }
                 placeholder="White chest"
-                disabled={isCreating}
+                disabled={
+                  isCreating
+                }
                 className="input-field"
               />
             </div>
-
-            {/* SIZE */}
 
             <div>
               <label className="block text-sm text-ink/80 mb-1">
@@ -688,7 +1023,9 @@ export default function PuppyUrlImporter({
               </label>
 
               <input
-                value={form.size}
+                value={
+                  form.size
+                }
                 onChange={(event) =>
                   updateField(
                     "size",
@@ -696,12 +1033,12 @@ export default function PuppyUrlImporter({
                   )
                 }
                 placeholder="Medium"
-                disabled={isCreating}
+                disabled={
+                  isCreating
+                }
                 className="input-field"
               />
             </div>
-
-            {/* GENERATION */}
 
             <div>
               <label className="block text-sm text-ink/80 mb-1">
@@ -709,7 +1046,9 @@ export default function PuppyUrlImporter({
               </label>
 
               <input
-                value={form.generation}
+                value={
+                  form.generation
+                }
                 onChange={(event) =>
                   updateField(
                     "generation",
@@ -717,12 +1056,12 @@ export default function PuppyUrlImporter({
                   )
                 }
                 placeholder="F1B"
-                disabled={isCreating}
+                disabled={
+                  isCreating
+                }
                 className="input-field"
               />
             </div>
-
-            {/* AGE */}
 
             <div>
               <label className="block text-sm text-ink/80 mb-1">
@@ -732,7 +1071,9 @@ export default function PuppyUrlImporter({
               <input
                 type="number"
                 min="0"
-                value={form.ageWeeks}
+                value={
+                  form.ageWeeks
+                }
                 onChange={(event) =>
                   updateField(
                     "ageWeeks",
@@ -740,12 +1081,12 @@ export default function PuppyUrlImporter({
                   )
                 }
                 placeholder="10"
-                disabled={isCreating}
+                disabled={
+                  isCreating
+                }
                 className="input-field"
               />
             </div>
-
-            {/* LITTER */}
 
             <div>
               <label className="block text-sm text-ink/80 mb-1">
@@ -753,7 +1094,9 @@ export default function PuppyUrlImporter({
               </label>
 
               <input
-                value={form.litterId}
+                value={
+                  form.litterId
+                }
                 onChange={(event) =>
                   updateField(
                     "litterId",
@@ -761,12 +1104,12 @@ export default function PuppyUrlImporter({
                   )
                 }
                 placeholder="Optional"
-                disabled={isCreating}
+                disabled={
+                  isCreating
+                }
                 className="input-field"
               />
             </div>
-
-            {/* READY DATE */}
 
             <div>
               <label className="block text-sm text-ink/80 mb-1">
@@ -775,19 +1118,21 @@ export default function PuppyUrlImporter({
 
               <input
                 type="date"
-                value={form.readyDate}
+                value={
+                  form.readyDate
+                }
                 onChange={(event) =>
                   updateField(
                     "readyDate",
                     event.target.value
                   )
                 }
-                disabled={isCreating}
+                disabled={
+                  isCreating
+                }
                 className="input-field"
               />
             </div>
-
-            {/* BREEDER */}
 
             <div>
               <label className="block text-sm text-ink/80 mb-1">
@@ -795,7 +1140,9 @@ export default function PuppyUrlImporter({
               </label>
 
               <select
-                value={form.breederId}
+                value={
+                  form.breederId
+                }
                 onChange={(event) =>
                   updateField(
                     "breederId",
@@ -803,8 +1150,7 @@ export default function PuppyUrlImporter({
                   )
                 }
                 disabled={
-                  isCreating ||
-                  !breedId
+                  isCreating
                 }
                 className="input-field"
               >
@@ -815,20 +1161,18 @@ export default function PuppyUrlImporter({
                 {availableBreeders.map(
                   (breeder) => (
                     <option
-                      key={breeder.id}
-                      value={breeder.id}
+                      key={
+                        breeder.id
+                      }
+                      value={
+                        breeder.id
+                      }
                     >
                       {breeder.name}
                     </option>
                   )
                 )}
               </select>
-
-              {!breedId && (
-                <p className="text-xs text-sage mt-1">
-                  Select a breed first.
-                </p>
-              )}
             </div>
           </div>
         </div>
@@ -841,16 +1185,20 @@ export default function PuppyUrlImporter({
           </label>
 
           <textarea
-            value={form.description}
+            value={
+              form.description
+            }
             onChange={(event) =>
               updateField(
                 "description",
                 event.target.value
               )
             }
-            rows={5}
-            placeholder="Enter the puppy's description..."
-            disabled={isCreating}
+            rows={6}
+            placeholder="The puppy description will appear here automatically."
+            disabled={
+              isCreating
+            }
             className="input-field"
           />
         </div>
@@ -863,8 +1211,6 @@ export default function PuppyUrlImporter({
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* MOTHER */}
-
             <div className="border border-sage/20 rounded-lg p-4">
               <p className="font-medium text-forest mb-3">
                 Mother
@@ -872,7 +1218,9 @@ export default function PuppyUrlImporter({
 
               <div className="space-y-3">
                 <input
-                  value={form.momName}
+                  value={
+                    form.momName
+                  }
                   onChange={(event) =>
                     updateField(
                       "momName",
@@ -880,12 +1228,16 @@ export default function PuppyUrlImporter({
                     )
                   }
                   placeholder="Mother's name"
-                  disabled={isCreating}
+                  disabled={
+                    isCreating
+                  }
                   className="input-field"
                 />
 
                 <input
-                  value={form.momBreed}
+                  value={
+                    form.momBreed
+                  }
                   onChange={(event) =>
                     updateField(
                       "momBreed",
@@ -893,12 +1245,16 @@ export default function PuppyUrlImporter({
                     )
                   }
                   placeholder="Breed"
-                  disabled={isCreating}
+                  disabled={
+                    isCreating
+                  }
                   className="input-field"
                 />
 
                 <input
-                  value={form.momWeight}
+                  value={
+                    form.momWeight
+                  }
                   onChange={(event) =>
                     updateField(
                       "momWeight",
@@ -906,7 +1262,9 @@ export default function PuppyUrlImporter({
                     )
                   }
                   placeholder="Weight"
-                  disabled={isCreating}
+                  disabled={
+                    isCreating
+                  }
                   className="input-field"
                 />
 
@@ -921,13 +1279,13 @@ export default function PuppyUrlImporter({
                     )
                   }
                   placeholder="Registration"
-                  disabled={isCreating}
+                  disabled={
+                    isCreating
+                  }
                   className="input-field"
                 />
               </div>
             </div>
-
-            {/* FATHER */}
 
             <div className="border border-sage/20 rounded-lg p-4">
               <p className="font-medium text-forest mb-3">
@@ -936,7 +1294,9 @@ export default function PuppyUrlImporter({
 
               <div className="space-y-3">
                 <input
-                  value={form.dadName}
+                  value={
+                    form.dadName
+                  }
                   onChange={(event) =>
                     updateField(
                       "dadName",
@@ -944,12 +1304,16 @@ export default function PuppyUrlImporter({
                     )
                   }
                   placeholder="Father's name"
-                  disabled={isCreating}
+                  disabled={
+                    isCreating
+                  }
                   className="input-field"
                 />
 
                 <input
-                  value={form.dadBreed}
+                  value={
+                    form.dadBreed
+                  }
                   onChange={(event) =>
                     updateField(
                       "dadBreed",
@@ -957,12 +1321,16 @@ export default function PuppyUrlImporter({
                     )
                   }
                   placeholder="Breed"
-                  disabled={isCreating}
+                  disabled={
+                    isCreating
+                  }
                   className="input-field"
                 />
 
                 <input
-                  value={form.dadWeight}
+                  value={
+                    form.dadWeight
+                  }
                   onChange={(event) =>
                     updateField(
                       "dadWeight",
@@ -970,7 +1338,9 @@ export default function PuppyUrlImporter({
                     )
                   }
                   placeholder="Weight"
-                  disabled={isCreating}
+                  disabled={
+                    isCreating
+                  }
                   className="input-field"
                 />
 
@@ -985,7 +1355,9 @@ export default function PuppyUrlImporter({
                     )
                   }
                   placeholder="Registration"
-                  disabled={isCreating}
+                  disabled={
+                    isCreating
+                  }
                   className="input-field"
                 />
               </div>
@@ -993,7 +1365,7 @@ export default function PuppyUrlImporter({
           </div>
         </div>
 
-        {/* HEALTH & PUBLISHING */}
+        {/* HEALTH */}
 
         <div>
           <h3 className="font-display text-lg text-forest mb-3">
@@ -1013,7 +1385,9 @@ export default function PuppyUrlImporter({
                     event.target.checked
                   )
                 }
-                disabled={isCreating}
+                disabled={
+                  isCreating
+                }
               />
 
               Vet checked
@@ -1031,7 +1405,9 @@ export default function PuppyUrlImporter({
                     event.target.checked
                   )
                 }
-                disabled={isCreating}
+                disabled={
+                  isCreating
+                }
               />
 
               Vaccinated
@@ -1049,7 +1425,9 @@ export default function PuppyUrlImporter({
                     event.target.checked
                   )
                 }
-                disabled={isCreating}
+                disabled={
+                  isCreating
+                }
               />
 
               Publish this puppy immediately
@@ -1057,41 +1435,32 @@ export default function PuppyUrlImporter({
           </div>
         </div>
 
-        {/* IMPORT BUTTON */}
+        {/* SAVE */}
 
-        <div className="pt-2">
-          <button
-            type="submit"
-            disabled={isCreating}
-            className="w-full bg-forest text-cream py-4 rounded-full hover:bg-forest-light transition-colors disabled:opacity-50 font-medium"
-          >
-            {isCreating
-              ? "Importing Puppy..."
-              : "Import Puppy"}
-          </button>
-
-          <p className="text-center text-xs text-sage mt-2">
-            This creates the puppy using
-            the details entered above. No
-            external website is scraped.
-          </p>
-        </div>
+        <button
+          type="submit"
+          disabled={
+            isCreating ||
+            isLookingUp
+          }
+          className="w-full bg-forest text-cream py-3 rounded-full hover:bg-forest-light transition-colors disabled:opacity-50"
+        >
+          {isCreating
+            ? "Saving Puppy..."
+            : "Save Puppy"}
+        </button>
       </form>
 
-      {/* SUCCESS */}
-
       {message && (
-        <div className="mt-4 rounded-md bg-forest/5 border border-forest/20 px-3 py-3">
-          <p className="text-sm text-forest font-medium">
+        <div className="mt-4 rounded-md bg-forest/5 border border-forest/20 px-3 py-2">
+          <p className="text-sm text-forest">
             {message}
           </p>
         </div>
       )}
 
-      {/* ERROR */}
-
       {error && (
-        <div className="mt-4 rounded-md bg-red-50 border border-red-200 px-3 py-3">
+        <div className="mt-4 rounded-md bg-red-50 border border-red-200 px-3 py-2">
           <p className="text-sm text-red-600">
             {error}
           </p>
@@ -1103,20 +1472,13 @@ export default function PuppyUrlImporter({
           width: 100%;
           border: 1px solid rgb(112 145 132 / 0.3);
           border-radius: 0.375rem;
-          padding: 0.65rem 0.75rem;
+          padding: 0.5rem 0.75rem;
           background: white;
-          color: #173f38;
         }
 
         .input-field:focus {
           outline: none;
           border-color: rgb(201 160 75);
-          box-shadow: 0 0 0 2px rgb(201 160 75 / 0.12);
-        }
-
-        .input-field:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
         }
       `}</style>
     </section>
