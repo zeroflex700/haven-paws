@@ -1146,35 +1146,6 @@ async function fetchSourcePage(
   return html;
 }
 
-      /*
-       * Cache the source page.
-       *
-       * This makes the second operation extremely quick and
-       * prevents us from downloading the same listing twice.
-       */
-      next: {
-        revalidate: 300,
-      },
-    });
-
-  if (!response.ok) {
-    throw new Error(
-      `The source website returned HTTP ${response.status}.`
-    );
-  }
-
-  const html =
-    await response.text();
-
-  if (!html.trim()) {
-    throw new Error(
-      "The source website returned an empty page."
-    );
-  }
-
-  return html;
-}
-
 async function scrapePuppy(
   sourceUrl: string
 ): Promise<ImportedPuppyDetails> {
