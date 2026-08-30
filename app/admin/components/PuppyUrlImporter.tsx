@@ -580,8 +580,7 @@ export default function PuppyUrlImporter({
 
       formData.set(
         "color",
-        form.color
-n
+        form.color 
 
       formData.set(
         "weight_estimate",
