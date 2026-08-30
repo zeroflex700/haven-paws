@@ -1088,15 +1088,63 @@ function getStatus(
 async function fetchSourcePage(
   url: string
 ): Promise<string> {
+  const token =
+    process.env.BROWSERLESS_TOKEN;
+
+  if (!token) {
+    throw new Error(
+      "BROWSERLESS_TOKEN is not configured."
+    );
+  }
+
+  const endpoint =
+    "https://production-sfo.browserless.io/content" +
+    `?token=${encodeURIComponent(token)}` +
+    "&proxy=residential" +
+    "&proxyCountry=us";
+
   const response =
-    await fetch(url, {
-      method: "GET",
+    await fetch(endpoint, {
+      method: "POST",
+
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (compatible; HavenPawsImporter/1.0)",
-        Accept:
-          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Content-Type":
+          "application/json",
       },
+
+      body: JSON.stringify({
+        url,
+      }),
+
+      cache: "no-store",
+    });
+
+  if (!response.ok) {
+    const body =
+      await response.text();
+
+    console.error(
+      "BROWSERLESS ERROR:",
+      response.status,
+      body
+    );
+
+    throw new Error(
+      `Unable to fetch the source website through the importer (HTTP ${response.status}).`
+    );
+  }
+
+  const html =
+    await response.text();
+
+  if (!html.trim()) {
+    throw new Error(
+      "The source website returned an empty page."
+    );
+  }
+
+  return html;
+}
 
       /*
        * Cache the source page.

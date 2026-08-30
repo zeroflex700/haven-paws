@@ -581,7 +581,7 @@ export default function PuppyUrlImporter({
       formData.set(
         "color",
         form.color
-      );
+n
 
       formData.set(
         "weight_estimate",
@@ -658,12 +658,14 @@ export default function PuppyUrlImporter({
         form.dadRegistration
       );
 
-      formData.set(
-        "included_items",
-        JSON.stringify(
-          form.includedItems
-        )
-      );
+      form.includedItems.forEach(
+  (item) => {
+    formData.append(
+      "included_items",
+      item
+    );
+  }
+);
 
       if (
         form.isPublished
