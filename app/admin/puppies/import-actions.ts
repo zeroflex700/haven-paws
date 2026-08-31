@@ -1,371 +1,538 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+
+type ImportedMedia = {
+  url: string;
+  mediaType: "image" | "video";
+};
 
 type ImportResult = {
   id: string;
   name: string;
+  mediaCount: number;
 };
 
-function textValue(
-  formData: FormData,
-  field: string
-): string | null {
-  const value = formData.get(field);
+function cleanText(value: string | null | undefined): string | null {
+  if (!value) return null;
 
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const cleaned = value.trim();
+  const cleaned = value
+    .replace(/\s+/g, " ")
+    .trim();
 
   return cleaned || null;
 }
 
-function numberValue(
-  formData: FormData,
-  field: string
-): number | null {
-  const value = textValue(formData, field);
-
-  if (!value) {
+function absoluteUrl(value: string, sourceUrl: string): string | null {
+  try {
+    return new URL(value, sourceUrl).toString();
+  } catch {
     return null;
-  }
-
-  const number = Number(value);
-
-  if (!Number.isFinite(number)) {
-    return null;
-  }
-
-  return number;
-}
-
-async function validateBreederForBreed(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  breederId: string | null,
-  breedId: string
-) {
-  if (!breederId) {
-    return;
-  }
-
-  const { data: breeder, error } = await supabase
-    .from("breeders")
-    .select("id, breed_id")
-    .eq("id", breederId)
-    .single();
-
-  if (error || !breeder) {
-    throw new Error(
-      "The selected breeder was not found."
-    );
-  }
-
-  if (breeder.breed_id !== breedId) {
-    throw new Error(
-      "The selected breeder does not belong to the selected breed."
-    );
   }
 }
 
-export async function createPuppyFromImport(
-  formData: FormData
-): Promise<ImportResult> {
-  const supabase = await createClient();
+function extractMeta(
+  html: string,
+  property: string
+): string | null {
+  const escaped = property.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-  /*
-   * SOURCE URL
-   *
-   * We intentionally DO NOT fetch this URL.
-   * This avoids PuppySpot's HTTP 403 problem.
-   */
-  const sourceUrl = textValue(
-    formData,
-    "source_url"
+  const patterns = [
+    new RegExp(
+      `<meta[^>]+property=["']${escaped}["'][^>]+content=["']([^"']+)["'][^>]*>`,
+      "i"
+    ),
+    new RegExp(
+      `<meta[^>]+content=["']([^"']+)["'][^>]+property=["']${escaped}["'][^>]*>`,
+      "i"
+    ),
+    new RegExp(
+      `<meta[^>]+name=["']${escaped}["'][^>]+content=["']([^"']+)["'][^>]*>`,
+      "i"
+    ),
+    new RegExp(
+      `<meta[^>]+content=["']([^"']+)["'][^>]+name=["']${escaped}["'][^>]*>`,
+      "i"
+    ),
+  ];
+
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+
+    if (match?.[1]) {
+      return cleanText(match[1]);
+    }
+  }
+
+  return null;
+}
+
+function decodeHtml(value: string): string {
+  return value
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
+}
+
+function extractTitle(html: string): string | null {
+  const match = html.match(
+    /<title[^>]*>([\s\S]*?)<\/title>/i
   );
 
-  if (!sourceUrl) {
-    throw new Error(
-      "A source website URL is required."
-    );
+  if (!match?.[1]) return null;
+
+  return cleanText(decodeHtml(match[1]));
+}
+
+function extractJsonLdObjects(html: string): unknown[] {
+  const objects: unknown[] = [];
+
+  const matches = html.matchAll(
+    /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
+  );
+
+  for (const match of matches) {
+    try {
+      const parsed = JSON.parse(match[1]);
+
+      if (Array.isArray(parsed)) {
+        objects.push(...parsed);
+      } else {
+        objects.push(parsed);
+      }
+    } catch {
+      // Ignore malformed JSON-LD.
+    }
+  }
+
+  return objects;
+}
+
+function collectImagesFromJsonLd(
+  objects: unknown[],
+  sourceUrl: string
+): string[] {
+  const urls: string[] = [];
+
+  function visit(value: unknown) {
+    if (!value || typeof value !== "object") return;
+
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        visit(item);
+      }
+
+      return;
+    }
+
+    const record = value as Record<string, unknown>;
+
+    for (const key of ["image", "contentUrl", "thumbnailUrl"]) {
+      const candidate = record[key];
+
+      if (typeof candidate === "string") {
+        const url = absoluteUrl(candidate, sourceUrl);
+
+        if (url) urls.push(url);
+      }
+
+      if (Array.isArray(candidate)) {
+        for (const item of candidate) {
+          if (typeof item === "string") {
+            const url = absoluteUrl(item, sourceUrl);
+
+            if (url) urls.push(url);
+          }
+        }
+      }
+    }
+
+    for (const child of Object.values(record)) {
+      visit(child);
+    }
+  }
+
+  for (const object of objects) {
+    visit(object);
+  }
+
+  return urls;
+}
+
+function extractHtmlImages(
+  html: string,
+  sourceUrl: string
+): string[] {
+  const urls: string[] = [];
+
+  const patterns = [
+    /<img[^>]+src=["']([^"']+)["']/gi,
+    /<img[^>]+data-src=["']([^"']+)["']/gi,
+    /<img[^>]+data-original=["']([^"']+)["']/gi,
+    /<source[^>]+src=["']([^"']+)["']/gi,
+  ];
+
+  for (const pattern of patterns) {
+    const matches = html.matchAll(pattern);
+
+    for (const match of matches) {
+      const raw = decodeHtml(match[1]);
+
+      const url = absoluteUrl(raw, sourceUrl);
+
+      if (url) {
+        urls.push(url);
+      }
+    }
+  }
+
+  return urls;
+}
+
+function extractVideos(
+  html: string,
+  sourceUrl: string
+): string[] {
+  const urls: string[] = [];
+
+  const patterns = [
+    /<video[^>]+src=["']([^"']+)["']/gi,
+    /<source[^>]+src=["']([^"']+)["'][^>]*>/gi,
+  ];
+
+  for (const pattern of patterns) {
+    const matches = html.matchAll(pattern);
+
+    for (const match of matches) {
+      const raw = decodeHtml(match[1]);
+
+      const url = absoluteUrl(raw, sourceUrl);
+
+      if (url) {
+        urls.push(url);
+      }
+    }
+  }
+
+  return urls;
+}
+
+function uniqueUrls(urls: string[]): string[] {
+  return Array.from(
+    new Set(
+      urls
+        .map((url) => url.trim())
+        .filter(Boolean)
+    )
+  );
+}
+
+function isProbablyImage(url: string): boolean {
+  const clean = url.split("?")[0].toLowerCase();
+
+  return /\.(jpg|jpeg|png|webp|gif|avif)$/i.test(clean);
+}
+
+function isProbablyVideo(url: string): boolean {
+  const clean = url.split("?")[0].toLowerCase();
+
+  return /\.(mp4|webm|mov|m4v|ogg)$/i.test(clean);
+}
+
+function getPuppyName(
+  html: string,
+  sourceUrl: string
+): string {
+  const jsonLd = extractJsonLdObjects(html);
+
+  for (const item of jsonLd) {
+    if (!item || typeof item !== "object") continue;
+
+    const record = item as Record<string, unknown>;
+
+    if (
+      typeof record.name === "string" &&
+      record.name.trim()
+    ) {
+      return record.name.trim();
+    }
+
+    if (Array.isArray(record["@graph"])) {
+      for (const graphItem of record["@graph"]) {
+        if (
+          graphItem &&
+          typeof graphItem === "object" &&
+          typeof (graphItem as Record<string, unknown>).name ===
+            "string"
+        ) {
+          return String(
+            (graphItem as Record<string, unknown>).name
+          ).trim();
+        }
+      }
+    }
+  }
+
+  const title =
+    extractMeta(html, "og:title") ??
+    extractTitle(html);
+
+  if (title) {
+    return title
+      .replace(/\s*[|–-]\s*PuppySpot.*$/i, "")
+      .trim();
   }
 
   try {
-    const parsedUrl = new URL(sourceUrl);
+    const pathname = new URL(sourceUrl).pathname;
 
-    if (
-      parsedUrl.protocol !== "http:" &&
-      parsedUrl.protocol !== "https:"
-    ) {
-      throw new Error();
+    const puppyMatch = pathname.match(
+      /\/puppy\/([^/]+)$/i
+    );
+
+    if (puppyMatch?.[1]) {
+      return decodeURIComponent(
+        puppyMatch[1]
+      ).replace(/[-_]+/g, " ");
     }
   } catch {
+    // Ignore.
+  }
+
+  return "Imported Puppy";
+}
+
+function getBreedName(
+  html: string
+): string | null {
+  const jsonLd = extractJsonLdObjects(html);
+
+  for (const item of jsonLd) {
+    if (!item || typeof item !== "object") continue;
+
+    const record = item as Record<string, unknown>;
+
+    const breed = record.breed;
+
+    if (typeof breed === "string") {
+      return cleanText(breed);
+    }
+
+    if (
+      breed &&
+      typeof breed === "object" &&
+      typeof (breed as Record<string, unknown>).name ===
+        "string"
+    ) {
+      return cleanText(
+        String(
+          (breed as Record<string, unknown>).name
+        )
+      );
+    }
+  }
+
+  return null;
+}
+
+async function findBreedId(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  breedName: string | null
+): Promise<string | null> {
+  if (!breedName) return null;
+
+  const { data } = await supabase
+    .from("breeds")
+    .select("id, name");
+
+  if (!data) return null;
+
+  const wanted = breedName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+
+  const match = data.find((breed) => {
+    const existing = String(breed.name)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "");
+
+    return (
+      existing === wanted ||
+      existing.includes(wanted) ||
+      wanted.includes(existing)
+    );
+  });
+
+  return match?.id ?? null;
+}
+
+async function fetchSourcePage(url: string): Promise<string> {
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (compatible; HavenPawsImporter/1.0)",
+      Accept:
+        "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
     throw new Error(
-      "Please enter a valid HTTP or HTTPS source URL."
+      `The source website returned HTTP ${response.status}.`
     );
   }
 
-  /*
-   * BASIC DETAILS
-   */
-  const name = textValue(
-    formData,
-    "name"
-  );
+  const html = await response.text();
 
-  const breedId = textValue(
-    formData,
-    "breed_id"
-  );
-
-  const breederId = textValue(
-    formData,
-    "breeder_id"
-  );
-
-  if (!name) {
-    throw new Error(
-      "A puppy name is required."
-    );
+  if (!html.trim()) {
+    throw new Error("The source website returned an empty page.");
   }
 
-  if (!breedId) {
-    throw new Error(
-      "A breed is required."
-    );
+  return html;
+}
+
+export async function importPuppyFromUrl(
+  sourceUrl: string
+): Promise<ImportResult> {
+  const parsedUrl = new URL(sourceUrl);
+
+  if (
+    parsedUrl.protocol !== "http:" &&
+    parsedUrl.protocol !== "https:"
+  ) {
+    throw new Error("Only HTTP and HTTPS URLs are supported.");
   }
 
-  const price = numberValue(
-    formData,
-    "price"
-  );
+  const html = await fetchSourcePage(sourceUrl);
 
-  if (price === null) {
-    throw new Error(
-      "A valid puppy price is required."
-    );
-  }
+  const supabase = await createClient();
 
-  if (price < 0) {
-    throw new Error(
-      "Puppy price cannot be negative."
-    );
-  }
+  const name = getPuppyName(html, sourceUrl);
 
-  /*
-   * BREEDER VALIDATION
-   */
-  await validateBreederForBreed(
+  const breedName = getBreedName(html);
+
+  const breedId = await findBreedId(
     supabase,
-    breederId,
-    breedId
+    breedName
   );
 
-  /*
-   * DESCRIPTION
-   */
-  const description =
-    textValue(
-      formData,
-      "description"
-    ) ?? "";
-
-  /*
-   * Keep the original source URL in the
-   * puppy description for now.
-   *
-   * We are NOT scraping the source website.
-   */
-  const finalDescription = description
-    ? `${description}\n\nSource listing:\n${sourceUrl}`
-    : `Source listing:\n${sourceUrl}`;
-
-  /*
-   * AGE
-   */
-  const ageWeeksValue = numberValue(
-    formData,
-    "age_weeks"
+  const ogImage = extractMeta(
+    html,
+    "og:image"
   );
 
-  const ageWeeks =
-    ageWeeksValue !== null
-      ? Math.round(ageWeeksValue)
-      : null;
+  const twitterImage = extractMeta(
+    html,
+    "twitter:image"
+  );
 
-  /*
-   * PUPPY DATA
-   */
-  const puppyData = {
-    name,
+  const jsonLdImages =
+    collectImagesFromJsonLd(
+      extractJsonLdObjects(html),
+      sourceUrl
+    );
 
-    breed_id: breedId,
+  const htmlImages =
+    extractHtmlImages(
+      html,
+      sourceUrl
+    );
 
-    breeder_id: breederId,
+  const imageUrls = uniqueUrls([
+    ...(ogImage
+      ? [absoluteUrl(ogImage, sourceUrl)].filter(
+          Boolean
+        ) as string[]
+      : []),
+    ...(twitterImage
+      ? [absoluteUrl(twitterImage, sourceUrl)].filter(
+          Boolean
+        ) as string[]
+      : []),
+    ...jsonLdImages,
+    ...htmlImages,
+  ]).filter(isProbablyImage);
 
-    sex:
-      textValue(
-        formData,
-        "sex"
-      ),
+  const videoUrls = uniqueUrls(
+    extractVideos(html, sourceUrl)
+  ).filter(isProbablyVideo);
 
-    price,
+  const media: ImportedMedia[] = [
+    ...imageUrls.map((url) => ({
+      url,
+      mediaType: "image" as const,
+    })),
+    ...videoUrls.map((url) => ({
+      url,
+      mediaType: "video" as const,
+    })),
+  ];
 
-    deposit_amount:
-      numberValue(
-        formData,
-        "deposit_amount"
-      ) ?? 0,
+  const { data: puppy, error: puppyError } =
+    await supabase
+      .from("puppies")
+      .insert({
+        name,
+        breed_id: breedId,
+        price: 0,
+        status: "available",
+        is_published: false,
+        description:
+          `Imported from ${sourceUrl}`,
+      })
+      .select("id, name")
+      .single();
 
-    description:
-      finalDescription,
-
-    status:
-      textValue(
-        formData,
-        "status"
-      ) ?? "available",
-
-    color:
-      textValue(
-        formData,
-        "color"
-      ),
-
-    weight_estimate:
-      numberValue(
-        formData,
-        "weight_estimate"
-      ),
-
-    markings:
-      textValue(
-        formData,
-        "markings"
-      ),
-
-    size:
-      textValue(
-        formData,
-        "size"
-      ),
-
-    generation:
-      textValue(
-        formData,
-        "generation"
-      ),
-
-    age_weeks:
-      ageWeeks,
-
-    litter_id:
-      textValue(
-        formData,
-        "litter_id"
-      ),
-
-    ready_date:
-      textValue(
-        formData,
-        "ready_date"
-      ),
-
-    vet_checked:
-      formData.get(
-        "vet_checked"
-      ) === "on",
-
-    vaccinated:
-      formData.get(
-        "vaccinated"
-      ) === "on",
-
-    is_published:
-      formData.get(
-        "is_published"
-      ) === "on",
-
-    mom_name:
-      textValue(
-        formData,
-        "mom_name"
-      ),
-
-    mom_breed:
-      textValue(
-        formData,
-        "mom_breed"
-      ),
-
-    mom_weight:
-      textValue(
-        formData,
-        "mom_weight"
-      ),
-
-    mom_registration:
-      textValue(
-        formData,
-        "mom_registration"
-      ),
-
-    dad_name:
-      textValue(
-        formData,
-        "dad_name"
-      ),
-
-    dad_breed:
-      textValue(
-        formData,
-        "dad_breed"
-      ),
-
-    dad_weight:
-      textValue(
-        formData,
-        "dad_weight"
-      ),
-
-    dad_registration:
-      textValue(
-        formData,
-        "dad_registration"
-      ),
-  };
-
-  /*
-   * CREATE PUPPY
-   */
-  const {
-    data: puppy,
-    error,
-  } = await supabase
-    .from("puppies")
-    .insert(puppyData)
-    .select("id, name")
-    .single();
-
-  if (error || !puppy) {
+  if (puppyError || !puppy) {
     throw new Error(
-      error?.message ??
-        "Failed to import the puppy."
+      puppyError?.message ??
+        "Failed to create the puppy."
     );
   }
 
-  /*
-   * REFRESH ADMIN + PUBLIC PAGES
-   */
-  revalidatePath("/");
-  revalidatePath("/puppies");
+  if (media.length > 0) {
+    const mediaRows = media.map(
+      (item, index) => ({
+        puppy_id: puppy.id,
+        media_type: item.mediaType,
+        url: item.url,
+        cloudinary_public_id: null,
+        sort_order: index,
+        is_cover: index === 0,
+      })
+    );
+
+    const { error: mediaError } =
+      await supabase
+        .from("puppy_media")
+        .insert(mediaRows);
+
+    if (mediaError) {
+      await supabase
+        .from("puppies")
+        .delete()
+        .eq("id", puppy.id);
+
+      throw new Error(
+        `Puppy was created but media could not be saved: ${mediaError.message}`
+      );
+    }
+  }
+
   revalidatePath("/admin");
   revalidatePath("/admin/puppies");
+  revalidatePath(`/admin/puppies/${puppy.id}`);
+  revalidatePath(`/admin/puppies/${puppy.id}/media`);
 
   return {
     id: puppy.id,
     name: puppy.name,
+    mediaCount: media.length,
   };
 }
