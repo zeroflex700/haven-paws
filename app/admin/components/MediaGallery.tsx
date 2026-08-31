@@ -48,7 +48,7 @@ Cover Photo
 <button
 disabled={i === 0 || isPending}
 onClick={() =>
-  startTransition(() => moveMedia(puppyId, m.id, "down"))
+  startTransition(() => moveMedia(puppyId, m.id, "up"))
 }
 className="p-1.5 text-sage disabled:opacity-30"
 >
@@ -57,7 +57,7 @@ className="p-1.5 text-sage disabled:opacity-30"
 <button
 disabled={i === media.length - 1 || isPending}
 onClick={() =>
-startTransition(() => moveMedia(puppyId, m.id, m.sort_order, "down"))
+startTransition(() => moveMedia(puppyId, m.id, "down"))
 }
 className="p-1.5 text-sage disabled:opacity-30"
 >
