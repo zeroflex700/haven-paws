@@ -29,7 +29,10 @@ return (
 <h1 className="font-display text-2xl text-forest mb-1">
 {puppy.name}'s Media
 </h1>
-<Link href={/admin/puppies/${id}} className="text-sm text-sage underline">
+<Link
+  href={`/admin/puppies/${id}`}
+  className="text-sm text-sage underline"
+>
 ← Back to details
 </Link>
 

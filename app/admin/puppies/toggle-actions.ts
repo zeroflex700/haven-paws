@@ -8,7 +8,7 @@ revalidatePath("/");
 revalidatePath("/puppies");
 revalidatePath("/admin");
 revalidatePath("/admin/puppies");
-if (id) revalidatePath(/admin/puppies/${id});
+if (id) revalidatePath(`/admin/puppies/${id}`);
 }
 
 export async function togglePublished(id: string, current: boolean) {
