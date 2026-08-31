@@ -27,7 +27,7 @@ return (
 <main className="px-5 pt-6">
 <p className="eyebrow mb-1">Haven Paws Admin</p>
 <h1 className="font-display text-2xl text-forest mb-1">
-{puppy.name}'s Media
+  {puppy.name}&apos;s Media
 </h1>
 <Link
   href={`/admin/puppies/${id}`}
