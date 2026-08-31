@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import IncludedItemsPicker from "./IncludedItemsPicker";
 import type { IncludedItemKey } from "@/lib/includedItems";
+import type { LitterAutofillData } from "@/lib/queries/adminLitters";
 
 type Breed = {
   id: string;
@@ -44,18 +45,23 @@ export default function PuppyForm({
   breeders,
   puppy,
   action,
-  litterIds = [],
+  litterAutofillMap = {},
 }: {
   breeds: Breed[];
   breeders: BreederOption[];
   puppy?: PuppyData;
   action: (formData: FormData) => void;
-  litterIds?: string[];
+  litterAutofillMap?: Record<string, LitterAutofillData>;
 }) {
   const inputClass =
     "w-full border border-sage/30 rounded-md px-3 py-2 focus:outline-none focus:border-gold";
 
   const labelClass = "block text-sm text-ink/80 mb-1 mt-4";
+
+  const litterIds = useMemo(
+    () => Object.keys(litterAutofillMap).sort(),
+    [litterAutofillMap]
+  );
 
   const [selectedBreedId, setSelectedBreedId] = useState(
     puppy?.breed_id ?? ""
@@ -63,6 +69,29 @@ export default function PuppyForm({
 
   const [selectedBreederId, setSelectedBreederId] = useState(
     puppy?.breeder_id ?? ""
+  );
+
+  const [litterId, setLitterId] = useState(puppy?.litter_id ?? "");
+  const [autofillApplied, setAutofillApplied] = useState(false);
+
+  const [price, setPrice] = useState(puppy?.price ?? "");
+  const [depositAmount, setDepositAmount] = useState(
+    puppy?.deposit_amount ?? 0
+  );
+  const [ageWeeks, setAgeWeeks] = useState(puppy?.age_weeks ?? "");
+  const [size, setSize] = useState(puppy?.size ?? "");
+  const [status, setStatus] = useState(puppy?.status ?? "available");
+  const [vetChecked, setVetChecked] = useState(
+    puppy?.vet_checked ?? false
+  );
+  const [vaccinated, setVaccinated] = useState(
+    puppy?.vaccinated ?? false
+  );
+  const [isPublished, setIsPublished] = useState(
+    puppy?.is_published ?? false
+  );
+  const [includedItems, setIncludedItems] = useState<IncludedItemKey[]>(
+    puppy?.included_items ?? []
   );
 
   const filteredBreeders = useMemo(() => {
@@ -73,8 +102,6 @@ export default function PuppyForm({
     );
   }, [breeders, selectedBreedId]);
 
-  // If the breed changes, make sure an old breeder from another
-  // breed cannot remain selected.
   useEffect(() => {
     if (
       selectedBreederId &&
@@ -92,10 +119,32 @@ export default function PuppyForm({
     const breedId = event.target.value;
 
     setSelectedBreedId(breedId);
-
-    // A breeder belongs to a breed, so changing the breed
-    // clears the previous breeder selection.
     setSelectedBreederId("");
+  }
+
+  function handleLitterIdChange(
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const value = event.target.value;
+    setLitterId(value);
+
+    const match = litterAutofillMap[value];
+
+    if (match) {
+      setSelectedBreedId(match.breed_id ?? "");
+      setPrice(match.price ?? "");
+      setDepositAmount(match.deposit_amount ?? 0);
+      setAgeWeeks(match.age_weeks ?? "");
+      setSize(match.size ?? "");
+      setStatus(match.status ?? "available");
+      setVetChecked(match.vet_checked);
+      setVaccinated(match.vaccinated);
+      setIsPublished(match.is_published);
+      setIncludedItems(match.included_items);
+      setAutofillApplied(true);
+    } else {
+      setAutofillApplied(false);
+    }
   }
 
   return (
@@ -172,7 +221,10 @@ export default function PuppyForm({
         name="price"
         type="number"
         step="0.01"
-        defaultValue={puppy?.price}
+        value={price}
+        onChange={(e) =>
+          setPrice(e.target.value === "" ? "" : Number(e.target.value))
+        }
         required
         className={inputClass}
       />
@@ -182,7 +234,8 @@ export default function PuppyForm({
         name="deposit_amount"
         type="number"
         step="0.01"
-        defaultValue={puppy?.deposit_amount ?? 0}
+        value={depositAmount}
+        onChange={(e) => setDepositAmount(Number(e.target.value))}
         className={inputClass}
       />
 
@@ -208,7 +261,10 @@ export default function PuppyForm({
         type="number"
         step="1"
         min="0"
-        defaultValue={puppy?.age_weeks}
+        value={ageWeeks}
+        onChange={(e) =>
+          setAgeWeeks(e.target.value === "" ? "" : Number(e.target.value))
+        }
         placeholder="e.g. 11"
         className={inputClass}
       />
@@ -228,7 +284,8 @@ export default function PuppyForm({
       <label className={labelClass}>Size</label>
       <input
         name="size"
-        defaultValue={puppy?.size}
+        value={size}
+        onChange={(e) => setSize(e.target.value)}
         placeholder="e.g. Miniature, Standard"
         className={inputClass}
       />
@@ -252,7 +309,8 @@ export default function PuppyForm({
       <label className={labelClass}>Litter ID</label>
       <input
         name="litter_id"
-        defaultValue={puppy?.litter_id}
+        value={litterId}
+        onChange={handleLitterIdChange}
         placeholder="e.g. havanese-petunia-2026-06"
         list="litter-id-suggestions"
         className={inputClass}
@@ -262,11 +320,20 @@ export default function PuppyForm({
           <option key={id} value={id} />
         ))}
       </datalist>
-      <p className="text-xs text-sage mt-1">
-        Use the exact same Litter ID on every puppy from the same litter so
-        they show up as siblings on each other&apos;s pages. Start typing to
-        see existing litter IDs.
-      </p>
+
+      {autofillApplied ? (
+        <p className="text-xs text-forest font-medium mt-1">
+          ✓ Autofilled from this litter — breed, price, deposit, age, size,
+          status, checkboxes, and included items were copied. Review and
+          adjust anything before saving. Parent info and photos will be
+          copied automatically once you save.
+        </p>
+      ) : (
+        <p className="text-xs text-sage mt-1">
+          Use the exact same Litter ID on every puppy from the same litter so
+          they show up as siblings — and to auto-fill shared details here.
+        </p>
+      )}
 
       <label className={labelClass}>Description</label>
       <textarea
@@ -279,7 +346,8 @@ export default function PuppyForm({
       <label className={labelClass}>Status</label>
       <select
         name="status"
-        defaultValue={puppy?.status ?? "available"}
+        value={status}
+        onChange={(e) => setStatus(e.target.value)}
         required
         className={inputClass}
       >
@@ -294,7 +362,8 @@ export default function PuppyForm({
           type="checkbox"
           name="vet_checked"
           id="vet_checked"
-          defaultChecked={puppy?.vet_checked}
+          checked={vetChecked}
+          onChange={(e) => setVetChecked(e.target.checked)}
           className="w-4 h-4"
         />
         <label htmlFor="vet_checked" className="text-sm text-ink/80">
@@ -307,7 +376,8 @@ export default function PuppyForm({
           type="checkbox"
           name="vaccinated"
           id="vaccinated"
-          defaultChecked={puppy?.vaccinated}
+          checked={vaccinated}
+          onChange={(e) => setVaccinated(e.target.checked)}
           className="w-4 h-4"
         />
         <label htmlFor="vaccinated" className="text-sm text-ink/80">
@@ -320,7 +390,8 @@ export default function PuppyForm({
           type="checkbox"
           name="is_published"
           id="is_published"
-          defaultChecked={puppy?.is_published}
+          checked={isPublished}
+          onChange={(e) => setIsPublished(e.target.checked)}
           className="w-4 h-4"
         />
         <label htmlFor="is_published" className="text-sm text-ink/80">
@@ -335,7 +406,8 @@ export default function PuppyForm({
       </p>
 
       <IncludedItemsPicker
-        selected={puppy?.included_items ?? []}
+        selected={includedItems}
+        onChange={setIncludedItems}
       />
 
       <button

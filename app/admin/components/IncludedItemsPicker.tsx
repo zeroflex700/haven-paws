@@ -4,10 +4,20 @@ import type { IncludedItemKey } from "@/lib/includedItems";
 import { ALL_INCLUDED_ITEMS } from "@/lib/includedItems";
 
 export default function IncludedItemsPicker({
-  selected = [],
+  selected,
+  onChange,
 }: {
-  selected?: IncludedItemKey[];
+  selected: IncludedItemKey[];
+  onChange: (next: IncludedItemKey[]) => void;
 }) {
+  function toggle(key: IncludedItemKey) {
+    if (selected.includes(key)) {
+      onChange(selected.filter((k) => k !== key));
+    } else {
+      onChange([...selected, key]);
+    }
+  }
+
   return (
     <div className="space-y-3 mt-3">
       {ALL_INCLUDED_ITEMS.map((item) => {
@@ -22,13 +32,12 @@ export default function IncludedItemsPicker({
               type="checkbox"
               name="included_items"
               value={item.key}
-              defaultChecked={checked}
+              checked={checked}
+              onChange={() => toggle(item.key)}
               className="w-4 h-4"
             />
 
-            <span className="text-sm text-ink/80">
-              {item.label}
-            </span>
+            <span className="text-sm text-ink/80">{item.label}</span>
           </label>
         );
       })}

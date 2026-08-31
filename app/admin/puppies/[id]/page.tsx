@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getBreeds } from "@/lib/queries/breeds";
+import { getLitterAutofillMap } from "@/lib/queries/adminLitters";
 import PuppyForm from "../../components/PuppyForm";
 import { updatePuppy } from "../actions";
 import { notFound } from "next/navigation";
@@ -29,19 +30,7 @@ export default async function EditPuppyPage({
 
   if (!puppy) notFound();
 
-  const { data: litterRows } = await supabase
-    .from("puppies")
-    .select("litter_id")
-    .not("litter_id", "is", null)
-    .neq("id", id);
-
-  const litterIds = Array.from(
-    new Set(
-      (litterRows ?? [])
-        .map((row) => row.litter_id as string)
-        .filter(Boolean)
-    )
-  ).sort();
+  const litterAutofillMap = await getLitterAutofillMap();
 
   const updatePuppyWithId = updatePuppy.bind(null, id);
 
@@ -73,7 +62,7 @@ export default async function EditPuppyPage({
         breeds={breeds}
         breeders={breeders ?? []}
         puppy={puppy}
-        litterIds={litterIds}
+        litterAutofillMap={litterAutofillMap}
         action={updatePuppyWithId}
       />
     </main>
