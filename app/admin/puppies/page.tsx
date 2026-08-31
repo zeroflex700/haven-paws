@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getAllPuppiesAdmin } from "@/lib/queries/adminPuppies";
 import PuppyListView from "../components/PuppyListView";
 export default async function AdminPuppiesPage() {
 const puppies = await getAllPuppiesAdmin();
