@@ -1,9 +1,9 @@
 import Link from "next/link";
 import PedigreeCard from "./PedigreeCard";
-import { getPuppies } from "@/lib/queries/puppies";
+import { getPublishedPuppies } from "@/lib/queries/puppies";
 
 export default async function FeaturedLitter() {
-  const puppies = await getPuppies();
+  const puppies = await getPublishedPuppies();
   const featured = puppies.filter((p) => p.status === "available").slice(0, 3);
 
   return (
