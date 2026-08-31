@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 function revalidatePublicPages(puppyId: string) {
 revalidatePath("/");
 revalidatePath("/puppies");
-revalidatePath(/admin/puppies/${puppyId}/media);
+revalidatePath(`/admin/puppies/${puppyId}/media`);
 }
 
 export async function addMedia(

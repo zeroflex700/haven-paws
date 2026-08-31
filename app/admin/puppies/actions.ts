@@ -165,7 +165,8 @@ if (error) throw new Error(error.message);
 
 revalidatePath("/admin");
 revalidatePath("/admin/puppies");
-revalidatePath(/admin/puppies/${id}); revalidatePath(/puppies/${id});
+revalidatePath(`/admin/puppies/${id}`);
+revalidatePath(`/puppies/${id}`);
 
 redirect("/admin/puppies");
 }

@@ -8,5 +8,5 @@ return url.replace(
 
 export function cldOptimized(url: string, width: number = 800) {
 if (!url.includes("/upload/")) return url;
-return url.replace("/upload/", /upload/w_${width},c_fill,q_auto,f_auto/);
+url.replace("/upload/", `/upload/w_${width},c_fill,q_auto,f_auto/`);
 }

@@ -47,14 +47,14 @@ const siblingIds = await getLitterSiblingIds(supabase, puppyId);
 const { error } = await supabase
 .from("puppies")
 .update({
-[${role}_name]: data.name, [``${role}_breed]: data.breed,
-[${role}_weight]: data.weight, [``${role}_registration]: data.registration,
+[`${role}_name`]: data.name, [``${role}_breed]: data.breed,
+[`${role}_weight`]: data.weight, [``${role}_registration]: data.registration,
 })
 .in("id", siblingIds);
 
 if (error) throw new Error(error.message);
 
-revalidatePath(/admin/puppies/${puppyId}/parents); revalidatePath(/puppies/${puppyId});
+revalidatePath(`/admin/puppies/${puppyId}/parents`); revalidatePath(/puppies/${puppyId});
 
 for (const id of siblingIds) {
 if (id !== puppyId) {

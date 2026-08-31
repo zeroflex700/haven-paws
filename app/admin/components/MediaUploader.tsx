@@ -42,8 +42,8 @@ reject(new Error("Network error during upload"))
 );
 
 xhr.open(
-"POST",
-https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/${mediaType}/upload
+  "POST",
+  `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/${mediaType}/upload`
 );
 xhr.send(formData);
 });
