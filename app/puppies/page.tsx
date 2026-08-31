@@ -5,7 +5,7 @@ import PuppiesClient from "../components/PuppiesClient";
 import TrendingSearches from "../components/TrendingSearches";
 import FavoriteBreedsRow from "../components/FavoriteBreedsRow";
 import RecentSearchesRow from "../components/RecentSearchesRow";
-import { getPublishedPuppies } from "@/lib/queries/puppies";
+import { getPuppies } from "@/lib/queries/puppies";
 
 export const metadata: Metadata = {
   title: "Available Puppies",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 };
 
 export default async function PuppiesPage() {
-  const puppies = await getPublishedPuppies();
+  const puppies = await getPuppies();
 
   return (
     <main className="min-h-screen">

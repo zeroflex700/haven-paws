@@ -22,30 +22,22 @@ type PuppyData = {
   breeder_id?: string | null;
   sex?: string;
   price?: number;
+  deposit_amount?: number;
+  description?: string;
+  status?: string;
+  color?: string;
   weight_estimate?: number;
-  age_weeks?: number;
+  litter_id?: string;
+  ready_date?: string;
+  included_items?: IncludedItemKey[];
+  vet_checked?: boolean;
+  vaccinated?: boolean;
+  is_published?: boolean;
   markings?: string;
   size?: string;
   generation?: string;
-  ready_date?: string;
-  litter_id?: string;
-  description?: string;
-  status?: string;
-  vet_checked?: boolean;
-  vaccinated?: boolean;
-  included_items?: IncludedItemKey[];
+  age_weeks?: number;
 };
-
-type PuppyFormProps = {
-  breeds: Breed[];
-  breeders: BreederOption[];
-  puppy?: PuppyData;
-  action: (formData: FormData) => void | Promise<void>;
-  litterIds?: string[];
-};
-
-const inputClass =
-  "w-full rounded-xl border border-forest/15 bg-white px-4 py-3 text-sm text-ink outline-none focus:border-gold focus:ring-2 focus:ring-gold/20";
 
 export default function PuppyForm({
   breeds,
@@ -53,7 +45,16 @@ export default function PuppyForm({
   puppy,
   action,
   litterIds = [],
-}: PuppyFormProps) {
+}: {
+  breeds: Breed[];
+  breeders: BreederOption[];
+  puppy?: PuppyData;
+  action: (formData: FormData) => void;
+  litterIds?: string[];
+}) {
+  const inputClass =
+    "w-full border border-sage/30 rounded-md px-3 py-2 focus:outline-none focus:border-gold";
+
   const labelClass = "block text-sm text-ink/80 mb-1 mt-4";
 
   const [selectedBreedId, setSelectedBreedId] = useState(
@@ -72,12 +73,14 @@ export default function PuppyForm({
     );
   }, [breeders, selectedBreedId]);
 
+  // If the breed changes, make sure an old breeder from another
+  // breed cannot remain selected.
   useEffect(() => {
-    // If the currently selected breeder is not assigned to the
-    // selected breed, clear the breeder selection.
     if (
       selectedBreederId &&
-      !filteredBreeders.some((breeder) => breeder.id === selectedBreederId)
+      !filteredBreeders.some(
+        (breeder) => breeder.id === selectedBreederId
+      )
     ) {
       setSelectedBreederId("");
     }
@@ -89,6 +92,9 @@ export default function PuppyForm({
     const breedId = event.target.value;
 
     setSelectedBreedId(breedId);
+
+    // A breeder belongs to a breed, so changing the breed
+    // clears the previous breeder selection.
     setSelectedBreederId("");
   }
 
@@ -97,7 +103,7 @@ export default function PuppyForm({
       <label className={labelClass}>Name</label>
       <input
         name="name"
-        defaultValue={puppy?.name ?? ""}
+        defaultValue={puppy?.name}
         required
         className={inputClass}
       />
@@ -112,14 +118,15 @@ export default function PuppyForm({
       >
         <option value="">Select a breed</option>
 
-        {breeds.map((breed) => (
-          <option key={breed.id} value={breed.id}>
-            {breed.name}
+        {breeds.map((b) => (
+          <option key={b.id} value={b.id}>
+            {b.name}
           </option>
         ))}
       </select>
 
       <label className={labelClass}>Breeder (optional)</label>
+
       <select
         name="breeder_id"
         value={selectedBreederId}
@@ -132,7 +139,7 @@ export default function PuppyForm({
             ? "Select a breed first"
             : filteredBreeders.length === 0
               ? "No breeders for this breed"
-              : "No breeder selected"}
+              : "No breeder profile linked"}
         </option>
 
         {filteredBreeders.map((breeder) => (
@@ -151,7 +158,7 @@ export default function PuppyForm({
       <label className={labelClass}>Gender</label>
       <select
         name="sex"
-        defaultValue={puppy?.sex ?? ""}
+        defaultValue={puppy?.sex}
         required
         className={inputClass}
       >
@@ -165,7 +172,24 @@ export default function PuppyForm({
         name="price"
         type="number"
         step="0.01"
-        defaultValue={puppy?.price ?? ""}
+        defaultValue={puppy?.price}
+        required
+        className={inputClass}
+      />
+
+      <label className={labelClass}>Deposit Amount ($)</label>
+      <input
+        name="deposit_amount"
+        type="number"
+        step="0.01"
+        defaultValue={puppy?.deposit_amount ?? 0}
+        className={inputClass}
+      />
+
+      <label className={labelClass}>Color</label>
+      <input
+        name="color"
+        defaultValue={puppy?.color}
         className={inputClass}
       />
 
@@ -174,7 +198,7 @@ export default function PuppyForm({
         name="weight_estimate"
         type="number"
         step="0.1"
-        defaultValue={puppy?.weight_estimate ?? ""}
+        defaultValue={puppy?.weight_estimate}
         className={inputClass}
       />
 
@@ -182,8 +206,10 @@ export default function PuppyForm({
       <input
         name="age_weeks"
         type="number"
+        step="1"
         min="0"
-        defaultValue={puppy?.age_weeks ?? ""}
+        defaultValue={puppy?.age_weeks}
+        placeholder="e.g. 11"
         className={inputClass}
       />
       <p className="text-xs text-sage mt-1">
@@ -194,7 +220,7 @@ export default function PuppyForm({
       <label className={labelClass}>Markings</label>
       <input
         name="markings"
-        defaultValue={puppy?.markings ?? ""}
+        defaultValue={puppy?.markings}
         placeholder="e.g. White markings"
         className={inputClass}
       />
@@ -202,7 +228,7 @@ export default function PuppyForm({
       <label className={labelClass}>Size</label>
       <input
         name="size"
-        defaultValue={puppy?.size ?? ""}
+        defaultValue={puppy?.size}
         placeholder="e.g. Miniature, Standard"
         className={inputClass}
       />
@@ -210,7 +236,7 @@ export default function PuppyForm({
       <label className={labelClass}>Generation</label>
       <input
         name="generation"
-        defaultValue={puppy?.generation ?? ""}
+        defaultValue={puppy?.generation}
         placeholder="e.g. F1, F1B, F2"
         className={inputClass}
       />
@@ -219,29 +245,33 @@ export default function PuppyForm({
       <input
         name="ready_date"
         type="date"
-        defaultValue={puppy?.ready_date ?? ""}
+        defaultValue={puppy?.ready_date}
         className={inputClass}
       />
 
       <label className={labelClass}>Litter ID</label>
       <input
         name="litter_id"
-        defaultValue={puppy?.litter_id ?? ""}
+        defaultValue={puppy?.litter_id}
         placeholder="e.g. havanese-petunia-2026-06"
         list="litter-id-suggestions"
         className={inputClass}
       />
-
       <datalist id="litter-id-suggestions">
-        {litterIds.map((litterId) => (
-          <option key={litterId} value={litterId} />
+        {litterIds.map((id) => (
+          <option key={id} value={id} />
         ))}
       </datalist>
+      <p className="text-xs text-sage mt-1">
+        Use the exact same Litter ID on every puppy from the same litter so
+        they show up as siblings on each other&apos;s pages. Start typing to
+        see existing litter IDs.
+      </p>
 
       <label className={labelClass}>Description</label>
       <textarea
         name="description"
-        defaultValue={puppy?.description ?? ""}
+        defaultValue={puppy?.description}
         rows={4}
         className={inputClass}
       />
@@ -256,15 +286,15 @@ export default function PuppyForm({
         <option value="available">Available</option>
         <option value="reserved">Reserved</option>
         <option value="sold">Sold</option>
-        <option value="unavailable">Unavailable</option>
+        <option value="hidden">Hidden</option>
       </select>
 
-      <div className="flex items-center gap-2 mt-5">
+      <div className="flex items-center gap-2 mt-4">
         <input
           type="checkbox"
           name="vet_checked"
           id="vet_checked"
-          defaultChecked={puppy?.vet_checked ?? false}
+          defaultChecked={puppy?.vet_checked}
           className="w-4 h-4"
         />
         <label htmlFor="vet_checked" className="text-sm text-ink/80">
@@ -277,7 +307,7 @@ export default function PuppyForm({
           type="checkbox"
           name="vaccinated"
           id="vaccinated"
-          defaultChecked={puppy?.vaccinated ?? false}
+          defaultChecked={puppy?.vaccinated}
           className="w-4 h-4"
         />
         <label htmlFor="vaccinated" className="text-sm text-ink/80">
@@ -285,18 +315,28 @@ export default function PuppyForm({
         </label>
       </div>
 
-      <div className="mt-5">
-        <p className="text-sm font-medium text-forest mb-1">
-          Included Items
-        </p>
-        <p className="text-xs text-sage mb-2">
-          Check everything that applies to this puppy.
-        </p>
-
-        <IncludedItemsPicker
-          selected={puppy?.included_items ?? []}
+      <div className="flex items-center gap-2 mt-3">
+        <input
+          type="checkbox"
+          name="is_published"
+          id="is_published"
+          defaultChecked={puppy?.is_published}
+          className="w-4 h-4"
         />
+        <label htmlFor="is_published" className="text-sm text-ink/80">
+          Published (visible on site)
+        </label>
       </div>
+
+      <label className={labelClass}>What&apos;s Included</label>
+
+      <p className="text-xs text-sage mb-1">
+        Check everything that applies to this puppy.
+      </p>
+
+      <IncludedItemsPicker
+        selected={puppy?.included_items ?? []}
+      />
 
       <button
         type="submit"
