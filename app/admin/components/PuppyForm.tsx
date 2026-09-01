@@ -339,7 +339,7 @@ export default function PuppyForm({
         className={inputClass}
       />
 
-      <<label className={labelClass}>Generation</label>
+      <label className={labelClass}>Generation</label>
       <input
         key={parsedExtras?.generation ?? puppy?.generation ?? "generation"}
         name="generation"
