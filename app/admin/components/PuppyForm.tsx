@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import IncludedItemsPicker from "./IncludedItemsPicker";
 import type { IncludedItemKey } from "@/lib/includedItems";
 import type { LitterAutofillData } from "@/lib/queries/adminLitters";
+import PasteParser from "./PasteParser";
+import type { ParsedPuppyData } from "../puppies/parse-actions";
 import StagedMediaUploader from "./StagedMediaUploader";
 
 type Breed = {
@@ -67,6 +69,10 @@ export default function PuppyForm({
   const [selectedBreedId, setSelectedBreedId] = useState(
     puppy?.breed_id ?? ""
   );
+  
+  const [parsedExtras, setParsedExtras] = useState<ParsedPuppyData | null>(
+    null
+  );
 
   const [selectedBreederId, setSelectedBreederId] = useState(
     puppy?.breeder_id ?? ""
@@ -125,6 +131,27 @@ export default function PuppyForm({
     setSelectedBreedId(breedId);
     setSelectedBreederId("");
   }
+  
+  function handleParsed(data: ParsedPuppyData) {
+    if (data.breed_name) {
+      const match = breeds.find(
+        (b) => b.name.toLowerCase() === data.breed_name?.toLowerCase()
+      );
+      if (match) {
+        setSelectedBreedId(match.id);
+      }
+    }
+
+    if (data.price !== null) setPrice(data.price);
+    if (data.deposit_amount !== null) setDepositAmount(data.deposit_amount);
+    if (data.age_weeks !== null) setAgeWeeks(data.age_weeks);
+    if (data.size) setSize(data.size);
+    if (data.included_items.length > 0) {
+      setIncludedItems(data.included_items as IncludedItemKey[]);
+    }
+
+    setParsedExtras(data);
+  }
 
   function handleLitterIdChange(
     event: React.ChangeEvent<HTMLInputElement>
@@ -156,6 +183,7 @@ export default function PuppyForm({
       {!puppy?.id && (
         <input type="hidden" name="id" value={puppyId} />
       )}
+      {!puppy?.id && <PasteParser onParsed={handleParsed} />}
       <label className={labelClass}>Name</label>
       {!puppy?.id && (
         <>
@@ -168,8 +196,9 @@ export default function PuppyForm({
         </>
       )}
       <input
+        key={parsedExtras?.name ?? puppy?.name ?? "name"}
         name="name"
-        defaultValue={puppy?.name}
+        defaultValue={parsedExtras?.name ?? puppy?.name ?? ""}
         required
         className={inputClass}
       />
@@ -223,8 +252,9 @@ export default function PuppyForm({
 
       <label className={labelClass}>Gender</label>
       <select
+        key={parsedExtras?.sex ?? puppy?.sex ?? "sex"}
         name="sex"
-        defaultValue={puppy?.sex}
+        defaultValue={parsedExtras?.sex ?? puppy?.sex ?? ""}
         required
         className={inputClass}
       >
@@ -258,8 +288,9 @@ export default function PuppyForm({
 
       <label className={labelClass}>Color</label>
       <input
+        key={parsedExtras?.color ?? puppy?.color ?? "color"}
         name="color"
-        defaultValue={puppy?.color}
+        defaultValue={parsedExtras?.color ?? puppy?.color ?? ""}
         className={inputClass}
       />
 
@@ -292,8 +323,9 @@ export default function PuppyForm({
 
       <label className={labelClass}>Markings</label>
       <input
+        key={parsedExtras?.markings ?? puppy?.markings ?? "markings"}
         name="markings"
-        defaultValue={puppy?.markings}
+        defaultValue={parsedExtras?.markings ?? puppy?.markings ?? ""}
         placeholder="e.g. White markings"
         className={inputClass}
       />
@@ -307,10 +339,11 @@ export default function PuppyForm({
         className={inputClass}
       />
 
-      <label className={labelClass}>Generation</label>
+      <<label className={labelClass}>Generation</label>
       <input
+        key={parsedExtras?.generation ?? puppy?.generation ?? "generation"}
         name="generation"
-        defaultValue={puppy?.generation}
+        defaultValue={parsedExtras?.generation ?? puppy?.generation ?? ""}
         placeholder="e.g. F1, F1B, F2"
         className={inputClass}
       />
@@ -351,11 +384,32 @@ export default function PuppyForm({
           they show up as siblings — and to auto-fill shared details here.
         </p>
       )}
+      
+      {parsedExtras && (
+        <>
+          <input type="hidden" name="mom_name" value={parsedExtras.mom_name ?? ""} />
+          <input type="hidden" name="mom_breed" value={parsedExtras.mom_breed ?? ""} />
+          <input type="hidden" name="mom_weight" value={parsedExtras.mom_weight ?? ""} />
+          <input type="hidden" name="mom_registration" value={parsedExtras.mom_registration ?? ""} />
+          <input type="hidden" name="dad_name" value={parsedExtras.dad_name ?? ""} />
+          <input type="hidden" name="dad_breed" value={parsedExtras.dad_breed ?? ""} />
+          <input type="hidden" name="dad_weight" value={parsedExtras.dad_weight ?? ""} />
+          <input type="hidden" name="dad_registration" value={parsedExtras.dad_registration ?? ""} />
+
+          {(parsedExtras.mom_name || parsedExtras.dad_name) && (
+            <p className="text-xs text-forest mt-1">
+              ✓ Parent info detected and will be saved automatically —
+              you can review/edit it afterward on the "Manage Parents" page.
+            </p>
+          )}
+        </>
+      )}
 
       <label className={labelClass}>Description</label>
       <textarea
+        key={parsedExtras?.description ?? puppy?.description ?? "description"}
         name="description"
-        defaultValue={puppy?.description}
+        defaultValue={parsedExtras?.description ?? puppy?.description ?? ""}
         rows={4}
         className={inputClass}
       />

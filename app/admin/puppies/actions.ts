@@ -106,6 +106,30 @@ export async function createPuppy(formData: FormData) {
     vaccinated: formData.get("vaccinated") === "on",
     is_published: formData.get("is_published") === "on",
     ...parentFields,
+    ...(formData.get("mom_name")
+      ? { mom_name: formData.get("mom_name") as string }
+      : {}),
+    ...(formData.get("mom_breed")
+      ? { mom_breed: formData.get("mom_breed") as string }
+      : {}),
+    ...(formData.get("mom_weight")
+      ? { mom_weight: formData.get("mom_weight") as string }
+      : {}),
+    ...(formData.get("mom_registration")
+      ? { mom_registration: formData.get("mom_registration") as string }
+      : {}),
+    ...(formData.get("dad_name")
+      ? { dad_name: formData.get("dad_name") as string }
+      : {}),
+    ...(formData.get("dad_breed")
+      ? { dad_breed: formData.get("dad_breed") as string }
+      : {}),
+    ...(formData.get("dad_weight")
+      ? { dad_weight: formData.get("dad_weight") as string }
+      : {}),
+    ...(formData.get("dad_registration")
+      ? { dad_registration: formData.get("dad_registration") as string }
+      : {}),
   });
 
   if (error) throw new Error(error.message);
