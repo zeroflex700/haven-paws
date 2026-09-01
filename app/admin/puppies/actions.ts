@@ -234,7 +234,7 @@ export async function createPuppy(formData: FormData) {
  * updatePuppy.bind(null, id) on the edit page, so the form action
  * signature stays (formData: FormData) like the rest of this file.
  *
- * Deliberately does NOT touch mom_*/dad_* fields or media — those are
+ * Deliberately does NOT touch mom_ or dad_ fields, or media — those are
  * managed from the separate "Manage Parents" and "Manage Photos & Videos"
  * pages linked from the edit screen, and PuppyForm doesn't render those
  * inputs at all when editing an existing puppy.
