@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import IncludedItemsPicker from "./IncludedItemsPicker";
 import type { IncludedItemKey } from "@/lib/includedItems";
 import type { LitterAutofillData } from "@/lib/queries/adminLitters";
+import StagedMediaUploader from "./StagedMediaUploader";
 
 type Breed = {
   id: string;
@@ -93,6 +94,9 @@ export default function PuppyForm({
   const [includedItems, setIncludedItems] = useState<IncludedItemKey[]>(
     puppy?.included_items ?? []
   );
+  const [puppyId] = useState(() =>
+    puppy?.id ?? crypto.randomUUID()
+  );
 
   const filteredBreeders = useMemo(() => {
     if (!selectedBreedId) return [];
@@ -149,7 +153,20 @@ export default function PuppyForm({
 
   return (
     <form action={action} className="pb-10">
+      {!puppy?.id && (
+        <input type="hidden" name="id" value={puppyId} />
+      )}
       <label className={labelClass}>Name</label>
+      {!puppy?.id && (
+        <>
+          <label className={labelClass}>Photos & Videos</label>
+          <p className="text-xs text-sage mb-1">
+            Upload now — these will be saved together with the puppy when
+            you submit the form below.
+          </p>
+          <StagedMediaUploader />
+        </>
+      )}
       <input
         name="name"
         defaultValue={puppy?.name}

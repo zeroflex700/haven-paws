@@ -47,6 +47,14 @@ async function getSiblingParentFields(
   return sibling ?? {};
 }
 
+type StagedMediaInput = {
+  url: string;
+  public_id: string;
+  media_type: "image" | "video";
+  is_cover: boolean;
+  sort_order: number;
+};
+
 export async function createPuppy(formData: FormData) {
   const supabase = await createClient();
 
@@ -54,6 +62,7 @@ export async function createPuppy(formData: FormData) {
   const breederId =
     (formData.get("breeder_id") as string) || null;
   const litterId = (formData.get("litter_id") as string) || null;
+  const puppyId = (formData.get("id") as string) || undefined;
 
   if (!breedId) {
     throw new Error("A breed is required.");
@@ -65,15 +74,13 @@ export async function createPuppy(formData: FormData) {
     breedId
   );
 
-  // If this litter already has a puppy, inherit its parent info and
-  // photos automatically — no need to visit "Manage Parents" for
-  // every sibling.
   const parentFields = await getSiblingParentFields(
     supabase,
     litterId
   );
 
   const { error } = await supabase.from("puppies").insert({
+    ...(puppyId ? { id: puppyId } : {}),
     name: formData.get("name") as string,
     breed_id: breedId,
     breeder_id: breederId,
@@ -103,8 +110,41 @@ export async function createPuppy(formData: FormData) {
 
   if (error) throw new Error(error.message);
 
+  // Attach any media uploaded during the intake session.
+  const stagedMediaRaw = formData.get("staged_media") as string | null;
+
+  if (puppyId && stagedMediaRaw) {
+    let stagedMedia: StagedMediaInput[] = [];
+
+    try {
+      stagedMedia = JSON.parse(stagedMediaRaw);
+    } catch {
+      stagedMedia = [];
+    }
+
+    if (stagedMedia.length > 0) {
+      const { error: mediaError } = await supabase
+        .from("puppy_media")
+        .insert(
+          stagedMedia.map((item) => ({
+            puppy_id: puppyId,
+            media_type: item.media_type,
+            url: item.url,
+            cloudinary_public_id: item.public_id,
+            sort_order: item.sort_order,
+            is_cover: item.is_cover,
+          }))
+        );
+
+      if (mediaError) throw new Error(mediaError.message);
+    }
+  }
+
   revalidatePath("/admin");
   revalidatePath("/admin/puppies");
+  if (puppyId) {
+    revalidatePath(`/puppies/${puppyId}`);
+  }
 
   redirect("/admin/puppies");
 }
