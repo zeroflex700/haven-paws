@@ -399,7 +399,8 @@ export default function PuppyForm({
           {(parsedExtras.mom_name || parsedExtras.dad_name) && (
             <p className="text-xs text-forest mt-1">
               ✓ Parent info detected and will be saved automatically —
-              you can review/edit it afterward on the "Manage Parents" page.
+              you can review/edit it afterward on the &quot;Manage
+              Parents&quot; page.
             </p>
           )}
         </>
