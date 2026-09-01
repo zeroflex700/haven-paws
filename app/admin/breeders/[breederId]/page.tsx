@@ -190,7 +190,7 @@ export default async function EditBreederPage({
         <a href="#home-gallery" className={sectionLinkClass}>Home Gallery</a>
         <a href="#qa" className={sectionLinkClass}>Q&amp;A</a>
         <a href="#photos" className={sectionLinkClass}>Photo Strip</a>
-        <a href="#included" className={sectionLinkClass}>What&apos;s Included</a>
+        <a href="#included-items" className={sectionLinkClass}>What&apos;s Included</a>
         <a href="#more-about" className={sectionLinkClass}>More About</a>
         <a href="#qualifications" className={sectionLinkClass}>Qualifications</a>
         <a href="#health-testing" className={sectionLinkClass}>Parent Health Testing</a>
@@ -287,50 +287,6 @@ export default async function EditBreederPage({
         </div>
       </section>
 
-      {/* ============================================================= */}
-      {/* SECTIONS 6–7 — WHAT'S INCLUDED                                 */}
-      {/* ============================================================= */}
-
-      <section id="included" className="scroll-mt-6 mb-12 pt-6 border-t border-sage/15">
-        <h2 className="font-display text-lg text-forest mb-4">
-          What&apos;s Included — {breederName}
-        </h2>
-
-        <form action={handleAddIncludedItem} className="bg-white border border-sage/20 rounded-lg p-4 mb-6">
-          <label className="block text-sm text-ink/80 mb-1">Category</label>
-          <select name="category" required className="w-full border border-sage/30 rounded-md px-3 py-2 mb-3">
-            {CATEGORY_ORDER.map((c) => (
-              <option key={c} value={c}>{CATEGORY_META[c].label}</option>
-            ))}
-          </select>
-          <label className="block text-sm text-ink/80 mb-1">Item</label>
-          <input
-            name="label"
-            required
-            placeholder="e.g. Vet check, Various sounds, Car rides"
-            className="w-full border border-sage/30 rounded-md px-3 py-2 mb-4"
-          />
-          <button type="submit" className="w-full bg-forest text-cream py-2.5 rounded-full hover:bg-forest-light">
-            Add Item
-          </button>
-        </form>
-
-        {CATEGORY_ORDER.map((cat) => {
-          const catItems = (includedItems ?? []).filter((i) => i.category === cat);
-          if (catItems.length === 0) return null;
-          return (
-            <div key={cat} className="mb-6">
-              <p className="text-sm font-medium text-forest mb-2">{CATEGORY_META[cat].label}</p>
-              {catItems.map((item) => (
-                <div key={item.id} className="flex justify-between items-center bg-white border border-sage/20 rounded-lg px-4 py-2 mb-2">
-                  <span className="text-sm text-ink">{item.label}</span>
-                  <DeleteGenericButton id={item.id} onDelete={removeIncludedItem} />
-                </div>
-              ))}
-            </div>
-          );
-        })}
-      </section>
 
       {/* ============================================================= */}
       {/* SECTION 8 — MORE ABOUT                                         */}

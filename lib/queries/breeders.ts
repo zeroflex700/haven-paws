@@ -153,6 +153,17 @@ export async function getBreederIncludedItems(
   return data ?? [];
 }
 
+export async function getGlobalIncludedItems(): Promise<
+  BreederIncludedItem[]
+> {
+  const { data } = await supabase
+    .from("global_included_items")
+    .select("id, category, label")
+    .order("sort_order");
+
+  return data ?? [];
+}
+
 export async function getBreederMoreAbout(
   breederId: string
 ): Promise<BreederIconTextItem[]> {
