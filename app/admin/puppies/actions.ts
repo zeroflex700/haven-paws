@@ -1,52 +1,3 @@
-"use server";
-
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
-
-async function validateBreederForBreed(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  breederId: string | null,
-  breedId: string
-) {
-  if (!breederId) return;
-
-  const { data: breeder, error } = await supabase
-    .from("breeders")
-    .select("id, breed_id")
-    .eq("id", breederId)
-    .single();
-
-  if (error || !breeder) {
-    throw new Error("Selected breeder was not found.");
-  }
-
-  if (breeder.breed_id !== breedId) {
-    throw new Error(
-      "The selected breeder does not belong to the selected breed."
-    );
-  }
-}
-
-async function getSiblingParentFields(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  litterId: string | null
-) {
-  if (!litterId) return {};
-
-  const { data: sibling } = await supabase
-    .from("puppies")
-    .select(
-      `mom_name, mom_breed, mom_weight, mom_registration, mom_photo_url,
-       dad_name, dad_breed, dad_weight, dad_registration, dad_photo_url`
-    )
-    .eq("litter_id", litterId)
-    .limit(1)
-    .maybeSingle();
-
-  return sibling ?? {};
-}
-
 type StagedMediaInput = {
   url: string;
   public_id: string;
@@ -74,10 +25,34 @@ export async function createPuppy(formData: FormData) {
     breedId
   );
 
-  const parentFields = await getSiblingParentFields(
+  // Fall back to a matching sibling's parent info only for whatever
+  // the form itself didn't provide (form values always win).
+  const siblingParentFields = await getSiblingParentFields(
     supabase,
     litterId
   );
+
+  const momName =
+    (formData.get("mom_name") as string) || null;
+  const momBreed =
+    (formData.get("mom_breed") as string) || null;
+  const momWeight =
+    (formData.get("mom_weight") as string) || null;
+  const momRegistration =
+    (formData.get("mom_registration") as string) || null;
+  const momPhotoUrl =
+    (formData.get("mom_photo_url") as string) || null;
+
+  const dadName =
+    (formData.get("dad_name") as string) || null;
+  const dadBreed =
+    (formData.get("dad_breed") as string) || null;
+  const dadWeight =
+    (formData.get("dad_weight") as string) || null;
+  const dadRegistration =
+    (formData.get("dad_registration") as string) || null;
+  const dadPhotoUrl =
+    (formData.get("dad_photo_url") as string) || null;
 
   const { error } = await supabase.from("puppies").insert({
     ...(puppyId ? { id: puppyId } : {}),
@@ -105,36 +80,24 @@ export async function createPuppy(formData: FormData) {
     vet_checked: formData.get("vet_checked") === "on",
     vaccinated: formData.get("vaccinated") === "on",
     is_published: formData.get("is_published") === "on",
-    ...parentFields,
-    ...(formData.get("mom_name")
-      ? { mom_name: formData.get("mom_name") as string }
-      : {}),
-    ...(formData.get("mom_breed")
-      ? { mom_breed: formData.get("mom_breed") as string }
-      : {}),
-    ...(formData.get("mom_weight")
-      ? { mom_weight: formData.get("mom_weight") as string }
-      : {}),
-    ...(formData.get("mom_registration")
-      ? { mom_registration: formData.get("mom_registration") as string }
-      : {}),
-    ...(formData.get("dad_name")
-      ? { dad_name: formData.get("dad_name") as string }
-      : {}),
-    ...(formData.get("dad_breed")
-      ? { dad_breed: formData.get("dad_breed") as string }
-      : {}),
-    ...(formData.get("dad_weight")
-      ? { dad_weight: formData.get("dad_weight") as string }
-      : {}),
-    ...(formData.get("dad_registration")
-      ? { dad_registration: formData.get("dad_registration") as string }
-      : {}),
+    mom_name: momName ?? siblingParentFields.mom_name ?? null,
+    mom_breed: momBreed ?? siblingParentFields.mom_breed ?? null,
+    mom_weight: momWeight ?? siblingParentFields.mom_weight ?? null,
+    mom_registration:
+      momRegistration ?? siblingParentFields.mom_registration ?? null,
+    mom_photo_url:
+      momPhotoUrl ?? siblingParentFields.mom_photo_url ?? null,
+    dad_name: dadName ?? siblingParentFields.dad_name ?? null,
+    dad_breed: dadBreed ?? siblingParentFields.dad_breed ?? null,
+    dad_weight: dadWeight ?? siblingParentFields.dad_weight ?? null,
+    dad_registration:
+      dadRegistration ?? siblingParentFields.dad_registration ?? null,
+    dad_photo_url:
+      dadPhotoUrl ?? siblingParentFields.dad_photo_url ?? null,
   });
 
   if (error) throw new Error(error.message);
 
-  // Attach any media uploaded during the intake session.
   const stagedMediaRaw = formData.get("staged_media") as string | null;
 
   if (puppyId && stagedMediaRaw) {
@@ -169,71 +132,6 @@ export async function createPuppy(formData: FormData) {
   if (puppyId) {
     revalidatePath(`/puppies/${puppyId}`);
   }
-
-  redirect("/admin/puppies");
-}
-
-export async function updatePuppy(
-  id: string,
-  formData: FormData
-) {
-  const supabase = await createClient();
-
-  const breedId = formData.get("breed_id") as string;
-  const breederId =
-    (formData.get("breeder_id") as string) || null;
-
-  if (!breedId) {
-    throw new Error("A breed is required.");
-  }
-
-  await validateBreederForBreed(
-    supabase,
-    breederId,
-    breedId
-  );
-
-  const { error } = await supabase
-    .from("puppies")
-    .update({
-      name: formData.get("name") as string,
-      breed_id: breedId,
-      breeder_id: breederId,
-      sex: formData.get("sex") as string,
-      price: Number(formData.get("price")),
-      deposit_amount: Number(
-        formData.get("deposit_amount") || 0
-      ),
-      description: formData.get("description") as string,
-      status: formData.get("status") as string,
-      color: formData.get("color") as string,
-      weight_estimate: formData.get("weight_estimate")
-        ? Number(formData.get("weight_estimate"))
-        : null,
-      markings: (formData.get("markings") as string) || null,
-      size: (formData.get("size") as string) || null,
-      generation: (formData.get("generation") as string) || null,
-      age_weeks: formData.get("age_weeks")
-        ? Number(formData.get("age_weeks"))
-        : null,
-      litter_id:
-        (formData.get("litter_id") as string) || null,
-      ready_date:
-        (formData.get("ready_date") as string) || null,
-      included_items: formData.getAll("included_items"),
-      vet_checked: formData.get("vet_checked") === "on",
-      vaccinated: formData.get("vaccinated") === "on",
-      is_published: formData.get("is_published") === "on",
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id);
-
-  if (error) throw new Error(error.message);
-
-  revalidatePath("/admin");
-  revalidatePath("/admin/puppies");
-  revalidatePath(`/admin/puppies/${id}`);
-  revalidatePath(`/puppies/${id}`);
 
   redirect("/admin/puppies");
 }

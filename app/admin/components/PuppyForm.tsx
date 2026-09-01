@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import IncludedItemsPicker from "./IncludedItemsPicker";
+import StagedMediaUploader from "./StagedMediaUploader";
+import SingleImageUploader from "./SingleImageUploader";
+import PasteParser from "./PasteParser";
 import type { IncludedItemKey } from "@/lib/includedItems";
 import type { LitterAutofillData } from "@/lib/queries/adminLitters";
-import PasteParser from "./PasteParser";
 import type { ParsedPuppyData } from "../puppies/parse-actions";
-import StagedMediaUploader from "./StagedMediaUploader";
 
 type Breed = {
   id: string;
@@ -61,6 +62,10 @@ export default function PuppyForm({
 
   const labelClass = "block text-sm text-ink/80 mb-1 mt-4";
 
+  const isNewPuppy = !puppy?.id;
+
+  const [puppyId] = useState(() => puppy?.id ?? crypto.randomUUID());
+
   const litterIds = useMemo(
     () => Object.keys(litterAutofillMap).sort(),
     [litterAutofillMap]
@@ -68,10 +73,6 @@ export default function PuppyForm({
 
   const [selectedBreedId, setSelectedBreedId] = useState(
     puppy?.breed_id ?? ""
-  );
-  
-  const [parsedExtras, setParsedExtras] = useState<ParsedPuppyData | null>(
-    null
   );
 
   const [selectedBreederId, setSelectedBreederId] = useState(
@@ -100,9 +101,23 @@ export default function PuppyForm({
   const [includedItems, setIncludedItems] = useState<IncludedItemKey[]>(
     puppy?.included_items ?? []
   );
-  const [puppyId] = useState(() =>
-    puppy?.id ?? crypto.randomUUID()
+
+  const [parsedExtras, setParsedExtras] = useState<ParsedPuppyData | null>(
+    null
   );
+
+  // Parent info — only relevant when creating a new puppy.
+  const [momName, setMomName] = useState("");
+  const [momBreed, setMomBreed] = useState("");
+  const [momWeight, setMomWeight] = useState("");
+  const [momRegistration, setMomRegistration] = useState("");
+  const [momPhotoUrl, setMomPhotoUrl] = useState("");
+
+  const [dadName, setDadName] = useState("");
+  const [dadBreed, setDadBreed] = useState("");
+  const [dadWeight, setDadWeight] = useState("");
+  const [dadRegistration, setDadRegistration] = useState("");
+  const [dadPhotoUrl, setDadPhotoUrl] = useState("");
 
   const filteredBreeders = useMemo(() => {
     if (!selectedBreedId) return [];
@@ -131,27 +146,6 @@ export default function PuppyForm({
     setSelectedBreedId(breedId);
     setSelectedBreederId("");
   }
-  
-  function handleParsed(data: ParsedPuppyData) {
-    if (data.breed_name) {
-      const match = breeds.find(
-        (b) => b.name.toLowerCase() === data.breed_name?.toLowerCase()
-      );
-      if (match) {
-        setSelectedBreedId(match.id);
-      }
-    }
-
-    if (data.price !== null) setPrice(data.price);
-    if (data.deposit_amount !== null) setDepositAmount(data.deposit_amount);
-    if (data.age_weeks !== null) setAgeWeeks(data.age_weeks);
-    if (data.size) setSize(data.size);
-    if (data.included_items.length > 0) {
-      setIncludedItems(data.included_items as IncludedItemKey[]);
-    }
-
-    setParsedExtras(data);
-  }
 
   function handleLitterIdChange(
     event: React.ChangeEvent<HTMLInputElement>
@@ -172,29 +166,73 @@ export default function PuppyForm({
       setVaccinated(match.vaccinated);
       setIsPublished(match.is_published);
       setIncludedItems(match.included_items);
+
+      setMomName(match.mom_name ?? "");
+      setMomBreed(match.mom_breed ?? "");
+      setMomWeight(match.mom_weight ?? "");
+      setMomRegistration(match.mom_registration ?? "");
+      setMomPhotoUrl(match.mom_photo_url ?? "");
+
+      setDadName(match.dad_name ?? "");
+      setDadBreed(match.dad_breed ?? "");
+      setDadWeight(match.dad_weight ?? "");
+      setDadRegistration(match.dad_registration ?? "");
+      setDadPhotoUrl(match.dad_photo_url ?? "");
+
       setAutofillApplied(true);
     } else {
       setAutofillApplied(false);
     }
   }
 
+  function handleParsed(data: ParsedPuppyData) {
+    if (data.breed_name) {
+      const match = breeds.find(
+        (b) => b.name.toLowerCase() === data.breed_name?.toLowerCase()
+      );
+      if (match) {
+        setSelectedBreedId(match.id);
+      }
+    }
+
+    if (data.price !== null) setPrice(data.price);
+    if (data.deposit_amount !== null) setDepositAmount(data.deposit_amount);
+    if (data.age_weeks !== null) setAgeWeeks(data.age_weeks);
+    if (data.size) setSize(data.size);
+
+    if (data.included_items.length > 0) {
+      const items = data.included_items as IncludedItemKey[];
+      setIncludedItems(items);
+
+      // Infer these two checkboxes from what's actually included,
+      // since the parser doesn't guess puppy status directly.
+      if (items.includes("vaccinations")) setVaccinated(true);
+      if (items.includes("vet_health_check")) setVetChecked(true);
+    }
+
+    if (data.mom_name) setMomName(data.mom_name);
+    if (data.mom_breed) setMomBreed(data.mom_breed);
+    if (data.mom_weight) setMomWeight(data.mom_weight);
+    if (data.mom_registration) setMomRegistration(data.mom_registration);
+
+    if (data.dad_name) setDadName(data.dad_name);
+    if (data.dad_breed) setDadBreed(data.dad_breed);
+    if (data.dad_weight) setDadWeight(data.dad_weight);
+    if (data.dad_registration) setDadRegistration(data.dad_registration);
+
+    setParsedExtras(data);
+  }
+
   return (
     <form action={action} className="pb-10">
-      {!puppy?.id && (
-        <input type="hidden" name="id" value={puppyId} />
-      )}
-      {!puppy?.id && <PasteParser onParsed={handleParsed} />}
-      <label className={labelClass}>Name</label>
-      {!puppy?.id && (
+      {isNewPuppy && (
         <>
-          <label className={labelClass}>Photos & Videos</label>
-          <p className="text-xs text-sage mb-1">
-            Upload now — these will be saved together with the puppy when
-            you submit the form below.
-          </p>
-          <StagedMediaUploader />
+          <input type="hidden" name="id" value={puppyId} />
+          <PasteParser onParsed={handleParsed} />
         </>
       )}
+
+      <label className={labelClass}>Name</label>
       <input
         key={parsedExtras?.name ?? puppy?.name ?? "name"}
         name="name"
@@ -202,6 +240,17 @@ export default function PuppyForm({
         required
         className={inputClass}
       />
+
+      {isNewPuppy && (
+        <>
+          <label className={labelClass}>Photos & Videos</label>
+          <p className="text-xs text-sage mb-1">
+            Upload now — these will be saved together with the puppy
+            when you submit the form below.
+          </p>
+          <StagedMediaUploader />
+        </>
+      )}
 
       <label className={labelClass}>Breed</label>
       <select
@@ -317,8 +366,8 @@ export default function PuppyForm({
         className={inputClass}
       />
       <p className="text-xs text-sage mt-1">
-        Enter the puppy&apos;s current age in weeks. This is a fixed number —
-        remember to update it periodically as the puppy gets older.
+        Enter the puppy&apos;s current age in weeks. This is a fixed number
+        — remember to update it periodically as the puppy gets older.
       </p>
 
       <label className={labelClass}>Markings</label>
@@ -374,41 +423,22 @@ export default function PuppyForm({
       {autofillApplied ? (
         <p className="text-xs text-forest font-medium mt-1">
           ✓ Autofilled from this litter — breed, price, deposit, age, size,
-          status, checkboxes, and included items were copied. Review and
-          adjust anything before saving. Parent info and photos will be
-          copied automatically once you save.
+          status, checkboxes, included items, and parent info/photos were
+          copied. Review and adjust anything before saving.
         </p>
       ) : (
         <p className="text-xs text-sage mt-1">
-          Use the exact same Litter ID on every puppy from the same litter so
-          they show up as siblings — and to auto-fill shared details here.
+          Use the exact same Litter ID on every puppy from the same litter
+          so they show up as siblings — and to auto-fill shared details and
+          parent info here.
         </p>
-      )}
-      
-      {parsedExtras && (
-        <>
-          <input type="hidden" name="mom_name" value={parsedExtras.mom_name ?? ""} />
-          <input type="hidden" name="mom_breed" value={parsedExtras.mom_breed ?? ""} />
-          <input type="hidden" name="mom_weight" value={parsedExtras.mom_weight ?? ""} />
-          <input type="hidden" name="mom_registration" value={parsedExtras.mom_registration ?? ""} />
-          <input type="hidden" name="dad_name" value={parsedExtras.dad_name ?? ""} />
-          <input type="hidden" name="dad_breed" value={parsedExtras.dad_breed ?? ""} />
-          <input type="hidden" name="dad_weight" value={parsedExtras.dad_weight ?? ""} />
-          <input type="hidden" name="dad_registration" value={parsedExtras.dad_registration ?? ""} />
-
-          {(parsedExtras.mom_name || parsedExtras.dad_name) && (
-            <p className="text-xs text-forest mt-1">
-              ✓ Parent info detected and will be saved automatically —
-              you can review/edit it afterward on the &quot;Manage
-              Parents&quot; page.
-            </p>
-          )}
-        </>
       )}
 
       <label className={labelClass}>Description</label>
       <textarea
-        key={parsedExtras?.description ?? puppy?.description ?? "description"}
+        key={
+          parsedExtras?.description ?? puppy?.description ?? "description"
+        }
         name="description"
         defaultValue={parsedExtras?.description ?? puppy?.description ?? ""}
         rows={4}
@@ -481,6 +511,123 @@ export default function PuppyForm({
         selected={includedItems}
         onChange={setIncludedItems}
       />
+
+      {isNewPuppy && (
+        <>
+          <label className={labelClass}>Parents</label>
+          <p className="text-xs text-sage mb-3">
+            Filled automatically from a matching Litter ID or pasted text —
+            review before saving. You can also edit parent info later from
+            the &quot;Manage Parents&quot; page.
+          </p>
+
+          <div className="rounded-md border border-sage/20 p-4 mb-4">
+            <p className="text-sm font-medium text-forest mb-2">Mom</p>
+
+            <SingleImageUploader
+              label="Mom photo"
+              fieldName="mom_photo_url"
+              value={momPhotoUrl}
+              onChange={setMomPhotoUrl}
+            />
+
+            <label className="block text-xs text-ink/70 mb-1 mt-3">
+              Name
+            </label>
+            <input
+              name="mom_name"
+              value={momName}
+              onChange={(e) => setMomName(e.target.value)}
+              className={inputClass}
+            />
+
+            <label className="block text-xs text-ink/70 mb-1 mt-3">
+              Breed
+            </label>
+            <input
+              name="mom_breed"
+              value={momBreed}
+              onChange={(e) => setMomBreed(e.target.value)}
+              className={inputClass}
+            />
+
+            <label className="block text-xs text-ink/70 mb-1 mt-3">
+              Weight
+            </label>
+            <input
+              name="mom_weight"
+              value={momWeight}
+              onChange={(e) => setMomWeight(e.target.value)}
+              placeholder="e.g. 12 - 14 lbs"
+              className={inputClass}
+            />
+
+            <label className="block text-xs text-ink/70 mb-1 mt-3">
+              Registration
+            </label>
+            <input
+              name="mom_registration"
+              value={momRegistration}
+              onChange={(e) => setMomRegistration(e.target.value)}
+              placeholder="e.g. AKC registered"
+              className={inputClass}
+            />
+          </div>
+
+          <div className="rounded-md border border-sage/20 p-4 mb-4">
+            <p className="text-sm font-medium text-forest mb-2">Dad</p>
+
+            <SingleImageUploader
+              label="Dad photo"
+              fieldName="dad_photo_url"
+              value={dadPhotoUrl}
+              onChange={setDadPhotoUrl}
+            />
+
+            <label className="block text-xs text-ink/70 mb-1 mt-3">
+              Name
+            </label>
+            <input
+              name="dad_name"
+              value={dadName}
+              onChange={(e) => setDadName(e.target.value)}
+              className={inputClass}
+            />
+
+            <label className="block text-xs text-ink/70 mb-1 mt-3">
+              Breed
+            </label>
+            <input
+              name="dad_breed"
+              value={dadBreed}
+              onChange={(e) => setDadBreed(e.target.value)}
+              className={inputClass}
+            />
+
+            <label className="block text-xs text-ink/70 mb-1 mt-3">
+              Weight
+            </label>
+            <input
+              name="dad_weight"
+              value={dadWeight}
+              onChange={(e) => setDadWeight(e.target.value)}
+              placeholder="e.g. 10 - 12 lbs"
+              className={inputClass}
+            />
+
+            <label className="block text-xs text-ink/70 mb-1 mt-3">
+              Registration
+            </label>
+            <input
+              name="dad_registration"
+              value={dadRegistration}
+              onChange={(e) => setDadRegistration(e.target.value)}
+              placeholder="e.g. AKC registered"
+              className={inputClass}
+            />
+          </div>
+        </>
+      )}
 
       <button
         type="submit"
