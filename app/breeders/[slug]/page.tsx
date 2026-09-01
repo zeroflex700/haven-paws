@@ -54,7 +54,7 @@ export default async function BreederProfilePage({
     getBreederHomePhotos(breeder.id),
     getBreederQA(breeder.id),
     getBreederPhotos(breeder.id),
-    getGlobalIncludedItems(breeder.id),
+    getGlobalIncludedItems(),
     getBreederMoreAbout(breeder.id),
     getBreederQualifications(breeder.id),
     getBreederHealthTesting(breeder.id),
