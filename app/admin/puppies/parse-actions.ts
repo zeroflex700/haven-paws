@@ -33,12 +33,16 @@ export type ParseResult =
 export async function parsePuppyText(
   rawText: string
 ): Promise<ParseResult> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKeys = [
+    process.env.GEMINI_API_KEY,
+    process.env.GEMINI_API_KEY_2,
+    process.env.GEMINI_API_KEY_3,
+  ].filter((key): key is string => Boolean(key));
 
-  if (!apiKey) {
+  if (apiKeys.length === 0) {
     return {
       success: false,
-      error: "Gemini API key is not configured on the server.",
+      error: "No Gemini API keys are configured on the server.",
     };
   }
 
@@ -108,30 +112,58 @@ TEXT TO EXTRACT FROM:
 ${rawText}
 """`;
 
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: "application/json",
-            temperature: 0.1,
-          },
-        }),
+  let lastErrorText = "";
+
+  for (const apiKey of apiKeys) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              responseMimeType: "application/json",
+              temperature: 0.1,
+            },
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        lastErrorText = await response.text();
+
+        // Rate-limited or overloaded — try the next key instead of failing.
+        if (response.status === 429 || response.status === 503) {
+          continue;
+        }
+
+        return {
+          success: false,
+          error: `Gemini API error: ${lastErrorText.slice(0, 200)}`,
+        };
       }
-    );
 
-    if (!response.ok) {
-      const errText = await response.text();
-      return {
-        success: false,
-        error: `Gemini API error: ${errText.slice(0, 200)}`,
-      };
+      const result = await parseGeminiResponse(response);
+      return result;
+    } catch (err) {
+      lastErrorText =
+        err instanceof Error ? err.message : "Unknown fetch error";
+      continue;
     }
+  }
 
+  return {
+    success: false,
+    error: `All Gemini API keys failed or are rate-limited. Last error: ${lastErrorText.slice(0, 200)}`,
+  };
+}
+
+async function parseGeminiResponse(
+  response: Response
+): Promise<ParseResult> {
+  try {
     const result = await response.json();
     const text: string | undefined =
       result?.candidates?.[0]?.content?.parts?.[0]?.text;
