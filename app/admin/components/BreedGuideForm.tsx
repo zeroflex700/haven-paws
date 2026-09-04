@@ -285,5 +285,3 @@ export default function BreedGuideForm({
     </form>
   );
 }
-EOF
-echo "BreedGuideForm.tsx written"

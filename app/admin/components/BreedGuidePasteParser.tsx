@@ -91,5 +91,3 @@ export default function BreedGuidePasteParser({
     </div>
   );
 }
-EOF
-echo "created BreedGuidePasteParser.tsx"

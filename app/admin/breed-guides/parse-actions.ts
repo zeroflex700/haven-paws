@@ -50,8 +50,6 @@ export async function parseBreedGuideText(
 
   const supabase = await createClient();
 
-  // Other breeds that already have a published guide — candidates for
-  // "related breeds". We exclude the current breed itself.
   const { data: guideRows } = await supabase
     .from("breed_guides")
     .select("breed_id, breeds ( id, name )")
@@ -205,5 +203,3 @@ async function parseGeminiResponse(response: Response): Promise<ParseResult> {
     };
   }
 }
-EOF
-echo "created parse-actions.ts"
