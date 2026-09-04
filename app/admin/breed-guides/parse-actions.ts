@@ -1,5 +1,3 @@
-cd ~/haven-paws
-cat > "app/admin/breed-guides/parse-actions.ts" << 'EOF'
 "use server";
 
 import { SCORECARD_FIELDS } from "@/lib/breedGuideFields";

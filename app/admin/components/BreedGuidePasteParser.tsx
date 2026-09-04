@@ -1,4 +1,3 @@
-cat > "app/admin/components/BreedGuidePasteParser.tsx" << 'EOF'
 "use client";
 
 import { useState } from "react";

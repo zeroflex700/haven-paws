@@ -1,5 +1,3 @@
-cd ~/haven-paws
-cat > "app/admin/components/BreedGuideForm.tsx" << 'EOF'
 "use client";
 
 import { useState } from "react";
