@@ -17,6 +17,8 @@ export type ParsedBreedGuideData = {
   historyText: string | null;
   scorecard: Record<string, string>;
   relatedBreedIds: string[];
+  faqs: { question: string; answer: string }[];
+  healthIssues: { subheading: string; body: string }[];
 };
 
 export type ParseResult =
@@ -71,7 +73,7 @@ export async function parseBreedGuideText(
     .map((f) => `- key: "${f.key}", label: "${f.label}" (short text)`)
     .join("\n");
 
-  const prompt = `You are helping populate a breed guide page for the "${breedName}" breed on a dog breeder website. You will be given pasted text (often copied from an article, breed encyclopedia entry, or club/AKC-style page) about this breed. You have two jobs on this text: (1) EXTRACT the article-style fields strictly from what's stated, and (2) FILL the scorecard and related breeds using your own general knowledge of the breed, informed by (but not limited to) the pasted text.
+  const prompt = `You are helping populate a breed guide page for the "${breedName}" breed on a dog breeder website. You will be given pasted text (often copied from an article, breed encyclopedia entry, or club/AKC-style page) about this breed. You have several jobs on this text.
 
 PART 1 — ARTICLE FIELDS (STRICT EXTRACTION ONLY):
 For each of these fields, only fill it in if the pasted text actually contains relevant content for it. Lightly clean up wording/grammar but do not invent facts not present in the text. If the text doesn't cover a section at all, return null for it.
@@ -87,8 +89,11 @@ For each of these fields, only fill it in if the pasted text actually contains r
 - healthIntroText: an intro paragraph on health issues (general, not a list of individual conditions).
 - historyText: a paragraph on the breed's history/origin.
 
+PART 1B — FAQS (STRICT EXTRACTION ONLY):
+If the pasted text contains a Q&A style section, or clearly phrased questions with answers about the breed, extract each as a {question, answer} pair, lightly cleaned up. Do NOT invent FAQs that are not actually present in the text. If there is no such content, return an empty array.
+
 PART 2 — SCORECARD (USE YOUR OWN KNOWLEDGE OF THE BREED):
-Unlike Part 1, these do not need to be explicitly stated in the pasted text. Use the pasted text as context/confirmation where relevant, but otherwise rely on your general knowledge of the "${breedName}" breed to fill these in as a knowledgeable breed expert would. Only return null/omit a key if you genuinely have no reasonable basis to judge it.
+Unlike Part 1, these do not need to be explicitly stated in the pasted text. Use the pasted text as context/confirmation where relevant, but otherwise rely on your general knowledge of the "${breedName}" breed to fill these in as a knowledgeable breed expert would. Only omit a key if you genuinely have no reasonable basis to judge it.
 
 Score fields (return a string of "1" through "5"):
 ${scoreFieldsList}
@@ -96,7 +101,10 @@ ${scoreFieldsList}
 Short-text fields (return a short factual string, e.g. "13-15 in", "10-14 years"):
 ${textFieldsList}
 
-Return these as a flat "scorecard" object mapping key -> string value. Omit a key entirely rather than guessing wildly.
+Return these as a flat "scorecard" object mapping key -> string value.
+
+PART 2B — HEALTH ISSUES (USE YOUR OWN KNOWLEDGE):
+List 3-6 health conditions this breed is commonly predisposed to, based on your general knowledge of the breed (use the pasted text for confirmation/detail if it mentions any). Each as {subheading, body}, where subheading is the condition name (e.g. "Hip Dysplasia") and body is a 1-2 sentence plain-language explanation. If you genuinely have no basis to judge this breed's health predispositions, return an empty array.
 
 PART 3 — RELATED BREEDS (USE YOUR OWN KNOWLEDGE):
 From this list of breeds that already have guides on the site, pick 2-5 that are genuinely similar to "${breedName}" (by size, temperament, grouping, or purpose) to feature as "Related Breeds". Only return ids from this exact list — never invent an id or suggest a breed not on it. If none are a good fit, return an empty array.
@@ -119,7 +127,9 @@ Return ONLY valid JSON matching this exact shape, nothing else, no markdown code
   "healthIntroText": string | null,
   "historyText": string | null,
   "scorecard": { [key: string]: string },
-  "relatedBreedIds": string[]
+  "relatedBreedIds": string[],
+  "faqs": [{ "question": string, "answer": string }],
+  "healthIssues": [{ "subheading": string, "body": string }]
 }
 
 PASTED TEXT:
@@ -191,6 +201,9 @@ async function parseGeminiResponse(response: Response): Promise<ParseResult> {
       .replace(/```\s*$/i, "");
 
     const parsed = JSON.parse(cleaned) as ParsedBreedGuideData;
+
+    if (!parsed.faqs) parsed.faqs = [];
+    if (!parsed.healthIssues) parsed.healthIssues = [];
 
     return { success: true, data: parsed };
   } catch (err) {

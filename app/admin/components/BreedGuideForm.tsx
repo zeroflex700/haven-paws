@@ -16,11 +16,15 @@ export default function BreedGuideForm({
   breedSlug,
   guide,
   allBreeds,
+  initialFaqs = [],
+  initialHealthIssues = [],
 }: {
   breedId: string;
   breedSlug: string;
   guide: BreedGuide;
   allBreeds: Breed[];
+  initialFaqs?: { question: string; answer: string }[];
+  initialHealthIssues?: { subheading: string; body: string }[];
 }) {
   const router = useRouter();
   const [form, setForm] = useState<BreedGuideInput>({
@@ -52,6 +56,8 @@ export default function BreedGuideForm({
     historyCredit: guide.historyCredit ?? "",
     scorecard: guide.scorecard ?? {},
     relatedBreedIds: guide.relatedBreedIds ?? [],
+    faqs: initialFaqs.map((f) => ({ question: f.question, answer: f.answer })),
+    healthIssues: initialHealthIssues.map((h) => ({ subheading: h.subheading, body: h.body })),
   });
   const [saving, setSaving] = useState(false);
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
@@ -71,6 +77,34 @@ export default function BreedGuideForm({
         ? f.relatedBreedIds.filter((x) => x !== id)
         : [...f.relatedBreedIds, id],
     }));
+  }
+
+  function addFaq() {
+    setForm((f) => ({ ...f, faqs: [...f.faqs, { question: "", answer: "" }] }));
+  }
+  function updateFaq(index: number, key: "question" | "answer", value: string) {
+    setForm((f) => {
+      const faqs = [...f.faqs];
+      faqs[index] = { ...faqs[index], [key]: value };
+      return { ...f, faqs };
+    });
+  }
+  function removeFaq(index: number) {
+    setForm((f) => ({ ...f, faqs: f.faqs.filter((_, i) => i !== index) }));
+  }
+
+  function addHealthIssue() {
+    setForm((f) => ({ ...f, healthIssues: [...f.healthIssues, { subheading: "", body: "" }] }));
+  }
+  function updateHealthIssue(index: number, key: "subheading" | "body", value: string) {
+    setForm((f) => {
+      const healthIssues = [...f.healthIssues];
+      healthIssues[index] = { ...healthIssues[index], [key]: value };
+      return { ...f, healthIssues };
+    });
+  }
+  function removeHealthIssue(index: number) {
+    setForm((f) => ({ ...f, healthIssues: f.healthIssues.filter((_, i) => i !== index) }));
   }
 
   function handleParsed(data: ParsedBreedGuideData) {
@@ -95,6 +129,14 @@ export default function BreedGuideForm({
 
     if (data.relatedBreedIds && data.relatedBreedIds.length > 0) {
       setForm((f) => ({ ...f, relatedBreedIds: data.relatedBreedIds }));
+    }
+
+    if (data.faqs && data.faqs.length > 0) {
+      setForm((f) => ({ ...f, faqs: data.faqs }));
+    }
+
+    if (data.healthIssues && data.healthIssues.length > 0) {
+      setForm((f) => ({ ...f, healthIssues: data.healthIssues }));
     }
   }
 
@@ -218,9 +260,40 @@ export default function BreedGuideForm({
 
       <label className={labelClass}>Health Issues — Intro Paragraph</label>
       <textarea value={form.healthIntroText} onChange={(e) => update("healthIntroText", e.target.value)} rows={3} className={inputClass} />
-      <p className="text-xs text-sage mt-1">
-        Add individual health issue entries after saving, from the breed guide list.
-      </p>
+
+      <div className="mt-4">
+        {form.healthIssues.map((issue, i) => (
+          <div key={i} className="bg-white border border-sage/20 rounded-lg p-4 mb-3">
+            <label className="block text-xs text-ink/70 mb-1">Subheading</label>
+            <input
+              value={issue.subheading}
+              onChange={(e) => updateHealthIssue(i, "subheading", e.target.value)}
+              className={inputClass}
+            />
+            <label className="block text-xs text-ink/70 mb-1 mt-3">Description</label>
+            <textarea
+              value={issue.body}
+              onChange={(e) => updateHealthIssue(i, "body", e.target.value)}
+              rows={3}
+              className={inputClass}
+            />
+            <button
+              type="button"
+              onClick={() => removeHealthIssue(i)}
+              className="text-xs text-red-600 mt-2"
+            >
+              Remove
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={addHealthIssue}
+          className="text-sm text-forest border border-sage/30 rounded-full px-4 py-2 bg-white hover:border-gold"
+        >
+          + Add Health Issue
+        </button>
+      </div>
 
       <label className={labelClass}>History</label>
       <textarea value={form.historyText} onChange={(e) => update("historyText", e.target.value)} rows={4} className={inputClass} />
@@ -273,6 +346,41 @@ export default function BreedGuideForm({
               {b.name}
             </label>
           ))}
+      </div>
+
+      <h2 className="font-display text-lg text-forest mb-2 mt-8">FAQs</h2>
+      <div>
+        {form.faqs.map((faq, i) => (
+          <div key={i} className="bg-white border border-sage/20 rounded-lg p-4 mb-3">
+            <label className="block text-xs text-ink/70 mb-1">Question</label>
+            <input
+              value={faq.question}
+              onChange={(e) => updateFaq(i, "question", e.target.value)}
+              className={inputClass}
+            />
+            <label className="block text-xs text-ink/70 mb-1 mt-3">Answer</label>
+            <textarea
+              value={faq.answer}
+              onChange={(e) => updateFaq(i, "answer", e.target.value)}
+              rows={3}
+              className={inputClass}
+            />
+            <button
+              type="button"
+              onClick={() => removeFaq(i)}
+              className="text-xs text-red-600 mt-2"
+            >
+              Remove
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={addFaq}
+          className="text-sm text-forest border border-sage/30 rounded-full px-4 py-2 bg-white hover:border-gold"
+        >
+          + Add FAQ
+        </button>
       </div>
 
       <button
