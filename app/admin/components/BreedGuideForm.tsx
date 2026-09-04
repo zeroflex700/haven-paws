@@ -1,3 +1,5 @@
+cd ~/haven-paws
+cat > "app/admin/components/BreedGuideForm.tsx" << 'EOF'
 "use client";
 
 import { useState } from "react";
@@ -6,6 +8,8 @@ import { upsertBreedGuide, type BreedGuideInput } from "../breed-guides/actions"
 import { SCORECARD_FIELDS, SCORECARD_GROUPS } from "@/lib/breedGuideFields";
 import { cldThumb } from "@/lib/cloudinary";
 import type { BreedGuide } from "@/lib/queries/breedGuides";
+import BreedGuidePasteParser from "./BreedGuidePasteParser";
+import type { ParsedBreedGuideData } from "../breed-guides/parse-actions";
 
 type Breed = { id: string; name: string };
 
@@ -71,6 +75,31 @@ export default function BreedGuideForm({
     }));
   }
 
+  function handleParsed(data: ParsedBreedGuideData) {
+    if (data.overviewQuote) update("overviewQuote", data.overviewQuote);
+    if (data.overviewSupport) update("overviewSupport", data.overviewSupport);
+    if (data.whyPeopleLove) update("whyPeopleLove", data.whyPeopleLove);
+    if (data.appearanceText) update("appearanceText", data.appearanceText);
+    if (data.groomingText) update("groomingText", data.groomingText);
+    if (data.temperamentText) update("temperamentText", data.temperamentText);
+    if (data.exerciseText) update("exerciseText", data.exerciseText);
+    if (data.trainingText) update("trainingText", data.trainingText);
+    if (data.dietText) update("dietText", data.dietText);
+    if (data.healthIntroText) update("healthIntroText", data.healthIntroText);
+    if (data.historyText) update("historyText", data.historyText);
+
+    if (data.scorecard && Object.keys(data.scorecard).length > 0) {
+      setForm((f) => ({
+        ...f,
+        scorecard: { ...f.scorecard, ...data.scorecard },
+      }));
+    }
+
+    if (data.relatedBreedIds && data.relatedBreedIds.length > 0) {
+      setForm((f) => ({ ...f, relatedBreedIds: data.relatedBreedIds }));
+    }
+  }
+
   async function handleImageUpload(field: keyof BreedGuideInput, file: File) {
     setUploadingKey(field);
     const formData = new FormData();
@@ -132,6 +161,14 @@ export default function BreedGuideForm({
 
   return (
     <form onSubmit={handleSubmit} className="pb-16">
+      {!guide.id && (
+        <BreedGuidePasteParser
+          breedId={breedId}
+          breedName={guide.breedName}
+          onParsed={handleParsed}
+        />
+      )}
+
       <h2 className="font-display text-lg text-forest mb-2">Hero</h2>
       <ImageField field="heroImageUrl" label="Hero Image" />
       <label className={labelClass}>Photo Credit (optional)</label>
@@ -250,3 +287,5 @@ export default function BreedGuideForm({
     </form>
   );
 }
+EOF
+echo "BreedGuideForm.tsx written"
