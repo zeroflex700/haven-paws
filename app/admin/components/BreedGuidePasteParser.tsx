@@ -49,7 +49,7 @@ export default function BreedGuidePasteParser({
       </div>
       <p className="text-xs text-sage mb-2">
         Article sections are extracted from the text. The Scorecard and
-        Related Breeds are filled using AI's general knowledge of the
+        Related Breeds are filled using AI&apos;s general knowledge of the
         breed — review both carefully before saving.
       </p>
 
