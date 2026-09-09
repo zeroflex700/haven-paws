@@ -1,4 +1,6 @@
 import { supabase } from "@/lib/supabase/client";
+import { getOrSetCache } from "@/lib/cache";
+import { cacheKeys } from "@/lib/cache-keys";
 
 export type PuppyRecord = {
   id: string;
@@ -34,6 +36,8 @@ type PuppyQueryRow = {
       }[]
     | null;
 };
+
+const PUBLISHED_PUPPIES_TTL_SECONDS = 300;
 
 function calcAgeWeeks(
   birthDate: string | null
@@ -82,9 +86,7 @@ function calcReadyLabel(
   )}`;
 }
 
-export async function getPublishedPuppies(): Promise<
-  PuppyRecord[]
-> {
+async function fetchPublishedPuppies(): Promise<PuppyRecord[]> {
   const { data, error } = await supabase
     .from("puppies")
     .select(
@@ -158,4 +160,14 @@ export async function getPublishedPuppies(): Promise<
       hasVideo,
     };
   });
+}
+
+export async function getPublishedPuppies(): Promise<
+  PuppyRecord[]
+> {
+  return getOrSetCache(
+    cacheKeys.publishedPuppies,
+    PUBLISHED_PUPPIES_TTL_SECONDS,
+    fetchPublishedPuppies
+  );
 }

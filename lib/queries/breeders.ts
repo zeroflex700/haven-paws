@@ -1,5 +1,7 @@
 import { supabase } from "@/lib/supabase/client";
 import { createClient } from "@/lib/supabase/server";
+import { getOrSetCache } from "@/lib/cache";
+import { cacheKeys } from "@/lib/cache-keys";
 
 export type Breeder = {
   id: string;
@@ -36,6 +38,8 @@ export type BreederQualification = {
   titleLine: string | null;
 };
 
+const BREEDER_TTL_SECONDS = 600;
+
 function mapBreeder(row: Record<string, unknown>): Breeder {
   const breed = row.breeds as
     | {
@@ -61,7 +65,7 @@ function mapBreeder(row: Record<string, unknown>): Breeder {
   };
 }
 
-export async function getBreederBySlug(
+async function fetchBreederBySlug(
   slug: string
 ): Promise<Breeder | null> {
   const { data } = await supabase
@@ -80,7 +84,17 @@ export async function getBreederBySlug(
   return data ? mapBreeder(data) : null;
 }
 
-export async function getBreederById(
+export async function getBreederBySlug(
+  slug: string
+): Promise<Breeder | null> {
+  return getOrSetCache(
+    cacheKeys.breederBySlug(slug),
+    BREEDER_TTL_SECONDS,
+    () => fetchBreederBySlug(slug)
+  );
+}
+
+async function fetchBreederById(
   id: string
 ): Promise<Breeder | null> {
   const { data } = await supabase
@@ -97,6 +111,16 @@ export async function getBreederById(
     .single();
 
   return data ? mapBreeder(data) : null;
+}
+
+export async function getBreederById(
+  id: string
+): Promise<Breeder | null> {
+  return getOrSetCache(
+    cacheKeys.breederById(id),
+    BREEDER_TTL_SECONDS,
+    () => fetchBreederById(id)
+  );
 }
 
 export async function getBreederHomePhotos(

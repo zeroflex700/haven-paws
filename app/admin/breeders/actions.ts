@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { invalidateBreeder } from "@/lib/cache-invalidate";
 
 function slugify(name: string) {
   return name
@@ -38,6 +39,8 @@ export async function createBreeder(input: BreederInput) {
 
   if (error) throw new Error(error.message);
 
+  await invalidateBreeder(null, slug);
+
   revalidatePath("/admin/breeders");
   revalidatePath(`/breeders/${slug}`);
   redirect("/admin/breeders");
@@ -60,6 +63,8 @@ export async function updateBreeder(id: string, slug: string, input: BreederInpu
     .eq("id", id);
 
   if (error) throw new Error(error.message);
+
+  await invalidateBreeder(id, slug);
 
   revalidatePath("/admin/breeders");
   revalidatePath(`/breeders/${slug}`);

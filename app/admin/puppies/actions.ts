@@ -3,6 +3,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import {
+  invalidatePublishedPuppies,
+  invalidatePuppyDetail,
+  invalidateRelatedPuppiesForBreed,
+  invalidateSiblingsForLitter,
+} from "@/lib/cache-invalidate";
 
 type StagedMediaInput = {
   url: string;
@@ -220,6 +226,11 @@ export async function createPuppy(formData: FormData) {
     }
   }
 
+  await invalidatePublishedPuppies();
+  if (puppyId) await invalidatePuppyDetail(puppyId);
+  await invalidateRelatedPuppiesForBreed(breedId);
+  if (litterId) await invalidateSiblingsForLitter(litterId);
+
   revalidatePath("/admin");
   revalidatePath("/admin/puppies");
   if (puppyId) {
@@ -248,6 +259,7 @@ export async function updatePuppy(
   const breedId = formData.get("breed_id") as string;
   const breederId =
     (formData.get("breeder_id") as string) || null;
+  const litterId = (formData.get("litter_id") as string) || null;
 
   if (!breedId) {
     throw new Error("A breed is required.");
@@ -282,8 +294,7 @@ export async function updatePuppy(
       age_weeks: formData.get("age_weeks")
         ? Number(formData.get("age_weeks"))
         : null,
-      litter_id:
-        (formData.get("litter_id") as string) || null,
+      litter_id: litterId,
       ready_date:
         (formData.get("ready_date") as string) || null,
       included_items: formData.getAll("included_items"),
@@ -295,6 +306,11 @@ export async function updatePuppy(
     .eq("id", id);
 
   if (error) throw new Error(error.message);
+
+  await invalidatePublishedPuppies();
+  await invalidatePuppyDetail(id);
+  await invalidateRelatedPuppiesForBreed(breedId);
+  if (litterId) await invalidateSiblingsForLitter(litterId);
 
   revalidatePath("/admin");
   revalidatePath("/admin/puppies");

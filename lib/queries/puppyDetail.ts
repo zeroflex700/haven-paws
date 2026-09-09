@@ -1,4 +1,6 @@
 import { supabase } from "@/lib/supabase/client";
+import { getOrSetCache } from "@/lib/cache";
+import { cacheKeys } from "@/lib/cache-keys";
 import type { IncludedItemKey } from "@/lib/includedItems";
 
 export type ParentInfo = {
@@ -43,6 +45,8 @@ export type PuppyDetail = {
   breederPhotoUrl: string | null;
 };
 
+const PUPPY_DETAIL_TTL_SECONDS = 300;
+
 function calcAgeWeeks(birthDate: string | null): number | null {
   if (!birthDate) return null;
 
@@ -54,7 +58,7 @@ function calcAgeWeeks(birthDate: string | null): number | null {
   );
 }
 
-export async function getPuppyDetail(
+async function fetchPuppyDetail(
   id: string
 ): Promise<PuppyDetail | null> {
   const { data, error } = await supabase
@@ -179,4 +183,14 @@ export async function getPuppyDetail(
     breederSlug: raw.breeders?.slug ?? null,
     breederPhotoUrl: raw.breeders?.photo_url ?? null,
   };
+}
+
+export async function getPuppyDetail(
+  id: string
+): Promise<PuppyDetail | null> {
+  return getOrSetCache(
+    cacheKeys.puppyDetail(id),
+    PUPPY_DETAIL_TTL_SECONDS,
+    () => fetchPuppyDetail(id)
+  );
 }

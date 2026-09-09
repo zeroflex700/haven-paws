@@ -1,4 +1,6 @@
 import { supabase } from "@/lib/supabase/client";
+import { getOrSetCache } from "@/lib/cache";
+import { cacheKeys } from "@/lib/cache-keys";
 
 export type RelatedPuppy = {
   id: string;
@@ -11,13 +13,15 @@ export type RelatedPuppy = {
   image: string | null;
 };
 
+const RELATED_PUPPIES_TTL_SECONDS = 300;
+
 function calcAgeWeeks(birthDate: string | null): number | null {
   if (!birthDate) return null;
   const diffMs = Date.now() - new Date(birthDate).getTime();
   return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24 * 7)));
 }
 
-export async function getRelatedPuppies(
+async function fetchRelatedPuppies(
   breedId: string,
   excludeId: string
 ): Promise<RelatedPuppy[]> {
@@ -55,4 +59,15 @@ export async function getRelatedPuppies(
       p.puppy_media?.[0]?.url ??
       null,
   }));
+}
+
+export async function getRelatedPuppies(
+  breedId: string,
+  excludeId: string
+): Promise<RelatedPuppy[]> {
+  return getOrSetCache(
+    cacheKeys.relatedPuppies(breedId, excludeId),
+    RELATED_PUPPIES_TTL_SECONDS,
+    () => fetchRelatedPuppies(breedId, excludeId)
+  );
 }

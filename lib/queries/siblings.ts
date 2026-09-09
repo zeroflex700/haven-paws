@@ -1,4 +1,6 @@
 import { supabase } from "@/lib/supabase/client";
+import { getOrSetCache } from "@/lib/cache";
+import { cacheKeys } from "@/lib/cache-keys";
 
 export type Sibling = {
   id: string;
@@ -8,12 +10,12 @@ export type Sibling = {
   image: string | null;
 };
 
-export async function getSiblings(
-  litterId: string | null,
+const SIBLINGS_TTL_SECONDS = 300;
+
+async function fetchSiblings(
+  litterId: string,
   excludeId: string
 ): Promise<Sibling[]> {
-  if (!litterId) return [];
-
   const { data } = await supabase
     .from("puppies")
     .select(`id, name, sex, status, puppy_media ( url, is_cover )`)
@@ -39,4 +41,17 @@ export async function getSiblings(
       p.puppy_media?.[0]?.url ??
       null,
   }));
+}
+
+export async function getSiblings(
+  litterId: string | null,
+  excludeId: string
+): Promise<Sibling[]> {
+  if (!litterId) return [];
+
+  return getOrSetCache(
+    cacheKeys.siblings(litterId, excludeId),
+    SIBLINGS_TTL_SECONDS,
+    () => fetchSiblings(litterId, excludeId)
+  );
 }

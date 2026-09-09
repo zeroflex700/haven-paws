@@ -1,5 +1,7 @@
 import { supabase } from "@/lib/supabase/client";
 import { createClient } from "@/lib/supabase/server";
+import { getOrSetCache } from "@/lib/cache";
+import { cacheKeys } from "@/lib/cache-keys";
 
 export type VideoStory = {
   id: string;
@@ -22,7 +24,9 @@ export type ExploringCard = {
   imageUrl: string | null;
 };
 
-export async function getVideoStories(): Promise<VideoStory[]> {
+const HOMEPAGE_COLLECTIONS_TTL_SECONDS = 600;
+
+async function fetchVideoStories(): Promise<VideoStory[]> {
   const { data } = await supabase
     .from("video_stories")
     .select("id, thumbnail_url, video_url, person_name, description")
@@ -36,7 +40,15 @@ export async function getVideoStories(): Promise<VideoStory[]> {
   }));
 }
 
-export async function getLocationCards(): Promise<LocationCard[]> {
+export async function getVideoStories(): Promise<VideoStory[]> {
+  return getOrSetCache(
+    cacheKeys.videoStories,
+    HOMEPAGE_COLLECTIONS_TTL_SECONDS,
+    fetchVideoStories
+  );
+}
+
+async function fetchLocationCards(): Promise<LocationCard[]> {
   const { data } = await supabase
     .from("location_cards")
     .select("id, city_name, image_url")
@@ -44,7 +56,15 @@ export async function getLocationCards(): Promise<LocationCard[]> {
   return (data ?? []).map((r) => ({ id: r.id, cityName: r.city_name, imageUrl: r.image_url }));
 }
 
-export async function getExploringCards(): Promise<ExploringCard[]> {
+export async function getLocationCards(): Promise<LocationCard[]> {
+  return getOrSetCache(
+    cacheKeys.locationCards,
+    HOMEPAGE_COLLECTIONS_TTL_SECONDS,
+    fetchLocationCards
+  );
+}
+
+async function fetchExploringCards(): Promise<ExploringCard[]> {
   const { data } = await supabase
     .from("exploring_cards")
     .select("id, caption, link_href, image_url")
@@ -57,7 +77,15 @@ export async function getExploringCards(): Promise<ExploringCard[]> {
   }));
 }
 
-// --- Admin variants ---
+export async function getExploringCards(): Promise<ExploringCard[]> {
+  return getOrSetCache(
+    cacheKeys.exploringCards,
+    HOMEPAGE_COLLECTIONS_TTL_SECONDS,
+    fetchExploringCards
+  );
+}
+
+// --- Admin variants (uncached — always read fresh from Supabase) ---
 
 export async function getVideoStoriesAdmin(): Promise<VideoStory[]> {
   const supabase = await createClient();
