@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 function revalidatePublicPages(puppyId: string) {
   revalidatePath("/");
@@ -16,6 +17,7 @@ export async function addMedia(
   publicId: string,
   mediaType: "image" | "video"
 ) {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { count, error: countError } = await supabase
@@ -46,6 +48,7 @@ export async function addMedia(
 }
 
 export async function deleteMedia(puppyId: string, mediaId: string) {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -62,6 +65,7 @@ export async function deleteMedia(puppyId: string, mediaId: string) {
 }
 
 export async function setCover(puppyId: string, mediaId: string) {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { error: clearError } = await supabase
@@ -91,6 +95,7 @@ export async function moveMedia(
   mediaId: string,
   direction: "up" | "down"
 ) {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { data: currentMedia, error: currentError } = await supabase

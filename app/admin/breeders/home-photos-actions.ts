@@ -2,8 +2,10 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 export async function addHomePhoto(breederId: string, breederSlug: string, imageUrl: string) {
+  await requireAdmin();
   const supabase = await createClient();
   const { count } = await supabase
     .from("breeder_home_photos")
@@ -19,6 +21,7 @@ export async function addHomePhoto(breederId: string, breederSlug: string, image
 }
 
 export async function deleteHomePhoto(id: string, breederSlug: string) {
+  await requireAdmin();
   const supabase = await createClient();
   const { error } = await supabase.from("breeder_home_photos").delete().eq("id", id);
   if (error) throw new Error(error.message);

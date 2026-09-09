@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 type ImportedMedia = {
   url: string;
@@ -400,6 +401,8 @@ async function fetchSourcePage(url: string): Promise<string> {
 export async function importPuppyFromUrl(
   sourceUrl: string
 ): Promise<ImportResult> {
+  await requireAdmin();
+
   const parsedUrl = new URL(sourceUrl);
 
   if (

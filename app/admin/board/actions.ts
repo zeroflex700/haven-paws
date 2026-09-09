@@ -3,8 +3,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 export async function createBoardMember(name: string, title: string, photoUrl: string | null) {
+  await requireAdmin();
   const supabase = await createClient();
   const { error } = await supabase
     .from("breeder_board_members")
@@ -22,6 +24,7 @@ export async function updateBoardMember(
   title: string,
   photoUrl: string | null
 ) {
+  await requireAdmin();
   const supabase = await createClient();
   const { error } = await supabase
     .from("breeder_board_members")
@@ -35,6 +38,7 @@ export async function updateBoardMember(
 }
 
 export async function deleteBoardMember(id: string) {
+  await requireAdmin();
   const supabase = await createClient();
   const { error } = await supabase.from("breeder_board_members").delete().eq("id", id);
   if (error) throw new Error(error.message);

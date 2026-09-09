@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 async function getLitterSiblingIds(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -53,6 +54,7 @@ export async function updateParentInfo(
     registration: string;
   }
 ) {
+  await requireAdmin();
   const supabase = await createClient();
 
   const siblingIds = await getLitterSiblingIds(supabase, puppyId);
@@ -86,6 +88,7 @@ export async function updateParentPhoto(
   role: "mom" | "dad",
   url: string
 ) {
+  await requireAdmin();
   const supabase = await createClient();
 
   const siblingIds = await getLitterSiblingIds(supabase, puppyId);

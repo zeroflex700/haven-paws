@@ -3,8 +3,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 export async function updateReservation(id: string, formData: FormData) {
+  await requireAdmin();
   const supabase = await createClient();
 
   const depositAmount = formData.get("deposit_amount");

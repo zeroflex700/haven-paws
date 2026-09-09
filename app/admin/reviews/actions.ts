@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 type ReviewInput = {
   customerName: string;
@@ -17,6 +18,7 @@ type ReviewInput = {
 };
 
 export async function createReview(input: ReviewInput) {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { error } = await supabase.from("reviews").insert({
@@ -40,6 +42,7 @@ export async function createReview(input: ReviewInput) {
 }
 
 export async function updateReview(id: string, input: ReviewInput) {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -66,6 +69,7 @@ export async function updateReview(id: string, input: ReviewInput) {
 }
 
 export async function deleteReview(id: string) {
+  await requireAdmin();
   const supabase = await createClient();
   const { error } = await supabase.from("reviews").delete().eq("id", id);
   if (error) throw new Error(error.message);

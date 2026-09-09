@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 const ROUTE_MAP: Record<string, string> = {
   "akc-registration": "/akc-registration",
@@ -29,6 +30,7 @@ function revalidateForSlug(slug: string) {
 }
 
 export async function updatePageHeroImage(slug: string, url: string) {
+  await requireAdmin();
   const supabase = await createClient();
   const { error } = await supabase.from("page_content").upsert({ slug, hero_image_url: url });
   if (error) throw new Error(error.message);
@@ -36,6 +38,7 @@ export async function updatePageHeroImage(slug: string, url: string) {
 }
 
 export async function updatePageHeroVideo(slug: string, url: string) {
+  await requireAdmin();
   const supabase = await createClient();
   const { error } = await supabase.from("page_content").upsert({ slug, hero_video_url: url });
   if (error) throw new Error(error.message);
@@ -43,6 +46,7 @@ export async function updatePageHeroVideo(slug: string, url: string) {
 }
 
 export async function updatePageExtraImage(slug: string, key: string, url: string) {
+  await requireAdmin();
   const supabase = await createClient();
   const { data: existing } = await supabase
     .from("page_content")
@@ -57,6 +61,7 @@ export async function updatePageExtraImage(slug: string, key: string, url: strin
 }
 
 export async function updatePageExtraVideo(slug: string, key: string, url: string) {
+  await requireAdmin();
   const supabase = await createClient();
   const { data: existing } = await supabase
     .from("page_content")
@@ -71,6 +76,7 @@ export async function updatePageExtraVideo(slug: string, key: string, url: strin
 }
 
 export async function updatePageExtraText(slug: string, key: string, text: string) {
+  await requireAdmin();
   const supabase = await createClient();
   const { data: existing } = await supabase
     .from("page_content")

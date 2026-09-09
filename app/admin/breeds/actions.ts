@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 function slugify(name: string) {
   return name
@@ -11,6 +12,7 @@ function slugify(name: string) {
 }
 
 export async function updateBreedInfo(breedId: string, formData: FormData) {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -30,6 +32,7 @@ export async function updateBreedInfo(breedId: string, formData: FormData) {
 }
 
 export async function updateBreedImage(breedId: string, url: string) {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -48,6 +51,7 @@ export async function updateBreedNameAndSlug(
   oldSlug: string | null,
   formData: FormData
 ) {
+  await requireAdmin();
   const supabase = await createClient();
 
   const name = (formData.get("name") as string)?.trim();
