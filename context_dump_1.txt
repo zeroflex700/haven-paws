@@ -1,3 +1,534 @@
+===== page.tsx =====
+import Link from "next/link";
+import Image from "next/image";
+import AccountInboxRealtime from "./AccountInboxRealtime";
+import {
+  MessageCircle,
+  ChevronRight,
+  MessagesSquare,
+  Sparkles,
+  PawPrint,
+} from "lucide-react";
+
+import Navbar from "../../components/Navbar";
+import Footer from "../../components/Footer";
+
+import { getCustomerConversations } from "@/lib/queries/conversations";
+
+function formatConversationTime(value: string | null) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+  const now = new Date();
+
+  if (date.toDateString() === now.toDateString()) {
+    return new Intl.DateTimeFormat("en", {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(date);
+  }
+
+  const diffDays = Math.floor(
+    (now.getTime() - date.getTime()) /
+      (1000 * 60 * 60 * 24)
+  );
+
+  if (diffDays < 7) {
+    return new Intl.DateTimeFormat("en", {
+      weekday: "short",
+    }).format(date);
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+  }).format(date);
+}
+
+export default async function MessagesPage() {
+  const conversations = await getCustomerConversations();
+
+  return (
+    <main className="min-h-screen bg-[#f7f5ef]">
+      <AccountInboxRealtime />
+
+      <Navbar />
+
+      {/* HERO */}
+      <section className="relative overflow-hidden border-b border-sage/10 bg-white">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-gold/5 blur-3xl" />
+          <div className="absolute -bottom-40 -left-24 h-80 w-80 rounded-full bg-forest/5 blur-3xl" />
+        </div>
+
+        <div className="relative mx-auto max-w-6xl px-5 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-16">
+          <div className="flex flex-col justify-between gap-8 sm:flex-row sm:items-end">
+            <div>
+              <div className="mb-4 flex items-center gap-2">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-forest text-cream shadow-sm">
+                  <MessagesSquare size={15} />
+                </span>
+
+                <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sage">
+                  Your Account
+                </span>
+              </div>
+
+              <h1 className="font-display text-4xl tracking-tight text-forest sm:text-5xl">
+                Your messages
+              </h1>
+
+              <p className="mt-4 max-w-xl text-sm leading-7 text-ink/60 sm:text-base">
+                Keep every conversation about your future companion
+                beautifully organised in one place.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 rounded-2xl border border-sage/10 bg-[#faf9f5] px-4 py-3 shadow-[0_8px_30px_rgba(39,63,48,0.04)]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-forest shadow-sm">
+                <PawPrint size={18} strokeWidth={1.7} />
+              </div>
+
+              <div>
+                <p className="text-lg font-semibold leading-none text-forest">
+                  {conversations.length}
+                </p>
+                <p className="mt-1 text-[11px] font-medium text-ink/45">
+                  {conversations.length === 1
+                    ? "conversation"
+                    : "conversations"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* INBOX */}
+      <section>
+        <div className="mx-auto max-w-6xl px-5 py-8 sm:px-6 sm:py-12 lg:px-8">
+          {conversations.length === 0 ? (
+            <EmptyMessagesState />
+          ) : (
+            <>
+              <div className="mb-5 flex items-center justify-between">
+                <div>
+                  <h2 className="text-sm font-semibold text-forest">
+                    Conversations
+                  </h2>
+                  <p className="mt-1 text-xs text-ink/45">
+                    Select a conversation to continue where you left off.
+                  </p>
+                </div>
+
+                <div className="hidden items-center gap-1.5 text-xs text-gold sm:flex">
+                  <Sparkles size={13} />
+                  <span>Stay connected</span>
+                </div>
+              </div>
+
+              <div className="overflow-hidden rounded-[30px] border border-sage/10 bg-white shadow-[0_18px_60px_rgba(39,63,48,0.06)]">
+                <div className="divide-y divide-sage/10">
+                  {conversations.map((conversation) => {
+                    const preview = conversation.lastMessagePreview
+                      ? `${
+                          conversation.lastMessageSenderRole === "customer"
+                            ? "You: "
+                            : ""
+                        }${conversation.lastMessagePreview}`
+                      : "Start the conversation with the Haven Paws team.";
+
+                    return (
+                      <Link
+                        key={conversation.id}
+                        href={`/account/messages/${conversation.id}`}
+                        className="group relative block overflow-hidden transition hover:bg-[#fcfbf7]"
+                      >
+                        <div className="absolute inset-y-0 left-0 w-1 origin-center scale-y-0 bg-gold transition-transform duration-300 group-hover:scale-y-100" />
+
+                        <div className="flex items-center gap-4 p-4 sm:gap-5 sm:p-5 lg:p-6">
+                          {/* AVATAR */}
+                          <div className="relative h-16 w-16 shrink-0 sm:h-[76px] sm:w-[76px]">
+                            <div className="absolute inset-0 rounded-[22px] bg-cream-alt" />
+
+                            <div className="relative h-full w-full overflow-hidden rounded-[22px] border border-sage/10 bg-cream-alt">
+                              {conversation.puppy.breederPhotoUrl ? (
+                                <Image
+                                  src={conversation.puppy.breederPhotoUrl}
+                                  alt={
+                                    conversation.puppy.breederName ??
+                                    "Breeder"
+                                  }
+                                  fill
+                                  className="object-cover transition duration-500 group-hover:scale-105"
+                                  sizes="76px"
+                                />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center text-forest/30">
+                                  <MessageCircle
+                                    size={24}
+                                    strokeWidth={1.5}
+                                  />
+                                </div>
+                              )}
+                            </div>
+
+                            {conversation.hasUnread && (
+                              <span className="absolute -right-1 -top-1 h-4 w-4 rounded-full border-[3px] border-white bg-gold shadow-sm" />
+                            )}
+                          </div>
+
+                          {/* CONTENT */}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <p
+                                    className={`truncate text-sm sm:text-base ${
+                                      conversation.hasUnread
+                                        ? "font-bold text-forest"
+                                        : "font-semibold text-forest"
+                                    }`}
+                                  >
+                                    {conversation.puppy.breederName ??
+                                      "Breeder"}
+                                  </p>
+
+                                  {conversation.hasUnread && (
+                                    <span className="hidden rounded-full bg-gold/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-gold sm:inline-flex">
+                                      New
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                                  <span className="text-xs font-medium text-sage">
+                                    {conversation.puppy.name}
+                                  </span>
+
+                                  <span className="h-1 w-1 rounded-full bg-sage/30" />
+
+                                  <span className="truncate text-xs text-ink/40">
+                                    {conversation.puppy.breed}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="flex shrink-0 items-center gap-3">
+                                {conversation.lastMessageAt && (
+                                  <span
+                                    className={`text-[11px] ${
+                                      conversation.hasUnread
+                                        ? "font-semibold text-forest"
+                                        : "text-ink/40"
+                                    }`}
+                                  >
+                                    {formatConversationTime(
+                                      conversation.lastMessageAt
+                                    )}
+                                  </span>
+                                )}
+
+                                <ChevronRight
+                                  size={18}
+                                  strokeWidth={1.5}
+                                  className="text-sage/40 transition-all duration-200 group-hover:translate-x-1 group-hover:text-forest"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="mt-3 flex items-center gap-3">
+                              <p
+                                className={`min-w-0 flex-1 truncate text-xs sm:text-sm ${
+                                  conversation.hasUnread
+                                    ? "font-medium text-ink/70"
+                                    : "text-ink/50"
+                                }`}
+                              >
+                                {preview}
+                              </p>
+
+                              {conversation.unreadCount > 0 && (
+                                <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-forest px-1.5 text-[10px] font-semibold text-cream shadow-sm">
+                                  {conversation.unreadCount > 99
+                                    ? "99+"
+                                    : conversation.unreadCount}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
+      <Footer />
+    </main>
+  );
+}
+
+function EmptyMessagesState() {
+  return (
+    <div className="relative mx-auto max-w-2xl overflow-hidden rounded-[32px] border border-sage/10 bg-white px-6 py-14 text-center shadow-[0_18px_60px_rgba(39,63,48,0.05)] sm:px-10 sm:py-20">
+      <div className="absolute -right-20 -top-20 h-52 w-52 rounded-full bg-gold/5 blur-3xl" />
+
+      <div className="relative">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[22px] border border-sage/10 bg-[#faf9f5] text-forest shadow-sm">
+          <MessageCircle size={27} strokeWidth={1.5} />
+        </div>
+
+        <h2 className="mt-6 font-display text-3xl text-forest">
+          No messages yet
+        </h2>
+
+        <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-ink/55 sm:text-base">
+          When you contact us about a puppy, your conversation
+          will appear here and you can continue it anytime.
+        </p>
+
+        <Link
+          href="/puppies"
+          className="mt-8 inline-flex items-center justify-center rounded-full bg-forest px-6 py-3.5 text-sm font-medium text-cream shadow-lg shadow-forest/10 transition hover:-translate-y-0.5 hover:bg-forest-light"
+        >
+          Meet Our Puppies
+          <ChevronRight size={16} className="ml-1" />
+        </Link>
+      </div>
+    </div>
+  );
+}import { notFound, redirect } from "next/navigation";
+
+import Navbar from "../../../components/Navbar";
+import Footer from "../../../components/Footer";
+
+import ConversationThread from "../../../components/messages/ConversationThread";
+
+import { createClient } from "@/lib/supabase/server";
+import {
+  getCustomerMessages,
+  type Message,
+  type MessageCursor,
+} from "@/lib/queries/messages";
+
+type ConversationRow = {
+  id: string;
+  puppy_id: string;
+  customer_id: string;
+  status: "open" | "closed";
+  last_message_at: string | null;
+  created_at: string;
+};
+
+type PuppyRow = {
+  id: string;
+  name: string;
+  puppy_media:
+    | {
+        url: string;
+        is_cover: boolean;
+        sort_order: number;
+      }[]
+    | null;
+  breed:
+    | { name: string }
+    | { name: string }[]
+    | null;
+  breeder:
+    | { name: string; photo_url: string | null }
+    | { name: string; photo_url: string | null }[]
+    | null;
+};
+
+function getSingleRelation<T>(
+  relation: T | T[] | null
+): T | null {
+  if (Array.isArray(relation)) {
+    return relation[0] ?? null;
+  }
+
+  return relation;
+}
+
+export default async function ConversationPage({
+  params,
+}: {
+  params: Promise<{
+    conversationId: string;
+  }>;
+}) {
+  const { conversationId } = await params;
+
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect(`/login?redirect=/account/messages/${conversationId}`);
+  }
+
+  const {
+    data: conversation,
+    error: conversationError,
+  } = await supabase
+    .from("conversations")
+    .select(`
+      id,
+      puppy_id,
+      customer_id,
+      status,
+      last_message_at,
+      created_at
+    `)
+    .eq("id", conversationId)
+    .eq("customer_id", user.id)
+    .maybeSingle();
+
+  if (conversationError) {
+    console.error(
+      "Failed to load conversation:",
+      conversationError
+    );
+  }
+
+  if (!conversation) {
+    notFound();
+  }
+
+  const typedConversation = conversation as ConversationRow;
+
+  const {
+    data: puppy,
+    error: puppyError,
+  } = await supabase
+    .from("puppies")
+    .select(`
+      id,
+      name,
+      puppy_media (
+        url,
+        is_cover,
+        sort_order
+      ),
+      breed:breeds (
+        name
+      ),
+      breeder:breeders (
+        name,
+        photo_url
+      )
+    `)
+    .eq("id", typedConversation.puppy_id)
+    .maybeSingle();
+
+  if (puppyError) {
+    console.error(
+      "Failed to load conversation puppy:",
+      puppyError
+    );
+  }
+  
+  if (!puppy) {
+    notFound();
+  }
+
+  const typedPuppy = puppy as PuppyRow;
+
+  const coverImage =
+    typedPuppy.puppy_media
+      ?.slice()
+      .sort(
+        (a, b) =>
+          a.sort_order - b.sort_order
+      )
+      .find(
+        (media) => media.is_cover
+      )?.url ??
+    typedPuppy.puppy_media
+      ?.slice()
+      .sort(
+        (a, b) =>
+          a.sort_order - b.sort_order
+      )[0]?.url ??
+    null;
+
+  const page = await getCustomerMessages(
+    conversationId,
+    {
+      limit: 30,
+    }
+  );
+
+  if (!page) {
+    notFound();
+  }
+
+  const initialMessages: Message[] =
+    page.messages;
+
+  const nextCursor: MessageCursor | null =
+    page.nextCursor;
+
+  return (
+    <main className="min-h-screen bg-[#f7f5ef]">
+      <Navbar />
+
+      {/* PAGE INTRO */}
+      <section className="border-b border-sage/10 bg-white">
+        <div className="mx-auto max-w-6xl px-5 py-6 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sage">
+              Your Account
+            </span>
+
+            <span className="h-1 w-1 rounded-full bg-sage/40" />
+
+            <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-ink/35">
+              Messages
+            </span>
+          </div>
+
+          <h1 className="mt-2 font-display text-2xl tracking-tight text-forest sm:text-3xl">
+            Conversation
+          </h1>
+        </div>
+      </section>
+
+      {/* CHAT */}
+      <section className="mx-auto max-w-6xl px-0 py-0 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+        <div className="overflow-hidden bg-white sm:rounded-[32px] sm:border sm:border-sage/10 sm:shadow-[0_20px_70px_rgba(39,63,48,0.07)]">
+          <ConversationThread
+            conversationId={typedConversation.id}
+            puppy={{
+            id: typedPuppy.id,
+            name: typedPuppy.name,
+            image: coverImage,
+            breed: getSingleRelation(typedPuppy.breed)?.name ?? null,
+            breederName: getSingleRelation(typedPuppy.breeder)?.name ?? null,
+            breederPhotoUrl: getSingleRelation(typedPuppy.breeder)?.photo_url ?? null,
+          }}
+            initialMessages={initialMessages}
+            initialNextCursor={nextCursor}
+            initialHasMore={page.hasMore}
+          />
+        </div>
+      </section>
+
+      <Footer />
+    </main>
+  );
+}===== layout.tsx (messages route + account route) =====
+===== components/messages/* =====
+--- app/components/messages/ConversationThread.tsx ---
 "use client";
 
 import Link from "next/link";
@@ -855,12 +1386,12 @@ export default function ConversationThread({
 
 
 return (
-  <div className="flex h-full flex-col bg-[#faf9f5]">
+  <div className="flex min-h-[720px] flex-col bg-[#faf9f5]">
     {/* ===================================================== */}
     {/* PREMIUM CHAT HEADER                                   */}
     {/* ===================================================== */}
 
-    <div className="shrink-0 border-b border-sage/10 bg-white">
+    <div className="sticky top-0 z-20 border-b border-sage/10 bg-white/95 backdrop-blur-xl">
       <div className="flex items-center gap-3 px-4 py-4 sm:px-6">
         <Link
           href="/account/messages"
@@ -970,42 +1501,43 @@ return (
       </Link>
     </div>
 
-    {/{/* ===================================================== */}
-    {/* SCROLLABLE CONVERSATION AREA                           */}
+    {/* ===================================================== */}
+    {/* LOAD OLDER                                             */}
     {/* ===================================================== */}
 
-    <div className="flex-1 overflow-y-auto">
-      {/* Load older */}
-      <div className="flex justify-center px-4 py-5">
-        {hasMore ? (
-          <button
-            type="button"
-            onClick={() => void loadOlderMessages()}
-            disabled={isLoadingOlder}
-            className="inline-flex items-center gap-2 rounded-full border border-sage/15 bg-white px-4 py-2 text-[11px] font-semibold text-forest shadow-sm transition hover:border-forest/20 hover:shadow disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isLoadingOlder ? (
-              <>
-                <Loader2 size={13} className="animate-spin" />
-                Loading messages…
-              </>
-            ) : (
-              "Load earlier messages"
-            )}
-          </button>
-        ) : messageCount === 0 ? (
-          <div className="rounded-2xl border border-dashed border-sage/20 bg-white/70 px-5 py-4 text-center">
-            <p className="text-xs font-medium text-ink/45">
-              This is the beginning of your conversation about{" "}
-              <span className="text-forest">{puppy.name}</span>.
-            </p>
-          </div>
-        ) : null}
-      </div>
+    <div className="flex justify-center px-4 py-5">
+      {hasMore ? (
+        <button
+          type="button"
+          onClick={() => void loadOlderMessages()}
+          disabled={isLoadingOlder}
+          className="inline-flex items-center gap-2 rounded-full border border-sage/15 bg-white px-4 py-2 text-[11px] font-semibold text-forest shadow-sm transition hover:border-forest/20 hover:shadow disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isLoadingOlder ? (
+            <>
+              <Loader2 size={13} className="animate-spin" />
+              Loading messages…
+            </>
+          ) : (
+            "Load earlier messages"
+          )}
+        </button>
+      ) : messageCount === 0 ? (
+        <div className="rounded-2xl border border-dashed border-sage/20 bg-white/70 px-5 py-4 text-center">
+          <p className="text-xs font-medium text-ink/45">
+            This is the beginning of your conversation about{" "}
+            <span className="text-forest">{puppy.name}</span>.
+          </p>
+        </div>
+      ) : null}
+    </div>
 
-      {/* Message list */}
-      <div className="px-4 pb-8 sm:px-6 sm:pb-10">
-        <div className="mx-auto max-w-3xl space-y-3">
+    {/* ===================================================== */}
+    {/* MESSAGE LIST                                           */}
+    {/* ===================================================== */}
+
+    <div className="flex-1 px-4 pb-8 sm:px-6 sm:pb-10">
+      <div className="mx-auto max-w-3xl space-y-3">
         {messages.map((message, index) => {
           const isMine =
             currentUserId !== null &&
@@ -1159,7 +1691,6 @@ return (
         )}
 
         <div ref={bottomRef} />
-        </div>
       </div>
     </div>
 
@@ -1167,7 +1698,7 @@ return (
     {/* COMPOSER                                               */}
     {/* ===================================================== */}
 
-    <div className="shrink-0 border-t border-sage/10 bg-white px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-6">
+    <div className="sticky bottom-0 z-20 border-t border-sage/10 bg-white/95 px-4 py-4 backdrop-blur-xl sm:px-6">
       <div className="mx-auto max-w-3xl">
         <div className="flex items-end gap-2 rounded-[24px] border border-sage/15 bg-[#faf9f5] p-1.5 shadow-[0_10px_35px_rgba(39,63,48,0.06)] transition focus-within:border-forest/25 focus-within:bg-white">
           <textarea

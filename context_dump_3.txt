@@ -1,0 +1,7 @@
+===== files referencing 'messages' table/queries =====
+app/admin/messages/page.tsx
+app/admin/messages/[conversationId]/page.tsx
+lib/queries/conversations.ts
+lib/queries/messages.ts
+===== supabase client setup =====
+./lib/supabase

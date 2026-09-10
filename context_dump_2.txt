@@ -1,0 +1,120 @@
+===== root layout =====
+import type { Metadata } from "next";
+import { Fraunces, Inter } from "next/font/google";
+import "./globals.css";
+import MediaProtection from "./components/MediaProtection";
+import TopLoadingBar from "./components/TopLoadingBar";
+import ScrollToTop from "./components/ScrollToTop";
+import SkipToContent from "./components/SkipToContent";
+import PageTransition from "./components/PageTransition";
+import BackToTopButton from "./components/BackToTopButton";
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-fraunces",
+  weight: ["500", "600"],
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const SITE_URL = "https://haven-paws-pi.vercel.app";
+const SITE_TITLE = "Haven Paws — A Curated Home for Every Puppy";
+const SITE_DESCRIPTION =
+  "Ethically bred, health-guaranteed puppies matched with families through a concierge adoption process.";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_TITLE,
+    template: "%s | Haven Paws",
+  },
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    type: "website",
+    siteName: "Haven Paws",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
+      <body className="font-body">
+        <SkipToContent />
+        <MediaProtection />
+        <TopLoadingBar />
+        <ScrollToTop />
+        <div id="main-content">
+          <PageTransition>{children}</PageTransition>
+        </div>
+        <BackToTopButton />
+      </body>
+    </html>
+  );
+}===== files importing Footer or Header =====
+app/page.tsx
+app/components/Navbar.tsx
+app/components/Footer.tsx
+app/components/FooterAccordion.tsx
+app/components/AccountPanel.tsx
+app/components/PaymentPrototype.tsx
+app/components/HeaderNavDropdown.tsx
+app/puppies/page.tsx
+app/puppies/[id]/page.tsx
+app/about/page.tsx
+app/how-it-works/page.tsx
+app/delivery/page.tsx
+app/contact/page.tsx
+app/account/page.tsx
+app/account/messages/page.tsx
+app/account/messages/[conversationId]/page.tsx
+app/account/applications/page.tsx
+app/account/your-puppy/page.tsx
+app/account/favorites/page.tsx
+app/account/payments/page.tsx
+app/account/settings/page.tsx
+app/breeds/page.tsx
+app/lifestyle/page.tsx
+app/akc-registration/page.tsx
+app/akc-benefits/page.tsx
+app/fetch-insurance/page.tsx
+app/reviews/page.tsx
+app/breeder-standards/page.tsx
+app/help-center/page.tsx
+app/faqs/page.tsx
+app/terms/page.tsx
+app/our-promise/page.tsx
+app/breed-guides/page.tsx
+app/breed-guides/[slug]/page.tsx
+app/puppy-training/page.tsx
+app/puppy-training/hub/page.tsx
+app/puppy-training/first-week/page.tsx
+app/puppy-training/crate-training/page.tsx
+app/puppy-training/health-wellness/page.tsx
+app/puppy-training/training-guides/page.tsx
+app/puppy-training/access/page.tsx
+app/puppy-training/protection/page.tsx
+app/puppy-training/protection/payment/page.tsx
+app/breeders/[slug]/page.tsx
+app/not-found.tsx
+app/payment-preview/[id]/page.tsx
+===== actual Header/Footer component files =====
+app/components/Footer.tsx
+app/components/FooterAccordion.tsx
+app/components/HeaderNavDropdown.tsx

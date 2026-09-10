@@ -1,8 +1,5 @@
 import { notFound, redirect } from "next/navigation";
 
-import Navbar from "../../../components/Navbar";
-import Footer from "../../../components/Footer";
-
 import ConversationThread from "../../../components/messages/ConversationThread";
 
 import { createClient } from "@/lib/supabase/server";
@@ -130,7 +127,7 @@ export default async function ConversationPage({
       puppyError
     );
   }
-  
+
   if (!puppy) {
     notFound();
   }
@@ -173,36 +170,11 @@ export default async function ConversationPage({
     page.nextCursor;
 
   return (
-    <main className="min-h-screen bg-[#f7f5ef]">
-      <Navbar />
-
-      {/* PAGE INTRO */}
-      <section className="border-b border-sage/10 bg-white">
-        <div className="mx-auto max-w-6xl px-5 py-6 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sage">
-              Your Account
-            </span>
-
-            <span className="h-1 w-1 rounded-full bg-sage/40" />
-
-            <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-ink/35">
-              Messages
-            </span>
-          </div>
-
-          <h1 className="mt-2 font-display text-2xl tracking-tight text-forest sm:text-3xl">
-            Conversation
-          </h1>
-        </div>
-      </section>
-
-      {/* CHAT */}
-      <section className="mx-auto max-w-6xl px-0 py-0 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-        <div className="overflow-hidden bg-white sm:rounded-[32px] sm:border sm:border-sage/10 sm:shadow-[0_20px_70px_rgba(39,63,48,0.07)]">
-          <ConversationThread
-            conversationId={typedConversation.id}
-            puppy={{
+    <main className="h-dvh w-full overflow-hidden bg-[#eef1ea] md:flex md:items-center md:justify-center md:p-6">
+      <div className="flex h-full w-full flex-col overflow-hidden bg-[#faf9f5] md:h-[calc(100dvh-3rem)] md:max-w-4xl md:rounded-[28px] md:border md:border-sage/10 md:shadow-[0_30px_80px_rgba(23,63,58,0.12)]">
+        <ConversationThread
+          conversationId={typedConversation.id}
+          puppy={{
             id: typedPuppy.id,
             name: typedPuppy.name,
             image: coverImage,
@@ -210,14 +182,11 @@ export default async function ConversationPage({
             breederName: getSingleRelation(typedPuppy.breeder)?.name ?? null,
             breederPhotoUrl: getSingleRelation(typedPuppy.breeder)?.photo_url ?? null,
           }}
-            initialMessages={initialMessages}
-            initialNextCursor={nextCursor}
-            initialHasMore={page.hasMore}
-          />
-        </div>
-      </section>
-
-      <Footer />
+          initialMessages={initialMessages}
+          initialNextCursor={nextCursor}
+          initialHasMore={page.hasMore}
+        />
+      </div>
     </main>
   );
 }
