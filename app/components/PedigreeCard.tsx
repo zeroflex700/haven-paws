@@ -1,8 +1,14 @@
 import Link from "next/link";
-import { Video } from "lucide-react";
+import { Video, ArrowUpRight } from "lucide-react";
 import OptimizedImage from "./OptimizedImage";
 
 type Status = "available" | "reserved" | "sold";
+
+const STATUS_STYLES: Record<Status, string> = {
+  available: "",
+  reserved: "bg-white/90 text-ink",
+  sold: "bg-ink/80 text-white",
+};
 
 export default function PedigreeCard({
   id,
@@ -14,6 +20,7 @@ export default function PedigreeCard({
   status,
   image,
   hasVideo,
+  price,
 }: {
   id: string;
   name: string;
@@ -24,32 +31,36 @@ export default function PedigreeCard({
   status: Status;
   image?: string | null;
   hasVideo?: boolean;
+  price?: number;
 }) {
   return (
     <Link
       href={`/puppies/${id}`}
-      className="block min-w-0 group"
+      className="group block min-w-0"
     >
-      <div className="relative aspect-square overflow-hidden rounded-lg bg-cream-alt">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-[20px] bg-cream-alt shadow-[0_6px_20px_rgba(23,63,58,0.06)] transition-shadow duration-300 group-hover:shadow-[0_10px_30px_rgba(23,63,58,0.12)]">
         <OptimizedImage
           src={image}
           alt={name}
           sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 18vw"
-          className="transition-transform duration-300 group-hover:scale-105"
+          className="transition-transform duration-500 ease-out group-hover:scale-105"
         />
 
+        {/* Gradient for legible overlay text */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-forest/80 via-forest/10 to-transparent opacity-90 transition-opacity duration-500 group-hover:opacity-100" />
 
-
-        {/* Status */}
+        {/* Status badge */}
         {status !== "available" && (
-          <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[9px] uppercase tracking-wider text-ink">
+          <span
+            className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-[9px] font-medium uppercase tracking-wider backdrop-blur-sm ${STATUS_STYLES[status]}`}
+          >
             {status}
           </span>
         )}
 
         {/* Video indicator */}
         {hasVideo && (
-          <span className="absolute bottom-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60">
+          <span className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-black/50 backdrop-blur-sm">
             <Video
               size={12}
               className="text-white"
@@ -57,26 +68,46 @@ export default function PedigreeCard({
             />
           </span>
         )}
+
+        {/* Name + breed set into the image */}
+        <div className="absolute inset-x-0 bottom-0 p-3.5 sm:p-4">
+          <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-white/70">
+            {breed}
+          </p>
+
+          <div className="mt-0.5 flex items-end justify-between gap-2">
+            <p className="font-display text-lg leading-tight text-white sm:text-xl">
+              {name}
+            </p>
+
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/15 text-white opacity-0 backdrop-blur-md transition-all duration-300 group-hover:bg-gold group-hover:text-forest group-hover:opacity-100">
+              <ArrowUpRight size={13} />
+            </span>
+          </div>
+        </div>
       </div>
 
-      <p className="mt-1.5 text-[11px] text-sage">
-        {breed}
-      </p>
+      {/* Secondary info below the image */}
+      <div className="mt-2 flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-xs capitalize text-ink/70">
+            {sex}
+            {ageWeeks !== null
+              ? ` · ${ageWeeks} weeks`
+              : ""}
+          </p>
 
-      <p className="inline-block border-b border-gold/60 text-sm font-medium text-forest">
-        {name}
-      </p>
+          <p className="mt-0.5 truncate text-[11px] text-sage">
+            {readyLabel}
+          </p>
+        </div>
 
-      <p className="mt-0.5 text-xs capitalize text-ink/70">
-        {sex}
-        {ageWeeks !== null
-          ? ` · ${ageWeeks} weeks`
-          : ""}
-      </p>
-
-      <p className="text-[11px] text-ink/60">
-        {readyLabel}
-      </p>
+        {typeof price === "number" && (
+          <p className="shrink-0 text-sm font-medium text-forest">
+            ${price.toLocaleString()}
+          </p>
+        )}
+      </div>
     </Link>
   );
 }
