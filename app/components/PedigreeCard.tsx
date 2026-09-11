@@ -69,13 +69,9 @@ export default function PedigreeCard({
           </span>
         )}
 
-        {/* Name + breed set into the image */}
+        {/* Name set into the image */}
         <div className="absolute inset-x-0 bottom-0 p-3.5 sm:p-4">
-          <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-white/70">
-            {breed}
-          </p>
-
-          <div className="mt-0.5 flex items-end justify-between gap-2">
+          <div className="flex items-end justify-between gap-2">
             <p className="font-display text-lg leading-tight text-white sm:text-xl">
               {name}
             </p>
@@ -90,7 +86,11 @@ export default function PedigreeCard({
       {/* Secondary info below the image */}
       <div className="mt-2 flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-xs capitalize text-ink/70">
+          <p className="truncate text-[10px] font-medium uppercase tracking-[0.1em] text-sage">
+            {breed}
+          </p>
+
+          <p className="mt-0.5 text-xs capitalize text-ink/70">
             {sex}
             {ageWeeks !== null
               ? ` · ${ageWeeks} weeks`
