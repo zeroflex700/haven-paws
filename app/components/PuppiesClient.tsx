@@ -801,7 +801,7 @@ export default function PuppiesClient({
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-9 lg:grid-cols-4 lg:gap-x-5 xl:grid-cols-5 xl:gap-x-6">
+                <div className="grid grid-cols-3 gap-x-2.5 gap-y-6 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-9 lg:grid-cols-4 lg:gap-x-5 xl:grid-cols-5 xl:gap-x-6">
 
                   {pageItems.map((p) => (
                     <div
