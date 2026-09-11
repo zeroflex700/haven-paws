@@ -18,6 +18,8 @@ import {
   SlidersHorizontal,
   Sparkles,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   X,
   PawPrint,
   ShieldCheck,
@@ -41,6 +43,81 @@ const DEFAULT_FILTERS: Filters = {
   readyNow: false,
   sort: "none",
 };
+
+const PAGE_SIZE = 30;
+
+/**
+ * Interleaves puppies round-robin across breeds — one from each breed
+ * in turn, looping back around — so browsing shows variety right away
+ * instead of a long run of the same breed. Within each breed's own
+ * queue, puppies are ordered price high to low.
+ */
+function interleaveByBreed(
+  puppies: PuppyRecord[]
+): PuppyRecord[] {
+  const byBreed = new Map<string, PuppyRecord[]>();
+
+  for (const puppy of puppies) {
+    const list = byBreed.get(puppy.breed) ?? [];
+    list.push(puppy);
+    byBreed.set(puppy.breed, list);
+  }
+
+  const breedQueues = Array.from(byBreed.values()).map(
+    (list) => [...list].sort((a, b) => b.price - a.price)
+  );
+
+  const result: PuppyRecord[] = [];
+  let remaining = puppies.length;
+
+  while (remaining > 0) {
+    for (const queue of breedQueues) {
+      if (queue.length === 0) continue;
+
+      const next = queue.shift();
+      if (next) {
+        result.push(next);
+        remaining--;
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Page numbers to render, with ellipsis collapsing once there are
+ * enough pages that showing every number would get unwieldy.
+ */
+function getPageNumbers(
+  current: number,
+  total: number
+): (number | "ellipsis")[] {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  const pages: (number | "ellipsis")[] = [1];
+
+  if (current > 3) {
+    pages.push("ellipsis");
+  }
+
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+
+  for (let i = start; i <= end; i++) {
+    pages.push(i);
+  }
+
+  if (current < total - 2) {
+    pages.push("ellipsis");
+  }
+
+  pages.push(total);
+
+  return pages;
+}
 
 export default function PuppiesClient({
   initialPuppies,
@@ -70,7 +147,12 @@ export default function PuppiesClient({
   const [mobileFiltersOpen, setMobileFiltersOpen] =
     useState(false);
 
+  const [page, setPage] = useState(1);
+
   const searchBoxRef =
+    useRef<HTMLDivElement>(null);
+
+  const resultsRef =
     useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -180,6 +262,11 @@ export default function PuppiesClient({
     };
   }, [mobileFiltersOpen]);
 
+  // Any filter change starts the results back at page 1.
+  useEffect(() => {
+    setPage(1);
+  }, [filters]);
+
   function commitSearch(term: string) {
     setFilters({
       ...filters,
@@ -250,10 +337,38 @@ export default function PuppiesClient({
       result = [...result].sort(
         (a, b) => b.price - a.price
       );
+    } else {
+      // Default view: interleave by breed for variety instead of
+      // whatever order the results happened to filter in.
+      result = interleaveByBreed(result);
     }
 
     return result;
   }, [filters, initialPuppies]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filtered.length / PAGE_SIZE)
+  );
+
+  const pageItems = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, page]);
+
+  function goToPage(next: number) {
+    const clamped = Math.min(
+      Math.max(1, next),
+      totalPages
+    );
+
+    setPage(clamped);
+
+    resultsRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
 
   const hasActiveFilters =
     filters.search.trim() !== "" ||
@@ -575,7 +690,10 @@ export default function PuppiesClient({
           {/* RESULTS HEADER                                                  */}
           {/* ============================================================ */}
 
-          <div className="mt-9 border-t border-sage/10 pt-6 sm:mt-11 sm:pt-7">
+          <div
+            ref={resultsRef}
+            className="mt-9 scroll-mt-24 border-t border-sage/10 pt-6 sm:mt-11 sm:pt-7"
+          >
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
 
@@ -645,7 +763,7 @@ export default function PuppiesClient({
           {/* LISTINGS                                                       */}
           {/* ============================================================ */}
 
-          <div className="pb-24 pt-6 sm:pt-8">
+          <div className="pb-10 pt-6 sm:pt-8">
 
             {filtered.length === 0 ? (
               <div className="rounded-[24px] border border-sage/12 bg-white px-6 py-16 text-center shadow-[0_8px_30px_rgba(30,55,45,0.035)] sm:px-10 sm:py-24">
@@ -682,21 +800,99 @@ export default function PuppiesClient({
 
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-9 lg:grid-cols-4 lg:gap-x-5 xl:grid-cols-5 xl:gap-x-6">
+              <>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-9 lg:grid-cols-4 lg:gap-x-5 xl:grid-cols-5 xl:gap-x-6">
 
-                {filtered.map((p) => (
-                  <div
-                    key={p.id}
-                    className="min-w-0"
-                  >
-                    <PedigreeCard
-                      {...p}
-                      image={p.coverImage}
-                    />
+                  {pageItems.map((p) => (
+                    <div
+                      key={p.id}
+                      className="min-w-0"
+                    >
+                      <PedigreeCard
+                        {...p}
+                        image={p.coverImage}
+                      />
+                    </div>
+                  ))}
+
+                </div>
+
+                {/* ==================================================== */}
+                {/* PAGINATION                                            */}
+                {/* ==================================================== */}
+
+                {totalPages > 1 && (
+                  <div className="mt-12 flex flex-col items-center gap-3 sm:mt-16">
+
+                    <p className="text-xs text-sage">
+                      Page {page} of {totalPages}
+                    </p>
+
+                    <div className="flex items-center gap-1.5">
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          goToPage(page - 1)
+                        }
+                        disabled={page === 1}
+                        aria-label="Previous page"
+                        className="flex h-10 w-10 items-center justify-center rounded-full border border-sage/15 bg-white text-forest transition-colors hover:border-gold disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-sage/15"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+
+                      {getPageNumbers(
+                        page,
+                        totalPages
+                      ).map((entry, i) =>
+                        entry === "ellipsis" ? (
+                          <span
+                            key={`ellipsis-${i}`}
+                            className="px-1.5 text-sage"
+                          >
+                            &hellip;
+                          </span>
+                        ) : (
+                          <button
+                            key={entry}
+                            type="button"
+                            onClick={() =>
+                              goToPage(entry)
+                            }
+                            aria-current={
+                              entry === page
+                                ? "page"
+                                : undefined
+                            }
+                            className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium transition-colors ${
+                              entry === page
+                                ? "bg-forest text-cream"
+                                : "border border-sage/15 bg-white text-forest hover:border-gold"
+                            }`}
+                          >
+                            {entry}
+                          </button>
+                        )
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          goToPage(page + 1)
+                        }
+                        disabled={page === totalPages}
+                        aria-label="Next page"
+                        className="flex h-10 w-10 items-center justify-center rounded-full border border-sage/15 bg-white text-forest transition-colors hover:border-gold disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-sage/15"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+
+                    </div>
+
                   </div>
-                ))}
-
-              </div>
+                )}
+              </>
             )}
 
           </div>

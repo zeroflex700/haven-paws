@@ -14,33 +14,84 @@ export type OptimizedImageProps = {
   containerClassName?: string;
 };
 
-function getImageUrl(
+const FILL_BREAKPOINTS = [320, 480, 640, 768, 1024, 1280, 1600];
+
+function isCloudinaryUrl(src: string): boolean {
+  return src.includes("/upload/");
+}
+
+function cloudinaryTransform(
   src: string,
-  width?: number,
-  height?: number
+  transformation: string
 ): string {
-  if (!src.includes("/upload/")) {
-    return src;
-  }
-
-  if (!width && !height) {
-    return src;
-  }
-
-  const transformations = [
-    width ? `w_${width}` : "",
-    height ? `h_${height}` : "",
-    width && height ? "c_fill" : "",
-    "q_auto",
-    "f_auto",
-  ]
-    .filter(Boolean)
-    .join(",");
-
   return src.replace(
     "/upload/",
-    `/upload/${transformations}/`
+    `/upload/${transformation}/`
   );
+}
+
+/**
+ * For fill-mode images (the vast majority — card grids, hero images,
+ * anything sized by its CSS container rather than fixed pixels), we
+ * can't know the exact rendered width ahead of time. So instead of
+ * skipping optimization entirely (the previous bug — this served full
+ * resolution originals for every fill image on the site), generate a
+ * real srcSet across common breakpoints and let the browser pick the
+ * right one, matched against the `sizes` prop the caller provides.
+ */
+function buildFillSources(src: string): {
+  src: string;
+  srcSet: string;
+} {
+  if (!isCloudinaryUrl(src)) {
+    return { src, srcSet: "" };
+  }
+
+  const srcSet = FILL_BREAKPOINTS.map(
+    (w) =>
+      `${cloudinaryTransform(
+        src,
+        `w_${w},q_auto,f_auto`
+      )} ${w}w`
+  ).join(", ");
+
+  // Reasonable mid-size fallback for browsers/contexts that ignore srcSet.
+  const fallbackSrc = cloudinaryTransform(
+    src,
+    "w_800,q_auto,f_auto"
+  );
+
+  return { src: fallbackSrc, srcSet };
+}
+
+/**
+ * For fixed-size images (explicit width/height passed), optimize to
+ * that exact size plus a 2x variant for retina screens.
+ */
+function buildFixedSources(
+  src: string,
+  width: number,
+  height?: number
+): { src: string; srcSet: string } {
+  if (!isCloudinaryUrl(src)) {
+    return { src, srcSet: "" };
+  }
+
+  const baseTransform = height
+    ? `w_${width},h_${height},c_fill,q_auto,f_auto`
+    : `w_${width},q_auto,f_auto`;
+
+  const retinaTransform = height
+    ? `w_${width * 2},h_${height * 2},c_fill,q_auto,f_auto`
+    : `w_${width * 2},q_auto,f_auto`;
+
+  const baseSrc = cloudinaryTransform(src, baseTransform);
+  const retinaSrc = cloudinaryTransform(src, retinaTransform);
+
+  return {
+    src: baseSrc,
+    srcSet: `${baseSrc} 1x, ${retinaSrc} 2x`,
+  };
 }
 
 export default function OptimizedImage({
@@ -68,11 +119,9 @@ export default function OptimizedImage({
     );
   }
 
-  const imageUrl = getImageUrl(
-    src,
-    fill ? undefined : width,
-    fill ? undefined : height
-  );
+  const { src: imageUrl, srcSet } = fill
+    ? buildFillSources(src)
+    : buildFixedSources(src, width ?? 800, height);
 
   if (failed) {
     return (
@@ -106,6 +155,7 @@ export default function OptimizedImage({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={imageUrl}
+        srcSet={srcSet || undefined}
         alt={alt}
         width={!fill ? width : undefined}
         height={!fill ? height : undefined}
