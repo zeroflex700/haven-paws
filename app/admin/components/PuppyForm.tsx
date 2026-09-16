@@ -228,7 +228,12 @@ export default function PuppyForm({
       {isNewPuppy && (
         <>
           <input type="hidden" name="id" value={puppyId} />
-          <PasteParser onParsed={handleParsed} />
+          <PasteParser
+  onParsed={handleParsed}
+  parseFn={parsePuppyText}
+  label="Paste puppy info to auto-fill this form"
+  placeholder="Paste a WhatsApp message, email, or any puppy description here…"
+/>
         </>
       )}
 

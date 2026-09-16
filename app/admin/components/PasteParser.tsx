@@ -2,12 +2,21 @@
 
 import { useState } from "react";
 import { Sparkles, Loader2 } from "lucide-react";
-import { parsePuppyText, type ParsedPuppyData } from "../puppies/parse-actions";
 
-export default function PasteParser({
+type ParseFnResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: string };
+
+export default function PasteParser<T>({
   onParsed,
+  parseFn,
+  label = "Paste info to auto-fill this form",
+  placeholder = "Paste text here…",
 }: {
-  onParsed: (data: ParsedPuppyData) => void;
+  onParsed: (data: T) => void;
+  parseFn: (text: string) => Promise<ParseFnResult<T>>;
+  label?: string;
+  placeholder?: string;
 }) {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,7 +28,7 @@ export default function PasteParser({
     setError("");
     setSuccess(false);
 
-    const result = await parsePuppyText(text);
+    const result = await parseFn(text);
 
     setLoading(false);
 
@@ -36,15 +45,13 @@ export default function PasteParser({
     <div className="mb-6 rounded-lg border border-gold/40 bg-gold/5 p-4">
       <div className="flex items-center gap-2 mb-2">
         <Sparkles size={16} className="text-gold" />
-        <p className="text-sm font-medium text-forest">
-          Paste breeder info to auto-fill this form
-        </p>
+        <p className="text-sm font-medium text-forest">{label}</p>
       </div>
 
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Paste a WhatsApp message, email, or any puppy description here…"
+        placeholder={placeholder}
         rows={5}
         className="w-full border border-sage/30 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-gold bg-white"
       />
@@ -72,8 +79,7 @@ export default function PasteParser({
 
       {success && (
         <p className="text-sm text-forest mt-2">
-          ✓ Fields filled below. Review everything carefully before saving —
-          double-check price, deposit, and any field left blank.
+          ✓ Fields filled below. Review everything carefully before saving.
         </p>
       )}
     </div>
