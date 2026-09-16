@@ -8,19 +8,15 @@ import {
   deleteBreederQA,
   addBreederPhoto,
   deleteBreederPhoto,
-  addIncludedItem,
-  deleteIncludedItem,
   addMoreAbout,
   deleteMoreAbout,
-  deleteQualification,
   addHealthTesting,
   deleteHealthTesting,
 } from "../content-actions";
 import BreederForm from "../../components/BreederForm";
 import SimpleImageUploadForm from "../../components/SimpleImageUploadForm";
 import DeleteGenericButton from "../../components/DeleteGenericButton";
-import QualificationForm from "../../components/QualificationForm";
-import { ICON_OPTIONS, CATEGORY_META, CATEGORY_ORDER } from "@/lib/breederIcons";
+import { ICON_OPTIONS } from "@/lib/breederIcons";
 import { notFound } from "next/navigation";
 
 export default async function EditBreederPage({
@@ -43,9 +39,7 @@ export default async function EditBreederPage({
     homePhotos,
     { data: qaItems },
     { data: photos },
-    { data: includedItems },
     { data: moreAboutItems },
-    { data: qualifications },
     { data: healthTestingItems },
   ] = await Promise.all([
     supabase.from("breeds").select("id, name").order("name"),
@@ -62,18 +56,8 @@ export default async function EditBreederPage({
       .eq("breeder_id", breederId)
       .order("sort_order"),
     supabase
-      .from("breeder_included_items")
-      .select("id, category, label")
-      .eq("breeder_id", breederId)
-      .order("sort_order"),
-    supabase
       .from("breeder_more_about")
       .select("id, icon_key, heading, body")
-      .eq("breeder_id", breederId)
-      .order("sort_order"),
-    supabase
-      .from("breeder_qualifications")
-      .select("id, badge_image_url, label_line, title_line")
       .eq("breeder_id", breederId)
       .order("sort_order"),
     supabase
@@ -119,20 +103,6 @@ export default async function EditBreederPage({
     await deleteBreederPhoto(id, breederSlug);
   };
 
-  const removeIncludedItem = async (id: string) => {
-    "use server";
-    await deleteIncludedItem(id, breederSlug);
-  };
-  async function handleAddIncludedItem(formData: FormData) {
-    "use server";
-    await addIncludedItem(
-      breederId,
-      breederSlug,
-      formData.get("category") as string,
-      formData.get("label") as string
-    );
-  }
-
   const removeMoreAbout = async (id: string) => {
     "use server";
     await deleteMoreAbout(id, breederSlug);
@@ -147,11 +117,6 @@ export default async function EditBreederPage({
       formData.get("body") as string
     );
   }
-
-  const removeQualification = async (id: string) => {
-    "use server";
-    await deleteQualification(id, breederSlug);
-  };
 
   const removeHealthTesting = async (id: string) => {
     "use server";
@@ -168,8 +133,6 @@ export default async function EditBreederPage({
     );
   }
 
-  const qualificationCount = qualifications?.length ?? 0;
-
   const sectionLinkClass =
     "text-xs text-forest border border-sage/20 rounded-full px-3 py-1.5 bg-white hover:border-gold transition-colors";
 
@@ -184,21 +147,14 @@ export default async function EditBreederPage({
         </Link>
       </p>
 
-      {/* Jump links — everything below is on this one page now */}
       <div className="flex flex-wrap gap-2 mb-8">
         <a href="#basics" className={sectionLinkClass}>Basics</a>
         <a href="#home-gallery" className={sectionLinkClass}>Home Gallery</a>
         <a href="#qa" className={sectionLinkClass}>Q&amp;A</a>
         <a href="#photos" className={sectionLinkClass}>Photo Strip</a>
-        <a href="#included-items" className={sectionLinkClass}>What&apos;s Included</a>
         <a href="#more-about" className={sectionLinkClass}>More About</a>
-        <a href="#qualifications" className={sectionLinkClass}>Qualifications</a>
         <a href="#health-testing" className={sectionLinkClass}>Parent Health Testing</a>
       </div>
-
-      {/* ============================================================= */}
-      {/* BASICS                                                         */}
-      {/* ============================================================= */}
 
       <section id="basics" className="scroll-mt-6 mb-12">
         <h2 className="font-display text-lg text-forest mb-3">Basics</h2>
@@ -208,10 +164,6 @@ export default async function EditBreederPage({
           breeds={breeds ?? []}
         />
       </section>
-
-      {/* ============================================================= */}
-      {/* HOME GALLERY                                                   */}
-      {/* ============================================================= */}
 
       <section id="home-gallery" className="scroll-mt-6 mb-12 pt-6 border-t border-sage/15">
         <h2 className="font-display text-lg text-forest mb-3">
@@ -233,10 +185,6 @@ export default async function EditBreederPage({
           <SimpleImageUploadForm onUpload={uploadHomePhoto} label="Upload Home Photo" />
         )}
       </section>
-
-      {/* ============================================================= */}
-      {/* SECTION 2 — Q&A                                                */}
-      {/* ============================================================= */}
 
       <section id="qa" className="scroll-mt-6 mb-12 pt-6 border-t border-sage/15">
         <h2 className="font-display text-lg text-forest mb-4">
@@ -264,10 +212,6 @@ export default async function EditBreederPage({
         ))}
       </section>
 
-      {/* ============================================================= */}
-      {/* SECTION 3 — PHOTO STRIP                                        */}
-      {/* ============================================================= */}
-
       <section id="photos" className="scroll-mt-6 mb-12 pt-6 border-t border-sage/15">
         <h2 className="font-display text-lg text-forest mb-1">{breederName}&apos;s Photos</h2>
         <p className="text-sm text-sage mb-4">Unbounded — add as many as you like.</p>
@@ -286,11 +230,6 @@ export default async function EditBreederPage({
           ))}
         </div>
       </section>
-
-
-      {/* ============================================================= */}
-      {/* SECTION 8 — MORE ABOUT                                         */}
-      {/* ============================================================= */}
 
       <section id="more-about" className="scroll-mt-6 mb-12 pt-6 border-t border-sage/15">
         <h2 className="font-display text-lg text-forest mb-4">More About {breederName}</h2>
@@ -321,41 +260,6 @@ export default async function EditBreederPage({
           </div>
         ))}
       </section>
-
-      {/* ============================================================= */}
-      {/* SECTION 9 — QUALIFICATIONS                                     */}
-      {/* ============================================================= */}
-
-      <section id="qualifications" className="scroll-mt-6 mb-12 pt-6 border-t border-sage/15">
-        <h2 className="font-display text-lg text-forest mb-1">Breeder Qualifications</h2>
-        <p className="text-sm text-sage mb-6">{qualificationCount}/8 slots used</p>
-
-        {qualificationCount < 8 ? (
-          <QualificationForm breederId={breederId} breederSlug={breederSlug} />
-        ) : (
-          <p className="text-sm text-sage mb-6">Maximum of 8 reached — delete one to add another.</p>
-        )}
-
-        <div className="grid grid-cols-2 gap-3">
-          {(qualifications ?? []).map((item) => (
-            <div key={item.id} className="bg-white border border-sage/20 rounded-lg p-3">
-              {item.badge_image_url && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={item.badge_image_url} alt="" className="w-12 h-12 rounded-lg object-cover mb-2" />
-              )}
-              <p className="text-xs text-sage">{item.label_line}</p>
-              <p className="text-sm text-forest font-medium">{item.title_line}</p>
-              <div className="mt-2">
-                <DeleteGenericButton id={item.id} onDelete={removeQualification} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ============================================================= */}
-      {/* SECTIONS 10–11 — PARENT HEALTH TESTING                         */}
-      {/* ============================================================= */}
 
       <section id="health-testing" className="scroll-mt-6 pt-6 border-t border-sage/15">
         <h2 className="font-display text-lg text-forest mb-4">

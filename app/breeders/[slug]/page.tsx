@@ -23,7 +23,6 @@ import {
   getBreederPhotos,
   getGlobalIncludedItems,
   getBreederMoreAbout,
-  getBreederQualifications,
   getBreederHealthTesting,
 } from "@/lib/queries/breeders";
 import { getBreedInfoByName } from "@/lib/queries/breedInfo";
@@ -47,7 +46,6 @@ export default async function BreederProfilePage({
     photos,
     included,
     moreAbout,
-    qualifications,
     healthTesting,
     breedInfo,
   ] = await Promise.all([
@@ -56,7 +54,6 @@ export default async function BreederProfilePage({
     getBreederPhotos(breeder.id),
     getGlobalIncludedItems(),
     getBreederMoreAbout(breeder.id),
-    getBreederQualifications(breeder.id),
     getBreederHealthTesting(breeder.id),
     breeder.breedName
       ? getBreedInfoByName(breeder.breedName)
@@ -101,17 +98,14 @@ export default async function BreederProfilePage({
             Reviewed and approved by Haven Paws
           </span>
 
-          {qualifications.length > 0 && (
-            <span className="flex items-center gap-1.5">
-              <BadgeCheck
-                size={13}
-                className="text-gold"
-                strokeWidth={1.5}
-              />
-              {qualifications.length} verified qualification
-              {qualifications.length !== 1 ? "s" : ""}
-            </span>
-          )}
+          <span className="flex items-center gap-1.5">
+            <BadgeCheck
+              size={13}
+              className="text-gold"
+              strokeWidth={1.5}
+            />
+            Verified Haven Paws qualifications
+          </span>
         </div>
 
         {/* Meet the Breeder */}
@@ -178,9 +172,7 @@ export default async function BreederProfilePage({
           items={moreAbout}
         />
 
-        <BreederQualificationsGrid
-          items={qualifications}
-        />
+        <BreederQualificationsGrid />
 
         <BreederIconTextSection
           title="Parent health testing"
