@@ -30,6 +30,115 @@ export type BreederInput = {
   healthTestingItems?: { iconKey: string; heading: string; body: string }[];
 };
 
+export type BreederFullInput = {
+  basics: BreederInput;
+  homePhotoUrls: string[];
+  qa: { question: string; answer: string }[];
+  photoUrls: string[];
+  moreAbout: { iconKey: string; heading: string; body: string }[];
+  healthTesting: { iconKey: string; heading: string; body: string }[];
+};
+
+export async function createBreederFull(input: BreederFullInput) {
+  const supabase = await createClient();
+  const slug = slugify(input.basics.name);
+
+  const { data: breeder, error } = await supabase
+    .from("breeders")
+    .insert({
+      name: input.basics.name,
+      slug,
+      breed_id: input.basics.breedId,
+      photo_url: input.basics.photoUrl,
+      meet_breeder_text: input.basics.meetBreederText,
+      meet_breeder_image_url: input.basics.meetBreederImageUrl,
+      home_gallery_title: input.basics.homeGalleryTitle,
+      getting_a_puppy_text: input.basics.gettingAPuppyText,
+    })
+    .select("id")
+    .single();
+
+  if (error || !breeder) {
+    throw new Error(error?.message ?? "Failed to create breeder");
+  }
+
+  const breederId = breeder.id as string;
+
+  if (input.homePhotoUrls.length > 0) {
+    const { error: homePhotosError } = await supabase
+      .from("breeder_home_photos")
+      .insert(
+        input.homePhotoUrls.map((url, index) => ({
+          breeder_id: breederId,
+          image_url: url,
+          sort_order: index,
+        }))
+      );
+    if (homePhotosError) throw new Error(homePhotosError.message);
+  }
+
+  if (input.qa.length > 0) {
+    const { error: qaError } = await supabase.from("breeder_qa").insert(
+      input.qa.map((item, index) => ({
+        breeder_id: breederId,
+        question: item.question,
+        answer: item.answer,
+        sort_order: index,
+      }))
+    );
+    if (qaError) throw new Error(qaError.message);
+  }
+
+  if (input.photoUrls.length > 0) {
+    const { error: photosError } = await supabase
+      .from("breeder_photos")
+      .insert(
+        input.photoUrls.map((url, index) => ({
+          breeder_id: breederId,
+          image_url: url,
+          sort_order: index,
+        }))
+      );
+    if (photosError) throw new Error(photosError.message);
+  }
+
+  if (input.moreAbout.length > 0) {
+    const { error: moreAboutError } = await supabase
+      .from("breeder_more_about")
+      .insert(
+        input.moreAbout.map((item, index) => ({
+          breeder_id: breederId,
+          icon_key: item.iconKey,
+          heading: item.heading,
+          body: item.body,
+          sort_order: index,
+        }))
+      );
+    if (moreAboutError) throw new Error(moreAboutError.message);
+  }
+
+  if (input.healthTesting.length > 0) {
+    const { error: healthError } = await supabase
+      .from("breeder_health_testing")
+      .insert(
+        input.healthTesting.map((item, index) => ({
+          breeder_id: breederId,
+          icon_key: item.iconKey,
+          heading: item.heading,
+          body: item.body,
+          sort_order: index,
+        }))
+      );
+    if (healthError) throw new Error(healthError.message);
+  }
+
+  await invalidateBreeder(null, slug);
+
+  revalidatePath("/admin/breeders");
+  revalidatePath(`/breeders/${slug}`);
+  redirect("/admin/breeders");
+}
+
 export async function createBreeder(input: BreederInput) {
   const supabase = await createClient();
   const slug = slugify(input.name);
