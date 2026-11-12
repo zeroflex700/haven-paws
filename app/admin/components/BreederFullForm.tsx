@@ -6,6 +6,11 @@ import { createBreederFull } from "../breeders/actions";
 import { cldThumb } from "@/lib/cloudinary";
 import { ICON_OPTIONS, type IconKey } from "@/lib/breederIcons";
 import { Trash2 } from "lucide-react";
+import PasteParser from "./PasteParser";
+import {
+  parseBreederText,
+  type ParsedBreederData,
+} from "../breeders/parse-actions";
 
 type BreedOption = { id: string; name: string };
 
@@ -51,6 +56,34 @@ export default function BreederFullForm({ breeds }: { breeds: BreedOption[] }) {
 
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  function handleParsed(data: ParsedBreederData) {
+    if (data.name) setName(data.name);
+
+    if (data.breed_name) {
+      const match = breeds.find(
+        (breed) =>
+          breed.name.trim().toLowerCase() ===
+          data.breed_name?.trim().toLowerCase()
+      );
+
+      if (match) setBreedId(match.id);
+    }
+
+    if (data.meet_breeder_text) {
+      setMeetBreederText(data.meet_breeder_text);
+    }
+
+    if (data.getting_a_puppy_text) {
+      setGettingAPuppyText(data.getting_a_puppy_text);
+    }
+
+    if (data.qa.length > 0) setQa(data.qa);
+    if (data.more_about.length > 0) setMoreAbout(data.more_about);
+    if (data.health_testing.length > 0) {
+      setHealthTesting(data.health_testing);
+    }
+  }
 
   const inputClass =
     "w-full border border-sage/30 rounded-md px-3 py-2 focus:outline-none focus:border-gold";
@@ -115,6 +148,13 @@ export default function BreederFullForm({ breeds }: { breeds: BreedOption[] }) {
 
   return (
     <form onSubmit={handleSubmit} className="pb-16">
+      <PasteParser
+        onParsed={handleParsed}
+        parseFn={parseBreederText}
+        label="Paste breeder information to auto-fill this form"
+        placeholder="Paste the breeder's profile, puppy purchasing process, Q&A, general information and parent health-testing details here…"
+      />
+
       {/* ============================================================= */}
       {/* BASICS                                                         */}
       {/* ============================================================= */}
