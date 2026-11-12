@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBreederFull } from "../breeders/actions";
 import { cldThumb } from "@/lib/cloudinary";
-import { ICON_OPTIONS } from "@/lib/breederIcons";
+import { ICON_OPTIONS, type IconKey } from "@/lib/breederIcons";
 import { Trash2 } from "lucide-react";
 
 type BreedOption = { id: string; name: string };
@@ -446,7 +446,7 @@ function IconTextStaging({
   inputClass: string;
   addLabel: string;
 }) {
-  const [iconKey, setIconKey] = useState(ICON_OPTIONS[0]?.key ?? "");
+  const [iconKey, setIconKey] = useState<IconKey>(ICON_OPTIONS[0]?.key ?? "award");
   const [heading, setHeading] = useState("");
   const [body, setBody] = useState("");
 
@@ -463,7 +463,7 @@ function IconTextStaging({
         <label className="block text-sm text-ink/80 mb-1">Icon</label>
         <select
           value={iconKey}
-          onChange={(e) => setIconKey(e.target.value)}
+          onChange={(e) => setIconKey(e.target.value as IconKey)}
           className={`${inputClass} mb-3`}
         >
           {ICON_OPTIONS.map((o) => (
