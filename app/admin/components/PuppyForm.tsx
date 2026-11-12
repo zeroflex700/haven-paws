@@ -7,7 +7,7 @@ import SingleImageUploader from "./SingleImageUploader";
 import PasteParser from "./PasteParser";
 import type { IncludedItemKey } from "@/lib/includedItems";
 import type { LitterAutofillData } from "@/lib/queries/adminLitters";
-import type { ParsedPuppyData } from "../puppies/parse-actions";
+import { parsePuppyText, type ParsedPuppyData } from "../puppies/parse-actions";
 
 type Breed = {
   id: string;
